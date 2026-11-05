@@ -1,6 +1,13 @@
 # Production stack for one VPS. Only Caddy publishes ports; see DEPLOY.md.
 name: upoharlab
 
+# Without a limit, container logs can slowly fill the server's disk.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:16.15-alpine
@@ -16,6 +23,7 @@ services:
       timeout: 5s
       retries: 12
     networks: [internal]
+    logging: *logging
     restart: unless-stopped
 
   app:
@@ -52,6 +60,7 @@ services:
       retries: 8
       start_period: 60s
     networks: [internal]
+    logging: *logging
     restart: unless-stopped
 
   caddy:
@@ -72,9 +81,16 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     networks:
       internal:
         ipv4_address: 172.30.57.20
+    logging: *logging
     restart: unless-stopped
 
 networks:

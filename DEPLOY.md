@@ -5,7 +5,7 @@ One VPS running Docker Compose: the app, PostgreSQL 16 and Caddy for HTTPS. Only
 ## What you need
 
 - A Linux VPS with Docker Engine and the Compose plugin, and SSH access.
-- About 1 GB RAM or more. A local test used roughly 370 MB after a light workload; this has not been measured on a real 1 GB server, so check yours with `docker stats`.
+- About 1 GB RAM or more. A local test used roughly 370 MB in total after a light workload (app about 310 MB, PostgreSQL 40 MB, Caddy 20 MB). This has not been measured on a real 1 GB server, so check yours with `docker stats`.
 - DNS `A` records for `upoharlab.com` and `www.upoharlab.com` pointing to the server.
 - A private off-server backup destination, set up with [rclone](https://rclone.org/) (for example a private Google Drive folder).
 
@@ -17,7 +17,7 @@ cp .env.example .env
 chmod 600 .env
 ```
 
-Edit `.env`. Production needs `DB_PASSWORD`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SITE_DOMAIN=upoharlab.com` and `APP_BASE_URL=https://upoharlab.com`.
+Edit `.env`. Production needs `DB_PASSWORD`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SITE_DOMAIN=upoharlab.com` and `APP_BASE_URL=https://upoharlab.com`. Use letters and numbers only in passwords; `openssl rand -hex 24` makes a good one. Keep a copy of `.env` somewhere safe and separate: backups cannot be used for the live site without its database password settings.
 
 Allow web traffic while keeping SSH open. Do this before enabling the firewall:
 
@@ -48,11 +48,16 @@ docker compose -f compose.prod.yaml logs --tail=100 app
 docker compose -f compose.prod.yaml logs --tail=100 caddy
 ```
 
-The app does not log form contents. Treat logs as private anyway, and never paste secrets from `.env`.
+The app does not log form contents. Treat logs as private anyway, and never paste secrets from `.env`. Each container keeps at most 30 MB of logs.
 
 ## Backups
 
-Add to `.env`:
+Install rclone and configure your private destination (`rclone config`). Create the folders once, then add the settings to `.env`:
+
+```sh
+sudo install -d -o "$USER" -m 700 /var/backups/upoharlab
+sudo install -o "$USER" -m 600 /dev/null /var/log/upoharlab-backup.log
+```
 
 ```sh
 BACKUP_DIR=/var/backups/upoharlab
@@ -74,13 +79,17 @@ Schedule the daily backup with `crontab -e`:
 30 21 * * * cd /home/you/upoharlab && scripts/backup.sh >> /var/log/upoharlab-backup.log 2>&1
 ```
 
-That is 3:30 AM in Bangladesh on a server set to UTC. Each backup pauses the app for a few seconds so the database and photos match. The 14 newest successful backups are kept, and a failed run leaves them alone. If Telegram is configured, a failure sends an alert.
+That is 3:30 AM in Bangladesh on a server set to UTC. Each backup pauses the app for a few seconds so the database and photos match. The 14 newest successful backups are kept, both on the server and off-server, and a failed run leaves them alone. Off-server backups survive even if the server and its backup folder are lost.
+
+Without Telegram, a failed backup only appears in the log, so check it regularly: `tail /var/log/upoharlab-backup.log`. With Telegram configured, a failure also sends an alert.
 
 Backups contain customer data, so keep the destination private. `.env` is not included: store a copy of it somewhere safe and separate.
 
 ## Restoring production after a disaster
 
 This replaces live data. Run `restore-check.sh` on the backup first.
+
+On a rebuilt server, first copy `.env` back, fetch the backup with `rclone copy <remote>/<backup-folder> <folder>`, and start only the database with `docker compose -f compose.prod.yaml up -d --build postgres`. Don't start the whole stack yet. The admin account comes back with the backup, so `ADMIN_USERNAME` and `ADMIN_PASSWORD` are not needed.
 
 ```sh
 docker compose -f compose.prod.yaml stop app caddy
@@ -116,3 +125,12 @@ APP_VERSION=$(git rev-parse --short HEAD) docker compose -f compose.prod.yaml up
 - The app trusts client-address headers only from Caddy's fixed private address, so rate limits see real visitors and clients cannot fake their address.
 - The app refuses to start in production without an `https://` site address and secure cookies.
 - PostgreSQL and the app publish no ports. Check from another machine that only ports 80 and 443 answer.
+- Caddy must be the first thing that receives visitors. If you later put a CDN such as Cloudflare in front, rate limits would see the CDN's address instead of each visitor's, so that needs extra setup first.
+
+## When is it really live?
+
+Report each stage separately. Docker files or a localhost test never count as deployed.
+
+- **Prepared:** deployment files and local checks are done.
+- **Deployed:** the site answers at `https://upoharlab.com`, and `www` redirects to it.
+- **Verified:** on the real domain, you have logged in, uploaded a photo, placed and fulfilled a test order, restarted the stack and found the order and photo still there, run a backup, passed `restore-check.sh`, and confirmed the backup arrived off-server.
