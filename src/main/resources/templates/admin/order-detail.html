@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title th:text="${order.code + ' · Upohar Lab'}"></title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/admin :: header}">
+</header>
+<main class="container admin-main">
+<p class="notice" role="status" th:if="${message}" th:text="${message}"></p>
+<p class="error" role="alert" th:if="${error}" th:text="${error}"></p>
+<a th:href="@{/admin/orders}">← Orders</a>
+<div class="section-heading">
+<h1 th:text="${order.code}"></h1>
+<span class="status-pill" th:text="${order.status}"></span>
+</div>
+<p class="muted" th:text="${'Placed ' + @bn.time(order.createdAt)}"></p>
+
+<section class="panel order-panel" aria-labelledby="next-title" th:unless="${order.status == 'DELIVERED' or order.status == 'CANCELLED'}">
+<h2 id="next-title">Next step</h2>
+<form th:if="${order.status == 'NEW'}" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
+<p>Send the design on WhatsApp, then record it here.</p>
+<input type="hidden" name="to" value="DESIGN_SENT">
+<button class="button">Mark design sent</button>
+</form>
+<th:block th:if="${order.status == 'DESIGN_SENT'}">
+<ul th:unless="${order.missingForConfirmation.isEmpty()}" class="missing-list">
+<li th:each="item : ${order.missingForConfirmation}" th:text="${item}"></li>
+</ul>
+<form th:if="${order.designApprovedAt == null}" th:action="@{/admin/orders/{c}/approve(c=${order.code})}" method="post">
+<button class="button">Design approved on WhatsApp</button>
+</form>
+<p th:if="${order.designApprovedAt != null}" th:text="${'Approved ' + @bn.time(order.designApprovedAt)}"></p>
+<form th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post" th:if="${order.missingForConfirmation.isEmpty()}">
+<input type="hidden" name="to" value="CONFIRMED">
+<button class="button">Confirm order</button>
+</form>
+</th:block>
+<form th:if="${order.status == 'CONFIRMED'}" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
+<ul th:unless="${order.missingForConfirmation.isEmpty()}" class="missing-list">
+<li th:each="item : ${order.missingForConfirmation}" th:text="${item}"></li>
+</ul>
+<input type="hidden" name="to" value="MAKING">
+<button class="button">Start making</button>
+</form>
+<form th:if="${order.status == 'MAKING'}" class="form-width" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
+<input type="hidden" name="to" value="SHIPPED">
+<label for="ship-courier">Courier</label>
+<input id="ship-courier" name="courier" maxlength="100" required th:value="${order.courier}">
+<label for="ship-tracking">Tracking or reference number</label>
+<input id="ship-tracking" name="tracking" maxlength="150" required th:value="${order.trackingNo}">
+<button class="button">Mark shipped</button>
+</form>
+<th:block th:if="${order.status == 'SHIPPED'}">
+<form th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
+<input type="hidden" name="to" value="DELIVERED">
+<button class="button">Mark delivered</button>
+</form>
+<details>
+<summary>Correct courier details</summary>
+<form class="form-width" th:action="@{/admin/orders/{c}/courier(c=${order.code})}" method="post">
+<label for="fix-courier">Courier</label>
+<input id="fix-courier" name="courier" maxlength="100" required th:value="${order.courier}">
+<label for="fix-tracking">Tracking or reference number</label>
+<input id="fix-tracking" name="tracking" maxlength="150" required th:value="${order.trackingNo}">
+<button>Save courier details</button>
+</form>
+</details>
+</th:block>
+</section>
+
+<div class="order-columns">
+<section class="panel order-panel" aria-labelledby="item-title">
+<h2 id="item-title">Order</h2>
+<dl class="facts">
+<dt>Product</dt><dd th:text="${order.productTitle}"></dd>
+<dt>Quantity</dt><dd th:text="${order.quantity}"></dd>
+<dt>Engraving</dt><dd class="preserve-lines" th:text="${order.engraving}"></dd>
+<th:block th:if="${order.customerNote != null}">
+<dt>Customer's note</dt><dd class="preserve-lines" th:text="${order.customerNote}"></dd>
+</th:block>
+<th:block th:if="${order.courier != null}">
+<dt>Courier</dt><dd th:text="${order.courier}"></dd>
+<dt>Tracking</dt><dd th:text="${order.trackingNo}"></dd>
+</th:block>
+<th:block th:if="${order.deliveredAt != null}">
+<dt>Delivered</dt><dd th:text="${@bn.time(order.deliveredAt)}"></dd>
+</th:block>
+</dl>
+</section>
+
+<section class="panel order-panel" aria-labelledby="customer-title">
+<h2 id="customer-title">Customer</h2>
+<dl class="facts">
+<dt>Name</dt><dd th:text="${order.customerName}"></dd>
+<dt>Phone</dt><dd><a th:href="${'tel:' + order.phone}" th:text="${order.phone}"></a></dd>
+<dt>Area</dt><dd th:text="${order.area == 'INSIDE' ? 'Inside Dhaka' : 'Outside Dhaka'}"></dd>
+<dt>Address</dt><dd class="preserve-lines" th:text="${order.address}"></dd>
+</dl>
+<p class="wa-links">
+<a th:each="link : ${whatsappLinks}" th:href="${link.value}" th:text="${link.key}" target="_blank" rel="noopener noreferrer"></a>
+</p>
+<details th:if="${order.canEditContact}" th:open="${contactName != null}">
+<summary>Correct contact details</summary>
+<form class="form-width" th:action="@{/admin/orders/{c}/contact(c=${order.code})}" method="post">
+<label for="contact-name">Name</label>
+<input id="contact-name" name="name" maxlength="100" required th:value="${contactName != null ? contactName : order.customerName}">
+<label for="contact-phone">Phone</label>
+<input id="contact-phone" name="phone" type="tel" required th:value="${contactPhone != null ? contactPhone : order.phone}">
+<label for="contact-address">Address</label>
+<textarea id="contact-address" name="address" rows="3" maxlength="500" required th:text="${contactAddress != null ? contactAddress : order.address}"></textarea>
+<p class="muted">The delivery area, product, quantity and engraving cannot change here. For those, cancel and take a new agreed order.</p>
+<button>Save contact details</button>
+</form>
+</details>
+</section>
+</div>
+
+<section class="panel order-panel" aria-labelledby="money-title">
+<h2 id="money-title">Money</h2>
+<dl class="facts">
+<dt>Product</dt><dd th:text="${'৳' + order.unitPrice + ' × ' + order.quantity + ' = ৳' + order.subtotal}"></dd>
+<dt>Delivery</dt><dd th:text="${'৳' + order.delivery}"></dd>
+<dt>Total</dt><dd th:text="${'৳' + order.total}"></dd>
+<dt>Advance required</dt><dd th:text="${'৳' + order.advanceRequired}"></dd>
+<dt th:text="${order.status == 'CANCELLED' ? 'Net money held' : 'Net paid'}"></dt><dd class="strong" th:text="${'৳' + order.netPaid}"></dd>
+<th:block th:if="${order.balance != null}">
+<dt>Remaining balance</dt><dd class="strong" th:text="${'৳' + order.balance}"></dd>
+</th:block>
+</dl>
+<p class="notice" th:if="${order.status == 'CANCELLED' and order.netPaid > 0}">Apply the agreed cancellation terms, refund outside the website, then record the verified refund here.</p>
+<p class="notice" th:if="${order.status == 'DELIVERED' and order.balance > 0}">Delivered, but this money is still awaiting customer or courier settlement.</p>
+<div class="table-wrap" th:unless="${order.payments.isEmpty()}">
+<table class="admin-table">
+<thead><tr><th scope="col">When</th><th scope="col">Type</th><th scope="col">Method</th><th scope="col">Amount</th><th scope="col">Reference</th><th scope="col">By</th></tr></thead>
+<tbody>
+<tr th:each="p : ${order.payments}">
+<td th:text="${@bn.time(p.at)}"></td>
+<td th:text="${p.kind}"></td>
+<td th:text="${p.method}"></td>
+<td th:text="${'৳' + p.amount}"></td>
+<td th:text="${p.reference}"></td>
+<td th:text="${p.recordedBy}"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<details th:open="${moneyAmount != null}">
+<summary>Record verified payment or refund</summary>
+<form class="form-width" th:action="@{/admin/orders/{c}/money(c=${order.code})}" method="post">
+<p class="muted">First check your bKash account or the actual cash or courier settlement. A customer's screenshot alone is not verification.</p>
+<label for="money-kind">Type</label>
+<select id="money-kind" name="kind">
+<option value="PAYMENT" th:selected="${moneyKind != 'REFUND'}">Payment received</option>
+<option value="REFUND" th:selected="${moneyKind == 'REFUND'}">Refund sent</option>
+</select>
+<label for="money-method">Method</label>
+<select id="money-method" name="method">
+<option value="BKASH" th:selected="${moneyMethod == 'BKASH'}">bKash</option>
+<option value="CASH" th:selected="${moneyMethod == 'CASH'}">Cash</option>
+<option value="COD" th:selected="${moneyMethod == 'COD'}">Courier cash on delivery</option>
+</select>
+<label for="money-amount">Amount (whole taka)</label>
+<input id="money-amount" name="amount" inputmode="numeric" required th:value="${moneyAmount}">
+<label for="money-reference">Transaction reference (required for bKash)</label>
+<input id="money-reference" name="reference" maxlength="100" autocomplete="off" th:value="${moneyReference}">
+<button>Save record</button>
+</form>
+</details>
+</section>
+
+<section class="panel order-panel" aria-labelledby="history-title">
+<h2 id="history-title">History and internal notes</h2>
+<ol class="history">
+<li th:each="e : ${order.history}">
+<span class="muted" th:text="${@bn.time(e.at) + ' · ' + e.actor}"></span><br>
+<strong th:switch="${e.type}">
+<span th:case="'CREATED'">Order placed</span>
+<span th:case="'STATUS_CHANGED'" th:text="${e.fromStatus + ' → ' + e.toStatus}"></span>
+<span th:case="'DESIGN_APPROVED'">Design approved on WhatsApp</span>
+<span th:case="'PAYMENT_RECORDED'">Payment recorded</span>
+<span th:case="'REFUND_RECORDED'">Refund recorded</span>
+<span th:case="'CONTACT_UPDATED'">Contact details corrected</span>
+<span th:case="'COURIER_UPDATED'">Courier details corrected</span>
+<span th:case="'NOTE'">Internal note</span>
+</strong>
+<span class="preserve-lines" th:if="${e.note != null}" th:text="${e.note}"></span>
+</li>
+</ol>
+<form class="form-width" th:action="@{/admin/orders/{c}/note(c=${order.code})}" method="post">
+<label for="note">Add internal note (customers never see this)</label>
+<textarea id="note" name="note" rows="2" maxlength="1000" required></textarea>
+<button>Add note</button>
+</form>
+</section>
+
+<section class="panel order-panel" aria-labelledby="cancel-title" th:if="${order.canCancel}">
+<h2 id="cancel-title">Cancel order</h2>
+<form class="form-width" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
+<input type="hidden" name="to" value="CANCELLED">
+<label for="cancel-reason">Reason</label>
+<input id="cancel-reason" name="reason" maxlength="500" required>
+<button>Cancel this order</button>
+</form>
+</section>
+</main>
+</body>
+</html>

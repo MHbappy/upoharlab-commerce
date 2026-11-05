@@ -4,20 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Upohar Lab · Admin</title>
+<title>Orders · Upohar Lab</title>
 <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
 <header th:replace="~{fragments/admin :: header}">
 </header>
 <main class="container admin-main">
-<p class="notice" role="status" th:if="${message}" th:text="${message}">
-</p>
-<p class="error" role="alert" th:if="${error}" th:text="${error}">
-</p>
 <h1>Orders</h1>
-<p>Online ordering is not available yet. Order submission is Phase 3; fulfilment tools are Phase 4.</p>
-<a th:href="@{/admin/products}">Manage products</a>
+<form class="filter-form" th:action="@{/admin/orders/search}" method="post">
+<div>
+<label for="q">Order code or phone</label>
+<input id="q" name="q" th:value="${q}" maxlength="40" autocomplete="off">
+</div>
+<div>
+<label for="status">Status</label>
+<select id="status" name="status">
+<option value="">All</option>
+<option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.name()}" th:selected="${s.name() == selectedStatus}"></option>
+</select>
+</div>
+<button class="button">Search</button>
+</form>
+<p th:text="${results.totalRows + (results.totalRows == 1 ? ' order' : ' orders')}"></p>
+<div th:if="${!results.rows.isEmpty()}" th:replace="~{fragments/admin-orders :: table(${results.rows})}"></div>
+<form class="pagination" th:if="${results.totalPages > 1}" th:action="@{/admin/orders/search}" method="post">
+<input type="hidden" name="q" th:value="${q}">
+<input type="hidden" name="status" th:value="${selectedStatus}">
+<button name="page" th:value="${results.page - 1}" th:disabled="${results.page == 0}">Previous</button>
+<span th:text="${'Page ' + (results.page + 1) + ' of ' + results.totalPages}"></span>
+<button name="page" th:value="${results.page + 1}" th:disabled="${results.page + 1 >= results.totalPages}">Next</button>
+</form>
 </main>
 </body>
 </html>

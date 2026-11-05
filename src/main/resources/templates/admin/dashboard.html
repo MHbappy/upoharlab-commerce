@@ -16,18 +16,26 @@
 <p class="error" role="alert" th:if="${error}" th:text="${error}">
 </p>
 <h1>Dashboard</h1>
-<p>Keep your shop details and products ready in one place.</p>
 <div class="admin-links">
-<a class="panel" th:href="@{/admin/products}">
-<h2>Products</h2>
-<p>Edit details, photos and availability.</p>
+<a class="panel" th:href="@{/admin/orders(status='NEW')}">
+<p class="stat" th:text="${counts.fresh}"></p>
+<p>New orders</p>
 </a>
-<a class="panel" th:href="@{/admin/settings}">
-<h2>Business settings</h2>
-<p>Check contacts, delivery charges and reply times.</p>
+<a class="panel" th:href="@{/admin/orders(status='MAKING')}">
+<p class="stat" th:text="${counts.making}"></p>
+<p>Being made</p>
+</a>
+<a class="panel" th:href="@{/admin/orders(status='SHIPPED')}">
+<p class="stat" th:text="${counts.shipped}"></p>
+<p>Shipped, awaiting delivery</p>
 </a>
 </div>
-<p class="muted">Customer orders are saved once you enable ordering. The order list and fulfilment tools arrive in Phase 4.</p>
+<div class="section-heading">
+<h2>Recent orders</h2>
+<a th:href="@{/admin/orders}">All orders</a>
+</div>
+<p th:if="${recent.isEmpty()}">No orders yet.</p>
+<div th:unless="${recent.isEmpty()}" th:replace="~{fragments/admin-orders :: table(${recent})}"></div>
 </main>
 </body>
 </html>

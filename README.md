@@ -133,9 +133,22 @@ Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` for optional owner ale
 `APP_BASE_URL` to include an admin link in them. Alerts never contain a phone or address, and a
 failed alert does not affect the order. `ORDERS_PER_HOUR` limits new orders per IP address.
 
-Order operations and dashboard counts arrive in Phase 4; until then, saved orders are in the
-`orders` database table. Tracking arrives in Phase 6, so the confirmation page has no tracking
-link yet.
+Tracking arrives in Phase 6, so the confirmation page has no tracking link yet.
+
+## Managing orders (Phase 4)
+
+Open **Orders** in the admin. Search by code or phone, then work an order through its steps:
+
+`NEW` → `DESIGN_SENT` → `CONFIRMED` → `MAKING` → `SHIPPED` → `DELIVERED`, or `CANCELLED` before shipping.
+
+- **Confirming** needs written approval recorded and verified payments covering the advance.
+- **Payments:** check your bKash account or the actual settlement first, then record it. A customer's
+  screenshot alone is not verification. Overpayments, excess refunds and repeated transaction
+  references are rejected. Delivered does not mean paid, so record the balance when it arrives.
+- **Cancelling** shows the money you still hold. Refund outside the website, then record the refund.
+- **Corrections:** name, phone and address can change before shipping. Product, quantity, engraving and
+  delivery area cannot; cancel and take a new agreed order instead.
+- **WhatsApp buttons** only open a prepared message. Nothing is ever sent automatically.
 No customer or business data has been invented to make the shop appear live.
 
 Admin form login follows [Spring Security's official form-login guidance](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/form.html).

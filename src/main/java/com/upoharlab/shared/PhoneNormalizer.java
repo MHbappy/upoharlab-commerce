@@ -3,6 +3,12 @@ package com.upoharlab.shared;
 public final class PhoneNormalizer {
   private PhoneNormalizer() {}
 
+  /** For lists: 01712345678 becomes 01XXX-XXX678. */
+  public static String mask(String phone) {
+    if (phone == null || phone.length() < 3) return "";
+    return "01XXX-XXX" + phone.substring(phone.length() - 3);
+  }
+
   public static String normalize(String input) {
     if (input == null) throw new IllegalArgumentException("ফোন নম্বর লিখুন।");
     String phone = BnDigits.toLatin(input).replaceAll("[\\s\\p{Zs}-]", "");

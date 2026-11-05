@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="table(rows)" class="table-wrap">
+<table class="admin-table">
+<thead>
+<tr>
+<th scope="col">Order</th>
+<th scope="col">Placed</th>
+<th scope="col">Product</th>
+<th scope="col">Customer</th>
+<th scope="col">Phone</th>
+<th scope="col">Total</th>
+<th scope="col">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr th:each="o : ${rows}">
+<td><a th:href="@{/admin/orders/{code}(code=${o.code})}" th:text="${o.code}"></a></td>
+<td th:text="${@bn.time(o.createdAt)}"></td>
+<td th:text="${o.productTitle + ' × ' + o.quantity}"></td>
+<td th:text="${o.customerName}"></td>
+<td th:text="${o.maskedPhone}"></td>
+<td th:text="${'৳' + o.total}"></td>
+<td><span class="status-pill" th:text="${o.status}"></span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>

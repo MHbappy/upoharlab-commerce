@@ -30,18 +30,6 @@ public class AdminController {
     return "admin/login";
   }
 
-  @GetMapping({"", "/"})
-  String dashboard(Model m) {
-    m.addAttribute("title", "Dashboard");
-    return "admin/dashboard";
-  }
-
-  @GetMapping("/orders")
-  String orders(Model m) {
-    m.addAttribute("title", "Orders");
-    return "admin/orders";
-  }
-
   @GetMapping("/products")
   String list(Model m) {
     m.addAttribute("products", products.list(true));
