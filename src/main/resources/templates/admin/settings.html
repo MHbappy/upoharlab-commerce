@@ -17,9 +17,11 @@
 <p class="error" role="alert" th:if="${error}" th:text="${error}">
 </p>
 <h1>Business settings</h1>
-<p>Keep unknown values empty. Check all contacts, charges and durations before enabling orders. The order form itself comes in Phase 3.</p>
+<p>Keep unknown values empty. All contacts, charges and durations are needed before you can enable orders.</p>
 <form class="form-width" th:object="${settingsForm}" th:action="@{/admin/settings}" method="post">
 <p th:if="${#fields.hasAnyErrors()}" class="error" role="alert">Please correct the fields below.</p>
+<fieldset class="edit-section">
+<legend>Business contacts</legend>
 <div class="field">
 <label for="phone">Business phone</label>
 <input id="phone" th:field="*{values[phone]}" type="text">
@@ -44,6 +46,10 @@
 <p class="error" th:if="${#fields.hasErrors('values[business_email]')}" th:errors="*{values[business_email]}">
 </p>
 </div>
+</fieldset>
+<fieldset class="edit-section">
+<legend>Delivery charges</legend>
+<p class="muted">The first values are trial charges. Confirm them before enabling orders.</p>
 <div class="field">
 <label for="delivery_inside">Delivery inside Dhaka (taka)</label>
 <input id="delivery_inside" th:field="*{values[delivery_inside]}" type="number">
@@ -56,6 +62,9 @@
 <p class="error" th:if="${#fields.hasErrors('values[delivery_outside]')}" th:errors="*{values[delivery_outside]}">
 </p>
 </div>
+</fieldset>
+<fieldset class="edit-section">
+<legend>Courier time and reply time</legend>
 <div class="field">
 <label for="courier_days_inside_min">Inside Dhaka courier days — minimum</label>
 <input id="courier_days_inside_min" th:field="*{values[courier_days_inside_min]}" type="number">
@@ -86,6 +95,9 @@
 <p class="error" th:if="${#fields.hasErrors('values[reply_hours]')}" th:errors="*{values[reply_hours]}">
 </p>
 </div>
+</fieldset>
+<fieldset class="edit-section">
+<legend>Taking orders</legend>
 <div class="field">
 <label for="accepting_orders">Accepting new orders</label>
 <select id="accepting_orders" th:field="*{values[accepting_orders]}">
@@ -102,6 +114,7 @@
 <p class="error" th:if="${#fields.hasErrors('values[pause_notice]')}" th:errors="*{values[pause_notice]}">
 </p>
 </div>
+</fieldset>
 <button class="button">Save settings</button>
 </form>
 </main>

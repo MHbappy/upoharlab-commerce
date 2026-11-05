@@ -1,12 +1,14 @@
 package com.upoharlab.product;
 
 public class ProductForm {
-  @jakarta.validation.constraints.NotBlank
+  @jakarta.validation.constraints.NotBlank(message = "Enter the product name.")
   @jakarta.validation.constraints.Size(max = 200)
   private String title;
 
-  @jakarta.validation.constraints.NotBlank
-  @jakarta.validation.constraints.Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*")
+  @jakarta.validation.constraints.NotNull(message = "Enter a URL slug.")
+  @jakarta.validation.constraints.Pattern(
+      regexp = "[a-z0-9]+(?:-[a-z0-9]+)*",
+      message = "Use lowercase English letters, numbers and single hyphens, like door-name-plate.")
   @jakarta.validation.constraints.Size(max = 150)
   private String slug;
 
@@ -34,8 +36,8 @@ public class ProductForm {
   @jakarta.validation.constraints.Size(max = 500)
   private String quantityHelp;
 
-  @jakarta.validation.constraints.Min(1)
-  @jakarta.validation.constraints.Max(1000000)
+  @jakarta.validation.constraints.Min(value = 1, message = "Enter a price above zero.")
+  @jakarta.validation.constraints.Max(value = 1000000, message = "Price can be at most 1,000,000.")
   private Integer price;
 
   @jakarta.validation.constraints.Min(0)

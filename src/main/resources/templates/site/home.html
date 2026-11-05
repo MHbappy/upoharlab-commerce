@@ -7,11 +7,8 @@
 </header>
   <main id="main" class="container">
     <section class="intro" aria-labelledby="welcome-title">
-      <p class="eyebrow">একটি নাম, একটি আপন উপহার</p>
-      <h1 id="welcome-title">আপনার প্রিয়জনের নাম,<br>যত্নে খোদাই করা</h1>
+      <h1 id="welcome-title">আপনার প্রিয়জনের নাম, যত্নে খোদাই করা</h1>
       <p class="lead">নামের চাবির রিং, বাসা ও অফিসের নেমপ্লেট। বানানোর আগে ডিজাইন দেখাব।</p>
-      <a class="button" href="#products">পণ্য দেখুন <span aria-hidden="true">↓</span>
-</a>
     </section>
     <section th:if="${products.isEmpty()}" id="products" class="availability" aria-labelledby="products-title">
       <p class="eyebrow">আমাদের পণ্য</p>
@@ -21,15 +18,14 @@
     </section>
     <section th:unless="${products.isEmpty()}" id="products" aria-labelledby="catalog-title">
 <h2 id="catalog-title">আপনার জন্য উপহার</h2>
+<p class="notice" role="status" th:if="${settings['accepting_orders'] != 'true'}" th:text="${#strings.isEmpty(settings['pause_notice']) ? 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।' : settings['pause_notice']}"></p>
 <div class="product-grid">
-<article class="panel" th:each="p : ${products}">
-<a th:href="@{/p/{slug}(slug=${p.details.slug})}">
-<img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" loading="lazy">
-<h3 th:text="${p.details.title}">
-</h3>
-</a>
-<p th:text="${@bn.money(p.details.price)}">
-</p>
+<article class="panel product-card" th:each="p, row : ${products}">
+<img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" th:attr="loading=${row.index < 3 ? 'eager' : 'lazy'}">
+<h3><a class="card-link" th:href="@{/p/{slug}(slug=${p.details.slug})}" th:text="${p.details.title}"></a></h3>
+<p class="card-description" th:if="${!#strings.isEmpty(p.details.shortDescription)}" th:text="${p.details.shortDescription}"></p>
+<p class="badge" th:if="${p.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
+<p class="card-footer"><span class="card-price" th:text="${@bn.money(p.details.price)}"></span><span class="card-action" aria-hidden="true">বিস্তারিত দেখুন →</span></p>
 </article>
 </div>
 </section>
@@ -61,8 +57,8 @@
     <section class="contact" th:if="${whatsapp != null or !#strings.isEmpty(settings['phone'])}">
 <h2>কিছু জানতে চান?</h2>
 <p>পণ্য বা খোদাই করার লেখা নিয়ে আমাদের সঙ্গে কথা বলুন।</p>
-<a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ কথা বলুন</a>
-<p th:if="${!#strings.isEmpty(settings['phone'])}"><a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
+<a class="button" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ কথা বলুন</a>
+<p class="contact-phone" th:if="${!#strings.isEmpty(settings['phone'])}">অথবা ফোন করুন: <a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
 </section>
   </main>
   <footer th:replace="~{fragments/footer :: footer}">

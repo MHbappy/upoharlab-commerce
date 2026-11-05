@@ -224,6 +224,22 @@ class AdminHttpTest {
   }
 
   @Test
+  void editorExplainsBadValuesInPlainWords() throws Exception {
+    var client = login();
+    String token = csrf(get(client, "/admin/products/new").body());
+    var page =
+        post(
+            client,
+            "/admin/products/new",
+            "_csrf=" + enc(token) + "&title=Test&slug=Bad+Slug&price=abc&sortOrder=&status=DRAFT");
+    assertThat(page.statusCode()).isEqualTo(200);
+    assertThat(page.body())
+        .contains("Use lowercase English letters", "Enter a whole number.")
+        .doesNotContain("Failed to convert", "[a-z0-9]+")
+        .contains("form=\"product-form\"");
+  }
+
+  @Test
   void courierDaysMustBeSavedAsAPair() throws Exception {
     var client = login();
     String token = csrf(get(client, "/admin/settings").body());

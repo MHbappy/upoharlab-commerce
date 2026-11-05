@@ -95,10 +95,16 @@ public class ProductStore {
             row.id()));
   }
 
+  /** Holds the product row for this transaction. An unknown product is a 404. */
+  public void lock(long id) {
+    if (db.queryForList("SELECT id FROM product WHERE id=? FOR UPDATE", Long.class, id).isEmpty())
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+  }
+
   @Transactional
   public Long save(Long id, ProductForm f, Errors errors) {
     if (id != null) {
-      db.queryForObject("SELECT id FROM product WHERE id=? FOR UPDATE", Long.class, id);
+      lock(id);
       if (get(id).details().getIndoorOnly()) f.setIndoorOnly(true);
     }
     if (db.queryForObject(
@@ -159,7 +165,7 @@ public class ProductStore {
 
   @Transactional
   public void removePhoto(long product, long photo) {
-    db.queryForObject("SELECT id FROM product WHERE id=? FOR UPDATE", Long.class, product);
+    lock(product);
     Page p = get(product);
     if (!p.details().getStatus().equals("DRAFT") && p.photos().size() <= 1)
       throw new IllegalArgumentException("Set the product to draft before removing its last photo.");
@@ -168,7 +174,7 @@ public class ProductStore {
 
   @Transactional
   public void movePhoto(long product, long photo, String direction) {
-    db.queryForObject("SELECT id FROM product WHERE id=? FOR UPDATE", Long.class, product);
+    lock(product);
     var photos = get(product).photos();
     for (int i = 0; i < photos.size(); i++)
       if (photos.get(i).id() == photo) {

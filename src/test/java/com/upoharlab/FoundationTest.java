@@ -180,10 +180,45 @@ class FoundationTest {
                 HttpResponse.BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(response.body()).contains("শুধু ঘরের ভেতরের জন্য", "৳৫০০");
+    assertThat(response.body())
+        .as("shop is closed: the reason replaces ordering, and one photo needs no thumbnails")
+        .contains("এখনো অনলাইনে অর্ডার নেওয়া শুরু হয়নি")
+        .doesNotContain("href=\"#order\"", "id=\"order\"", "class=\"thumbnails\"");
+    var home =
+        HttpClient.newHttpClient()
+            .send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/")).build(),
+                HttpResponse.BodyHandlers.ofString());
+    assertThat(home.body())
+        .as("card shows the facts, and the home page says ordering is closed")
+        .contains("পরীক্ষার পণ্য", "Description", "৳৫০০", "শুধু ঘরের ভেতরের জন্য")
+        .contains("এখনো অনলাইনে অর্ডার নেওয়া শুরু হয়নি");
     f.setStatus("PAUSED");
     products.save(
         id, f, new org.springframework.validation.BeanPropertyBindingResult(f, "productForm"));
     assertThat(products.list(false)).noneMatch(p -> p.id() == id);
+  }
+
+  @Test
+  void unknownProductIsNotFoundInsteadOfAServerError() {
+    var f = draft();
+    assertThatThrownBy(
+            () ->
+                products.save(
+                    999999L,
+                    f,
+                    new org.springframework.validation.BeanPropertyBindingResult(f, "productForm")))
+        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+    assertThatThrownBy(() -> products.movePhoto(999999L, 1L, "up"))
+        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+    assertThatThrownBy(
+            () ->
+                images.upload(
+                    999999L,
+                    new org.springframework.mock.web.MockMultipartFile(
+                        "photo", "a.png", "image/png", new byte[] {1}),
+                    "Photo"))
+        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
   }
 
   @Test

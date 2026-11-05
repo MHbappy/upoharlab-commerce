@@ -17,15 +17,18 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImageStorage {
   private final Path root;
   private final JdbcTemplate db;
+  private final ProductStore products;
 
-  public ImageStorage(@Value("${app.uploads-directory}") String root, JdbcTemplate db) {
+  public ImageStorage(
+      @Value("${app.uploads-directory}") String root, JdbcTemplate db, ProductStore products) {
     this.root = Path.of(root).toAbsolutePath().normalize();
     this.db = db;
+    this.products = products;
   }
 
   @Transactional
   public void upload(long product, MultipartFile file, String alt) throws IOException {
-    db.queryForObject("SELECT id FROM product WHERE id=? FOR UPDATE", Long.class, product);
+    products.lock(product);
     if (file.isEmpty() || file.getSize() > 5 * 1024 * 1024)
       throw new IllegalArgumentException("Choose a JPEG or PNG up to 5 MB.");
     if (alt == null || alt.isBlank() || alt.length() > 250)

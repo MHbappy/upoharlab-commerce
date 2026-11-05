@@ -19,21 +19,26 @@
 <a th:href="@{/admin/products}">← Products</a>
 <h1 th:text="${productId == null ? 'Add product' : 'Edit product'}">
 </h1>
-<p>Save a draft first, add photos, then publish when details are ready.</p>
-<a th:if="${productId != null}" th:href="@{/admin/products/{id}/preview(id=${productId})}">Preview product</a>
-<form class="product-form" th:object="${productForm}" th:action="${productId == null ? '/admin/products/new' : '/admin/products/' + productId}" method="post">
+<p th:text="${productId == null ? 'Save a draft first. You can add photos and publish after that.' : 'Fill in the details, add photos, then publish when everything is ready.'}">
+</p>
+<p th:if="${productId != null}"><a th:href="@{/admin/products/{id}/preview(id=${productId})}">Preview product</a></p>
+<div class="product-form" th:object="${productForm}">
 <div th:if="${#fields.hasAnyErrors()}" class="error" role="alert">
-<p>Please correct the fields below.</p>
+<p>Please correct the fields marked below.</p>
 </div>
+<form id="product-form" th:action="${productId == null ? '/admin/products/new' : '/admin/products/' + productId}" method="post">
+<fieldset class="edit-section">
+<legend>Basic information</legend>
 <div class="field">
 <label for="title">Product name (Bangla)</label>
-<input id="title" th:field="*{title}" type="text">
+<input id="title" th:field="*{title}" type="text" maxlength="200">
 <p class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">
 </p>
 </div>
 <div class="field">
 <label for="slug">Product URL slug</label>
-<input id="slug" th:field="*{slug}" type="text">
+<input id="slug" th:field="*{slug}" type="text" maxlength="150" aria-describedby="slug-help">
+<p id="slug-help" class="field-help">Lowercase English letters, numbers and hyphens. Changing it on a published product breaks links already shared.</p>
 <p class="error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">
 </p>
 </div>
@@ -44,33 +49,37 @@
 <p class="error" th:if="${#fields.hasErrors('shortDescription')}" th:errors="*{shortDescription}">
 </p>
 </div>
+</fieldset>
+<fieldset class="edit-section">
+<legend>Price and details</legend>
 <div class="field">
-<label for="description">Extra details (optional)</label>
-<textarea id="description" th:field="*{description}" rows="3">
-</textarea>
-<p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">
+<label for="price">Price (whole taka)</label>
+<input id="price" th:field="*{price}" type="number" min="1" max="1000000" step="1">
+<p class="error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">
 </p>
 </div>
 <div class="field">
 <label for="includes">What is included</label>
-<textarea id="includes" th:field="*{includes}" rows="3">
+<textarea id="includes" th:field="*{includes}" rows="2">
 </textarea>
 <p class="error" th:if="${#fields.hasErrors('includes')}" th:errors="*{includes}">
 </p>
 </div>
+<div class="field-row">
+<div class="field">
+<label for="size">Size</label>
+<textarea id="size" th:field="*{size}" rows="2">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('size')}" th:errors="*{size}">
+</p>
+</div>
 <div class="field">
 <label for="material">Material</label>
-<textarea id="material" th:field="*{material}" rows="3">
+<textarea id="material" th:field="*{material}" rows="2">
 </textarea>
 <p class="error" th:if="${#fields.hasErrors('material')}" th:errors="*{material}">
 </p>
 </div>
-<div class="field">
-<label for="size">Size</label>
-<textarea id="size" th:field="*{size}" rows="3">
-</textarea>
-<p class="error" th:if="${#fields.hasErrors('size')}" th:errors="*{size}">
-</p>
 </div>
 <div class="field">
 <label for="engravingHelp">Engraving instructions and limits</label>
@@ -79,11 +88,24 @@
 <p class="error" th:if="${#fields.hasErrors('engravingHelp')}" th:errors="*{engravingHelp}">
 </p>
 </div>
+<div class="field-row">
 <div class="field">
-<label for="care">Care (optional)</label>
-<textarea id="care" th:field="*{care}" rows="3">
-</textarea>
-<p class="error" th:if="${#fields.hasErrors('care')}" th:errors="*{care}">
+<label for="makingDaysMin">Making days, minimum</label>
+<input id="makingDaysMin" th:field="*{makingDaysMin}" type="number" min="0" max="365" step="1">
+<p class="error" th:if="${#fields.hasErrors('makingDaysMin')}" th:errors="*{makingDaysMin}">
+</p>
+</div>
+<div class="field">
+<label for="makingDaysMax">Making days, maximum</label>
+<input id="makingDaysMax" th:field="*{makingDaysMax}" type="number" min="0" max="365" step="1">
+<p class="error" th:if="${#fields.hasErrors('makingDaysMax')}" th:errors="*{makingDaysMax}">
+</p>
+</div>
+</div>
+<div class="field">
+<label class="check-row" for="indoorOnly"><input type="checkbox" id="indoorOnly" th:field="*{indoorOnly}"> Indoor use only</label>
+<p class="field-help">Shows the indoor-only warning to customers. It stays on once saved.</p>
+<p class="error" th:if="${#fields.hasErrors('indoorOnly')}" th:errors="*{indoorOnly}">
 </p>
 </div>
 <div class="field">
@@ -94,60 +116,34 @@
 </p>
 </div>
 <div class="field">
-<label for="price">Price (whole taka)</label>
-<input id="price" th:field="*{price}" type="number">
-<p class="error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">
+<label for="description">Extra details (optional)</label>
+<textarea id="description" th:field="*{description}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">
 </p>
 </div>
 <div class="field">
-<label for="makingDaysMin">Making days — minimum</label>
-<input id="makingDaysMin" th:field="*{makingDaysMin}" type="number">
-<p class="error" th:if="${#fields.hasErrors('makingDaysMin')}" th:errors="*{makingDaysMin}">
+<label for="care">Care (optional)</label>
+<textarea id="care" th:field="*{care}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('care')}" th:errors="*{care}">
 </p>
 </div>
-<div class="field">
-<label for="makingDaysMax">Making days — maximum</label>
-<input id="makingDaysMax" th:field="*{makingDaysMax}" type="number">
-<p class="error" th:if="${#fields.hasErrors('makingDaysMax')}" th:errors="*{makingDaysMax}">
-</p>
-</div>
-<div class="field">
-<label for="indoorOnly">Indoor use only</label>
-<input type="checkbox" id="indoorOnly" th:field="*{indoorOnly}">
-<span>Indoor use only (kept once enabled)</span>
-<p class="error" th:if="${#fields.hasErrors('indoorOnly')}" th:errors="*{indoorOnly}">
-</p>
-</div>
-<div class="field">
-<label for="status">Publishing status</label>
-<select id="status" th:field="*{status}">
-<option value="DRAFT">Draft — hidden from customers</option>
-<option value="ACTIVE">Active — visible in the shop</option>
-<option value="PAUSED">Paused — visible, ordering paused</option>
-</select>
-<p class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">
-</p>
-</div>
-<div class="field">
-<label for="sortOrder">Display order</label>
-<input id="sortOrder" th:field="*{sortOrder}" type="number">
-<p class="error" th:if="${#fields.hasErrors('sortOrder')}" th:errors="*{sortOrder}">
-</p>
-</div>
-<button class="button">Save product</button>
+</fieldset>
+<p class="form-actions"><button class="button" th:text="${productId == null ? 'Save draft' : 'Save details'}">Save details</button></p>
 </form>
-<section th:if="${productId != null}" class="photos-editor">
-<h2>Product photos</h2>
-<p>Use your own JPEG or PNG product photos. Maximum 5 MB and 20 megapixels.</p>
-<div class="photo-row" th:each="photo : ${photos}">
+<section th:if="${productId != null}" class="edit-section photos-editor" aria-labelledby="photos-title">
+<h2 id="photos-title">Photos</h2>
+<p>Use your own JPEG or PNG product photos, up to 5 MB and 20 megapixels. The first photo is the main one. Save any text changes above before adding a photo, because adding one reloads this page.</p>
+<div class="photo-row" th:each="photo, row : ${photos}">
 <img th:src="@{/media/{name}(name=${photo.filename})}" th:alt="${photo.alt}" width="120">
 <div>
 <p th:text="${photo.alt}">
 </p>
 <div class="photo-actions">
 <form th:action="@{/admin/products/{id}/photos/{photo}/move(id=${productId},photo=${photo.id})}" method="post">
-<button name="direction" value="up">Move up</button>
-<button name="direction" value="down">Move down</button>
+<button name="direction" value="up" th:disabled="${row.first}">Move up</button>
+<button name="direction" value="down" th:disabled="${row.last}">Move down</button>
 </form>
 <form th:action="@{/admin/products/{id}/photos/{photo}/remove(id=${productId},photo=${photo.id})}" method="post">
 <button>Remove photo</button>
@@ -156,13 +152,35 @@
 </div>
 </div>
 <form th:action="@{/admin/products/{id}/photos(id=${productId})}" method="post" enctype="multipart/form-data">
-<label for="photo">Photo</label>
+<label for="photo">Add a photo</label>
 <input id="photo" name="photo" type="file" accept="image/jpeg,image/png" required>
 <label for="alt">Describe this photo (Bangla)</label>
 <input id="alt" name="alt" maxlength="250" required>
 <button class="button">Add photo</button>
 </form>
 </section>
+<fieldset class="edit-section">
+<legend>Publishing</legend>
+<div class="field">
+<label for="status">Status</label>
+<select id="status" form="product-form" th:field="*{status}">
+<option value="DRAFT">Draft: hidden from customers</option>
+<option value="ACTIVE">Active: visible and can be ordered</option>
+<option value="PAUSED">Paused: visible, ordering stopped</option>
+</select>
+<p class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">
+</p>
+</div>
+<div class="field">
+<label for="sortOrder">Display order</label>
+<input id="sortOrder" form="product-form" th:field="*{sortOrder}" type="number" min="0" step="1" aria-describedby="sort-help">
+<p id="sort-help" class="field-help">Lower numbers appear first in the shop.</p>
+<p class="error" th:if="${#fields.hasErrors('sortOrder')}" th:errors="*{sortOrder}">
+</p>
+</div>
+</fieldset>
+<p class="form-actions"><button class="button" form="product-form">Save product</button></p>
+</div>
 </main>
 </body>
 </html>

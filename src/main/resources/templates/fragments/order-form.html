@@ -98,13 +98,17 @@
 </div>
 </fieldset>
 
-<section class="order-summary" aria-labelledby="summary-title" aria-live="polite" data-order-summary th:attr="data-unit=${prices.unit},data-inside=${prices.inside},data-outside=${prices.outside}">
+<section class="order-summary" aria-labelledby="summary-title" aria-live="polite" data-order-summary th:with="courierInside=${#strings.isEmpty(settings['courier_days_inside_max']) ? '' : @bn.digits(settings['courier_days_inside_min']) + '–' + @bn.digits(settings['courier_days_inside_max']) + ' দিন'},courierOutside=${#strings.isEmpty(settings['courier_days_outside_max']) ? '' : @bn.digits(settings['courier_days_outside_min']) + '–' + @bn.digits(settings['courier_days_outside_max']) + ' দিন'}" th:attr="data-unit=${prices.unit},data-inside=${prices.inside},data-outside=${prices.outside},data-courier-inside=${courierInside},data-courier-outside=${courierOutside}">
 <h3 id="summary-title">মোট হিসাব</h3>
 <dl>
 <dt>পণ্য</dt>
 <dd data-line="subtotal" th:text="${quote.subtotal != null ? @bn.money(quote.unit) + ' × ' + @bn.digits(quote.quantity) + ' = ' + @bn.money(quote.subtotal) : 'সঠিক পরিমাণ লিখুন'}"></dd>
 <dt>ডেলিভারি</dt>
 <dd data-line="delivery" th:text="${quote.delivery != null ? @bn.money(quote.delivery) : 'ঢাকায় ' + @bn.money(prices.inside) + ', ঢাকার বাইরে ' + @bn.money(prices.outside)}"></dd>
+<th:block th:if="${!#strings.isEmpty(courierInside) and !#strings.isEmpty(courierOutside)}">
+<dt>কুরিয়ারে সময়</dt>
+<dd data-line="courier" th:text="${orderForm.area == 'INSIDE' ? courierInside : (orderForm.area == 'OUTSIDE' ? courierOutside : 'এলাকা বাছলে দেখাবে')}"></dd>
+</th:block>
 <dt class="total">মোট</dt>
 <dd class="total" data-line="total" th:text="${quote.total != null ? @bn.money(quote.total) : 'এলাকা বাছলে দেখাবে'}"></dd>
 <dt>ডিজাইনে সম্মতির পরে ৫০% অগ্রিম</dt>

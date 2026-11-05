@@ -29,6 +29,9 @@
       var both = "ঢাকায় " + money(charges.INSIDE) + ", ঢাকার বাইরে " + money(charges.OUTSIDE);
       set("subtotal", valid ? money(unit) + " × " + toBangla(quantity) + " = " + money(unit * quantity) : "সঠিক পরিমাণ লিখুন");
       set("delivery", delivery === null ? both : money(delivery));
+      if (summary.querySelector('[data-line="courier"]')) {
+        set("courier", area ? (area.value === "INSIDE" ? summary.dataset.courierInside : summary.dataset.courierOutside) : "এলাকা বাছলে দেখাবে");
+      }
       if (valid && delivery !== null) {
         var total = unit * quantity + delivery;
         var advance = Math.floor((total + 1) / 2);
@@ -50,6 +53,18 @@
     var quoteButton = form.querySelector('button[value="quote"]');
     if (quoteButton) quoteButton.hidden = true;
     update();
+  }
+
+  // Without JavaScript a thumbnail simply opens the full photo.
+  var mainPhoto = document.querySelector(".main-photo");
+  if (mainPhoto) {
+    document.querySelectorAll(".thumbnails a").forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        mainPhoto.src = link.href;
+        mainPhoto.alt = link.querySelector("img").alt;
+      });
+    });
   }
 
   var errorSummary = document.getElementById("order-errors");

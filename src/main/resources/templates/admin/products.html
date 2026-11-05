@@ -22,13 +22,13 @@
 </div>
 <div class="product-grid">
 <article class="panel" th:each="p : ${products}">
-<p class="eyebrow" th:text="${p.details.status}">
-</p>
+<img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" loading="lazy">
+<p><span class="status-pill" th:text="${p.details.status == 'ACTIVE' ? 'Active' : (p.details.status == 'PAUSED' ? 'Paused' : 'Draft')}"></span></p>
 <h2 th:text="${p.details.title}">
 </h2>
-<p th:if="${p.details.price != null}" th:text="${'৳' + p.details.price}">
+<p th:text="${p.details.price != null ? '৳' + p.details.price : 'No price yet'}">
 </p>
-<a th:href="@{/admin/products/{id}(id=${p.id})}">Edit product</a>
+<p class="photo-actions"><a th:href="@{/admin/products/{id}(id=${p.id})}">Edit product</a><a th:href="@{/admin/products/{id}/preview(id=${p.id})}">Preview</a></p>
 </article>
 </div>
 </main>

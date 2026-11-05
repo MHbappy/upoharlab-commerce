@@ -89,6 +89,29 @@ class OrderFlowTest {
   }
 
   @Test
+  void summaryShowsCourierTimeOnlyForTheChosenArea() throws Exception {
+    OrderTestSupport.setting(db, "courier_days_inside_min", "1");
+    OrderTestSupport.setting(db, "courier_days_inside_max", "2");
+    OrderTestSupport.setting(db, "courier_days_outside_min", "3");
+    OrderTestSupport.setting(db, "courier_days_outside_max", "5");
+    try {
+      String line = "data-line=\"courier\">";
+      assertThat(new Browser(port).open().get("/p/" + SLUG).body())
+          .contains(line + "এলাকা বাছলে দেখাবে");
+      assertThat(browser().order("quote", Map.of("quantity", "1", "area", "OUTSIDE")).body())
+          .contains(line + "৩–৫ দিন");
+    } finally {
+      for (String key :
+          new String[] {
+            "courier_days_inside_min",
+            "courier_days_inside_max",
+            "courier_days_outside_min",
+            "courier_days_outside_max"
+          }) OrderTestSupport.setting(db, key, "");
+    }
+  }
+
+  @Test
   void quoteShowsBreakdownAndNeverSaves() throws Exception {
     var page = browser().order("quote", Map.of("quantity", "2"));
     assertThat(page.statusCode()).isEqualTo(200);
