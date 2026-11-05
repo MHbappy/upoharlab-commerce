@@ -22,6 +22,10 @@ services:
     environment:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      APP_BASE_URL: ${APP_BASE_URL:-}
+      ORDERS_PER_HOUR: ${ORDERS_PER_HOUR:-5}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-upoharlab}
       DB_USER: ${DB_USER:-upoharlab}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}

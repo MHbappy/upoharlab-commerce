@@ -26,28 +26,36 @@ public class ProductStore {
   public record Page(long id, ProductForm details, List<Photo> photos) {}
 
   public List<Page> list(boolean admin) {
-    return db.query(
-        "SELECT * FROM product "
-            + (admin ? "" : "WHERE status='ACTIVE' ")
-            + "ORDER BY sort_order,id",
-        (r, n) -> page(r));
+    return db
+        .query(
+            "SELECT * FROM product "
+                + (admin ? "" : "WHERE status='ACTIVE' ")
+                + "ORDER BY sort_order,id",
+            (r, n) -> row(r))
+        .stream()
+        .map(this::withPhotos)
+        .toList();
   }
 
   public Page get(long id) {
-    return db.query("SELECT * FROM product WHERE id=?", (r, n) -> page(r), id).stream()
+    return db.query("SELECT * FROM product WHERE id=?", (r, n) -> row(r), id).stream()
         .findFirst()
+        .map(this::withPhotos)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
   public Page bySlug(String slug) {
     return db
-        .query("SELECT * FROM product WHERE slug=? AND status<>'DRAFT'", (r, n) -> page(r), slug)
+        .query("SELECT * FROM product WHERE slug=? AND status<>'DRAFT'", (r, n) -> row(r), slug)
         .stream()
         .findFirst()
+        .map(this::withPhotos)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
-  private Page page(ResultSet r) throws SQLException {
+  private record Row(long id, ProductForm details) {}
+
+  private Row row(ResultSet r) throws SQLException {
     ProductForm f = new ProductForm();
     f.setTitle(r.getString("title_bn"));
     f.setSlug(r.getString("slug"));
@@ -58,16 +66,24 @@ public class ProductStore {
     f.setSize(r.getString("size_bn"));
     f.setEngravingHelp(r.getString("engraving_help_bn"));
     f.setCare(r.getString("care_bn"));
+    f.setQuantityHelp(r.getString("quantity_help_bn"));
     f.setPrice((Integer) r.getObject("price"));
     f.setMakingDaysMin((Integer) r.getObject("making_days_min"));
     f.setMakingDaysMax((Integer) r.getObject("making_days_max"));
     f.setIndoorOnly(r.getBoolean("indoor_only"));
     f.setStatus(r.getString("status"));
     f.setSortOrder(r.getInt("sort_order"));
-    long id = r.getLong("id");
+    return new Row(r.getLong("id"), f);
+  }
+
+  /**
+   * Must run after the product query has finished, never inside its row mapper. A nested query
+   * holds one pooled connection while waiting for another, which freezes the site under load.
+   */
+  private Page withPhotos(Row row) {
     return new Page(
-        id,
-        f,
+        row.id(),
+        row.details(),
         db.query(
             "SELECT * FROM product_image WHERE product_id=? ORDER BY sort_order,id",
             (i, n) ->
@@ -76,7 +92,7 @@ public class ProductStore {
                     i.getString("filename"),
                     i.getString("alt_bn"),
                     i.getInt("sort_order")),
-            id));
+            row.id()));
   }
 
   @Transactional
@@ -95,7 +111,7 @@ public class ProductStore {
         && f.getMakingDaysMax() != null
         && f.getMakingDaysMax() < f.getMakingDaysMin())
       errors.rejectValue("makingDaysMax", "range", "Maximum days must be at least the minimum.");
-    if ("ACTIVE".equals(f.getStatus())) {
+    if (!"DRAFT".equals(f.getStatus())) {
       for (String field :
           List.of("shortDescription", "includes", "material", "size", "engravingHelp")) {
         String value =
@@ -124,9 +140,9 @@ public class ProductStore {
     if (id == null)
       return named.queryForObject(
           "INSERT INTO"
-              + " product(title_bn,slug,short_description_bn,description_bn,includes_bn,material_bn,size_bn,engraving_help_bn,care_bn,price,making_days_min,making_days_max,indoor_only,status,sort_order)"
+              + " product(title_bn,slug,short_description_bn,description_bn,includes_bn,material_bn,size_bn,engraving_help_bn,care_bn,quantity_help_bn,price,making_days_min,making_days_max,indoor_only,status,sort_order)"
               + " VALUES"
-              + " (:title,:slug,:shortDescription,:description,:includes,:material,:size,:engravingHelp,:care,:price,:makingDaysMin,:makingDaysMax,:indoorOnly,:status,:sortOrder)"
+              + " (:title,:slug,:shortDescription,:description,:includes,:material,:size,:engravingHelp,:care,:quantityHelp,:price,:makingDaysMin,:makingDaysMax,:indoorOnly,:status,:sortOrder)"
               + " RETURNING id",
           params,
           Long.class);
@@ -135,7 +151,7 @@ public class ProductStore {
     map.addValue("id", id);
     named.update(
         "UPDATE product SET"
-            + " title_bn=:title,slug=:slug,short_description_bn=:shortDescription,description_bn=:description,includes_bn=:includes,material_bn=:material,size_bn=:size,engraving_help_bn=:engravingHelp,care_bn=:care,price=:price,making_days_min=:makingDaysMin,making_days_max=:makingDaysMax,indoor_only=:indoorOnly,status=:status,sort_order=:sortOrder,updated_at=now()"
+            + " title_bn=:title,slug=:slug,short_description_bn=:shortDescription,description_bn=:description,includes_bn=:includes,material_bn=:material,size_bn=:size,engraving_help_bn=:engravingHelp,care_bn=:care,quantity_help_bn=:quantityHelp,price=:price,making_days_min=:makingDaysMin,making_days_max=:makingDaysMax,indoor_only=:indoorOnly,status=:status,sort_order=:sortOrder,updated_at=now()"
             + " WHERE id=:id",
         map);
     return id;
@@ -145,8 +161,8 @@ public class ProductStore {
   public void removePhoto(long product, long photo) {
     db.queryForObject("SELECT id FROM product WHERE id=? FOR UPDATE", Long.class, product);
     Page p = get(product);
-    if (p.details().getStatus().equals("ACTIVE") && p.photos().size() <= 1)
-      throw new IllegalArgumentException("Pause the product before removing its last photo.");
+    if (!p.details().getStatus().equals("DRAFT") && p.photos().size() <= 1)
+      throw new IllegalArgumentException("Set the product to draft before removing its last photo.");
     db.update("DELETE FROM product_image WHERE id=? AND product_id=?", photo, product);
   }
 

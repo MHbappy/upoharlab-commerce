@@ -7,6 +7,7 @@
 <title th:text="${product.details.title + ' — উপহার ল্যাব'}">
 </title>
 <link rel="stylesheet" th:href="@{/css/app.css}">
+<script th:src="@{/js/order.js}" defer></script>
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}">
@@ -33,7 +34,8 @@
 <p th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}" th:text="${'ডেলিভারি আলাদা: ঢাকায় ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside'])}">
 </p>
 <p class="badge" th:if="${product.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
-<p th:if="${product.details.slug == 'keyring-gift-pair'}">প্রতি সেটে দুটি চাবির রিং পাবেন। পরিমাণ ১ মানে এক জোড়া।</p>
+<p th:if="${!#strings.isEmpty(product.details.quantityHelp)}" th:text="${product.details.quantityHelp}">
+</p>
 <dl>
 <th:block th:each="fact : ${ {'কী পাবেন': product.details.includes, 'মাপ': product.details.size, 'উপাদান': product.details.material, 'কী লেখা যাবে': product.details.engravingHelp} }">
 <dt th:if="${!#strings.isEmpty(fact.value)}" th:text="${fact.key}">
@@ -52,14 +54,11 @@
 <p th:if="${!#strings.isEmpty(settings['courier_days_outside_min'])}" th:text="${'ঢাকার বাইরে কুরিয়ার: ' + @bn.digits(settings['courier_days_outside_min']) + '–' + @bn.digits(settings['courier_days_outside_max']) + ' দিন।'}">
 </p>
 </section>
-<section id="order" class="panel">
-<p th:if="${product.details.status == 'PAUSED'}">এই পণ্যের অর্ডার এখন বন্ধ আছে।</p>
-<p th:unless="${product.details.status == 'PAUSED'}" th:text="${settings['accepting_orders'] == 'false' and !#strings.isEmpty(settings['pause_notice']) ? settings['pause_notice'] : 'অনলাইনে অর্ডার নেওয়া এখনো চালু হয়নি।'}">
-</p>
-<a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ জানতে চান</a>
-</section>
+<a class="button" th:if="${orderable}" href="#order">অর্ডার করুন</a>
 </section>
 </div>
+<section th:replace="~{fragments/order-form :: order}">
+</section>
 <section class="reading-width" th:if="${!#strings.isEmpty(product.details.description)}">
 <h2>আরও বিস্তারিত</h2>
 <p class="preserve-lines" th:text="${product.details.description}">

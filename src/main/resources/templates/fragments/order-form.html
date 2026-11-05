@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="order" id="order" class="panel order-section" aria-labelledby="order-title">
+<h2 id="order-title">অর্ডার করুন</h2>
+<p class="notice" role="status" th:if="${orderMessage}" th:text="${orderMessage}">
+</p>
+<p class="notice" role="status" th:if="${product.details.status == 'PAUSED'}">এই পণ্যের অর্ডার এখন বন্ধ আছে।</p>
+<p class="notice" role="status" th:if="${product.details.status != 'PAUSED' and !orderable}" th:text="${settings['accepting_orders'] != 'true' and !#strings.isEmpty(settings['pause_notice']) ? settings['pause_notice'] : 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।'}">
+</p>
+<a th:if="${!orderable and whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ জানতে চান</a>
+<form th:if="${showForm}" data-order-form class="order-form" th:object="${orderForm}" th:action="@{/p/{slug}/order(slug=${product.details.slug})} + '#order'" method="post" novalidate>
+<div id="order-errors" class="error-summary" tabindex="-1" role="alert" th:if="${#fields.hasAnyErrors()}">
+<p>অর্ডার পাঠানোর আগে এগুলো ঠিক করুন:</p>
+<ul>
+<li th:each="e : ${#fields.detailedErrors()}">
+<a th:href="${'#' + e.fieldName}" th:text="${e.message}">
+</a>
+</li>
+</ul>
+</div>
+<input type="hidden" name="submitToken" th:value="${submitToken}">
+<input type="hidden" name="shownTotal" th:value="${shownTotal}">
+<div class="hp" aria-hidden="true">
+<label for="website">এই ঘরটি খালি রাখুন</label>
+<input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+</div>
+
+<fieldset>
+<legend>পণ্য</legend>
+<div class="field">
+<label for="quantity">পরিমাণ (১–১০)</label>
+<input id="quantity" th:field="*{quantity}" type="text" inputmode="numeric" maxlength="2" aria-describedby="quantity-help">
+<p id="quantity-help" class="help">
+<span th:if="${!#strings.isEmpty(product.details.quantityHelp)}" th:text="${product.details.quantityHelp + ' '}"></span>
+১০টির বেশি লাগলে <a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ জানান</a><span th:unless="${whatsapp != null}">আমাদের জানান</span>।
+</p>
+<p class="error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}">
+</p>
+</div>
+<div class="field">
+<label for="engraving">কী খোদাই হবে</label>
+<textarea id="engraving" th:field="*{engraving}" rows="4" autocomplete="off" aria-describedby="engraving-help">
+</textarea>
+<p id="engraving-help" class="help">
+<span class="preserve-lines" th:if="${!#strings.isEmpty(product.details.engravingHelp)}" th:text="${product.details.engravingHelp}"></span>
+একাধিক পণ্যে আলাদা লেখা হলে প্রতি লাইনে লিখুন, যেমন: ১ম: নাম, ২য়: নাম। বানান WhatsApp-এ মিলিয়ে নেব।
+</p>
+<p class="error" th:if="${#fields.hasErrors('engraving')}" th:errors="*{engraving}">
+</p>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>আপনার তথ্য</legend>
+<div class="field">
+<label for="name">আপনার নাম</label>
+<input id="name" th:field="*{name}" type="text" autocomplete="name">
+<p class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">
+</p>
+</div>
+<div class="field">
+<label for="phone">ফোন নম্বর (WhatsApp থাকলে ভালো)</label>
+<input id="phone" th:field="*{phone}" type="tel" autocomplete="tel">
+<p class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">
+</p>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>ডেলিভারি</legend>
+<div class="field" id="area">
+<p class="field-label">কোথায় পাঠাব?</p>
+<label class="choice" for="area-inside">
+<input id="area-inside" type="radio" th:field="*{area}" value="INSIDE">
+<span th:text="${'ঢাকার ভেতরে (' + @bn.money(prices.inside) + ')'}"></span>
+</label>
+<label class="choice" for="area-outside">
+<input id="area-outside" type="radio" th:field="*{area}" value="OUTSIDE">
+<span th:text="${'ঢাকার বাইরে (' + @bn.money(prices.outside) + ')'}"></span>
+</label>
+<p class="error" th:if="${#fields.hasErrors('area')}" th:errors="*{area}">
+</p>
+</div>
+<div class="field">
+<label for="address">পুরো ঠিকানা</label>
+<textarea id="address" th:field="*{address}" rows="3" autocomplete="street-address">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}">
+</p>
+</div>
+<div class="field">
+<label for="note">কিছু জানাতে চান? (ঐচ্ছিক)</label>
+<textarea id="note" th:field="*{note}" rows="2">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('note')}" th:errors="*{note}">
+</p>
+</div>
+</fieldset>
+
+<section class="order-summary" aria-labelledby="summary-title" aria-live="polite" data-order-summary th:attr="data-unit=${prices.unit},data-inside=${prices.inside},data-outside=${prices.outside}">
+<h3 id="summary-title">মোট হিসাব</h3>
+<dl>
+<dt>পণ্য</dt>
+<dd data-line="subtotal" th:text="${quote.subtotal != null ? @bn.money(quote.unit) + ' × ' + @bn.digits(quote.quantity) + ' = ' + @bn.money(quote.subtotal) : 'সঠিক পরিমাণ লিখুন'}"></dd>
+<dt>ডেলিভারি</dt>
+<dd data-line="delivery" th:text="${quote.delivery != null ? @bn.money(quote.delivery) : 'ঢাকায় ' + @bn.money(prices.inside) + ', ঢাকার বাইরে ' + @bn.money(prices.outside)}"></dd>
+<dt class="total">মোট</dt>
+<dd class="total" data-line="total" th:text="${quote.total != null ? @bn.money(quote.total) : 'এলাকা বাছলে দেখাবে'}"></dd>
+<dt>ডিজাইনে সম্মতির পরে ৫০% অগ্রিম</dt>
+<dd data-line="advance" th:text="${quote.advance != null ? @bn.money(quote.advance) : 'এলাকা বাছলে দেখাবে'}"></dd>
+<dt>বাকি টাকা ডেলিভারিতে</dt>
+<dd data-line="balance" th:text="${quote.balance != null ? @bn.money(quote.balance) : 'এলাকা বাছলে দেখাবে'}"></dd>
+</dl>
+</section>
+
+<div class="order-actions" th:if="${orderable}">
+<button class="link-button" type="submit" name="action" value="quote">হিসাব আপডেট করুন</button>
+<button class="button" type="submit" name="action" value="submit">অর্ডার পাঠান</button>
+<p class="help">এখন টাকা দিতে হবে না। আগে WhatsApp-এ ডিজাইন দেখাব। আপনি সম্মতি দিলে ৫০% অগ্রিম দেবেন।</p>
+</div>
+</form>
+</section>
+</body>
+</html>

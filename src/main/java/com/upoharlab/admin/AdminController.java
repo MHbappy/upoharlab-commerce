@@ -139,6 +139,8 @@ public class AdminController {
     m.addAttribute("settings", settings.all());
     m.addAttribute("whatsapp", settings.whatsapp(settings.all()));
     m.addAttribute("preview", true);
+    m.addAttribute("orderable", false);
+    m.addAttribute("showForm", false);
     return "site/product";
   }
 

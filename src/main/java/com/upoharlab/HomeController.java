@@ -31,15 +31,6 @@ public class HomeController {
     return "site/home";
   }
 
-  @GetMapping("/p/{slug}")
-  public String product(@PathVariable String slug, Model m) {
-    m.addAttribute("product", products.bySlug(slug));
-    m.addAttribute("settings", settings.all());
-    m.addAttribute("whatsapp", settings.whatsapp(settings.all()));
-    m.addAttribute("preview", false);
-    return "site/product";
-  }
-
   @GetMapping("/media/{filename}")
   public ResponseEntity<Resource> image(@PathVariable String filename, Authentication auth) {
     java.nio.file.Path path;

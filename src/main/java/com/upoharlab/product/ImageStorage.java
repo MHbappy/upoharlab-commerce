@@ -46,6 +46,8 @@ public class ImageStorage {
           throw new IllegalArgumentException("The photo must be at most 20 megapixels.");
         decoded = reader.read(0);
         if (decoded == null) throw new IllegalArgumentException("The photo cannot be read.");
+        if (format.equalsIgnoreCase("JPEG"))
+          decoded = ExifOrientation.apply(decoded, ExifOrientation.read(file.getBytes()));
       } finally {
         reader.dispose();
       }

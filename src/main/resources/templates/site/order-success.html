@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>আপনার অর্ডার পেয়েছি — উপহার ল্যাব</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+<script th:src="@{/js/order.js}" defer></script>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}">
+</header>
+<main class="container product-main form-width">
+<h1>আপনার অর্ডার পেয়েছি</h1>
+<p>অর্ডার কোড সংরক্ষণ করে রাখুন:</p>
+<p class="order-code">
+<span th:text="${order.code}"></span>
+<button class="link-button" type="button" hidden th:attr="data-copy-code=${order.code}">কপি করুন</button>
+</p>
+<div class="panel order-summary">
+<dl>
+<dt>পণ্য</dt>
+<dd th:text="${order.productTitle + ' × ' + @bn.digits(order.quantity)}"></dd>
+<dt class="total">মোট</dt>
+<dd class="total" th:text="${@bn.money(order.total)}"></dd>
+<dt>ডিজাইনে সম্মতির পরে ৫০% অগ্রিম</dt>
+<dd th:text="${@bn.money(order.advance)}"></dd>
+<dt>বাকি টাকা ডেলিভারিতে</dt>
+<dd th:text="${@bn.money(order.balance)}"></dd>
+</dl>
+</div>
+<h2>এরপর কী হবে</h2>
+<ol class="next-steps">
+<li>
+<span th:if="${!#strings.isEmpty(settings['reply_hours'])}" th:text="${@bn.digits(settings['reply_hours']) + ' ঘণ্টার মধ্যে আমরা WhatsApp-এ যোগাযোগ করব।'}"></span>
+<span th:if="${#strings.isEmpty(settings['reply_hours'])}">আমরা WhatsApp-এ যোগাযোগ করব।</span>
+</li>
+<li>ডিজাইন ও বানান দেখে লিখিতভাবে সম্মতি দিন।</li>
+<li>সম্মতির পরে অগ্রিম কীভাবে দেবেন, আমরা bKash-এর তথ্য জানাব।</li>
+<li>বানানো শুরু হবে। পাঠানোর পরে কুরিয়ারের তথ্য জানাব।</li>
+</ol>
+<a class="button" th:if="${whatsappWithCode != null}" th:href="${whatsappWithCode}">WhatsApp-এ যোগাযোগ করুন</a>
+</main>
+<footer th:replace="~{fragments/footer :: footer}">
+</footer>
+</body>
+</html>

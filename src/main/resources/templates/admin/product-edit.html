@@ -86,6 +86,13 @@
 </p>
 </div>
 <div class="field">
+<label for="quantityHelp">What quantity means (optional, shown to customers)</label>
+<textarea id="quantityHelp" th:field="*{quantityHelp}" rows="2" maxlength="500">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('quantityHelp')}" th:errors="*{quantityHelp}">
+</p>
+</div>
+<div class="field">
 <label for="price">Price (whole taka)</label>
 <input id="price" th:field="*{price}" type="number">
 <p class="error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">

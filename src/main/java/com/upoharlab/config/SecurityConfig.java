@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.*;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
@@ -42,7 +43,15 @@ public class SecurityConfig {
     return http.authorizeHttpRequests(
             a ->
                 a.requestMatchers(
-                        "/", "/css/**", "/fonts/**", "/p/**", "/media/**", "/admin/login", "/error")
+                        "/",
+                        "/css/**",
+                        "/js/**",
+                        "/fonts/**",
+                        "/p/**",
+                        "/order/**",
+                        "/media/**",
+                        "/admin/login",
+                        "/error")
                     .permitAll()
                     .requestMatchers("/admin/**", "/admin")
                     .hasRole("ADMIN")
@@ -54,6 +63,15 @@ public class SecurityConfig {
                     .loginProcessingUrl("/admin/login")
                     .defaultSuccessUrl("/admin", true)
                     .failureUrl("/admin/login?error"))
+        .exceptionHandling(
+            e ->
+                e.authenticationEntryPoint(
+                    (req, res, ex) -> {
+                      if (req.getRequestURI().startsWith("/admin"))
+                        new LoginUrlAuthenticationEntryPoint("/admin/login")
+                            .commence(req, res, ex);
+                      else res.sendError(404);
+                    }))
         .logout(
             l ->
                 l.logoutUrl("/admin/logout")

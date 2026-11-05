@@ -2,9 +2,9 @@
 
 A small Bangla ordering website using Java 21, Spring Boot, Thymeleaf and PostgreSQL.
 
-Phases 1–2 provide the application foundation, admin login, product and photo editing,
-business settings, home/product pages and local Docker setup. The order form follows in
-Phase 3. Existing products remain draft until you complete and publish them.
+Phases 1–3 provide the application foundation, admin login, product and photo editing,
+business settings, home/product pages, the customer order form and local Docker setup.
+Existing products remain draft until you complete and publish them.
 
 ## Run locally with Docker
 
@@ -99,8 +99,7 @@ business clock use `Asia/Dhaka`. SQL logging of parameters is not enabled.
 
 The app uses the `/data/uploads` persistent volume for later photo uploads. Secrets use environment
 variables. The first account is created from `ADMIN_USERNAME` and `ADMIN_PASSWORD` only when the admin
-table is empty. Later restarts keep the existing password. Optional Telegram credentials
-are reserved for Phase 3. CSRF stays enabled on every form; login is rate-limited by
+table is empty. Later restarts keep the existing password. CSRF stays enabled on every form; login is rate-limited by
 username and IP. Admin pages are uncached and marked noindex. Unimplemented routes remain closed.
 
 The `prod` profile enables secure cookies. It is a starting configuration, not a completed
@@ -116,17 +115,27 @@ the database account. A missing first-boot credential causes a clear startup fai
 
 - **Products:** edit a draft, save, add real JPEG/PNG photos and their Bangla descriptions,
   then complete the required details and switch to Active. Use Preview to inspect drafts.
-- **Photos:** up to 5 MB and 20 megapixels. Stored as resized JPEGs with random filenames,
-  full and thumbnail versions. The original filename and metadata are discarded.
+- **Photos:** up to 5 MB and 20 megapixels. Phone rotation is applied, then photos are stored as
+  resized JPEGs with random filenames, full and thumbnail versions. The original filename and metadata are discarded.
 - **Availability:** Draft is private, Active appears in the home grid, Paused keeps the
   public detail page with a pause message. Indoor-only warnings stay enabled once set.
 - **Settings:** contacts, bKash, delivery charges, making-independent courier durations,
   reply hours and shop pause notice. All required business details must be valid before
   enabling the order-taking setting. Unknown optional values may stay empty.
 
-Ordering itself is still unavailable in Phase 2: the product page says so and offers a
-WhatsApp contact when configured. Phase 3 will add the order form. Order operations and
-operational dashboard counts arrive in Phase 4; their current pages explain this clearly.
+## Ordering (Phase 3)
+
+The order form appears on active products once **Accepting new orders** is enabled in Settings.
+Customers pay nothing on the website. The server recalculates every amount, and saves an order
+only after the customer has seen the current total; if prices change first, they review it again.
+
+Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` for optional owner alerts, and
+`APP_BASE_URL` to include an admin link in them. Alerts never contain a phone or address, and a
+failed alert does not affect the order. `ORDERS_PER_HOUR` limits new orders per IP address.
+
+Order operations and dashboard counts arrive in Phase 4; until then, saved orders are in the
+`orders` database table. Tracking arrives in Phase 6, so the confirmation page has no tracking
+link yet.
 No customer or business data has been invented to make the shop appear live.
 
 Admin form login follows [Spring Security's official form-login guidance](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/form.html).

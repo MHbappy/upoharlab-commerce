@@ -31,6 +31,9 @@ public class ProductForm {
   @jakarta.validation.constraints.Size(max = 2000)
   private String care;
 
+  @jakarta.validation.constraints.Size(max = 500)
+  private String quantityHelp;
+
   @jakarta.validation.constraints.Min(1)
   @jakarta.validation.constraints.Max(1000000)
   private Integer price;
@@ -121,6 +124,14 @@ public class ProductForm {
 
   public void setCare(String value) {
     this.care = value;
+  }
+
+  public String getQuantityHelp() {
+    return quantityHelp;
+  }
+
+  public void setQuantityHelp(String value) {
+    this.quantityHelp = value;
   }
 
   public Integer getPrice() {

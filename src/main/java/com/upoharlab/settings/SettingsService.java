@@ -83,7 +83,13 @@ public class SettingsService {
             errors.rejectValue("values[" + k + "]", "number", "Enter a valid whole number.");
           }
       }
-    for (String area : List.of("inside", "outside"))
+    for (String area : List.of("inside", "outside")) {
+      String min = "courier_days_" + area + "_min", max = "courier_days_" + area + "_max";
+      if (s.get(min).isBlank() != s.get(max).isBlank())
+        errors.rejectValue(
+            "values[" + (s.get(min).isBlank() ? min : max) + "]",
+            "pair",
+            "Enter both minimum and maximum, or leave both empty.");
       try {
         if (Integer.parseInt(s.get("courier_days_" + area + "_max"))
             < Integer.parseInt(s.get("courier_days_" + area + "_min")))
@@ -93,6 +99,7 @@ public class SettingsService {
               "Maximum must be at least minimum.");
       } catch (NumberFormatException ignored) {
       }
+    }
     if (s.get("pause_notice").length() > 500)
       errors.rejectValue("values[pause_notice]", "length", "Keep the notice under 500 characters.");
     if (errors.hasErrors()) return;

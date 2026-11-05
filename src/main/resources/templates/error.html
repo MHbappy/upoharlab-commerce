@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>উপহার ল্যাব</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}">
+</header>
+<main class="container product-main reading-width">
+<th:block th:switch="${status}">
+<th:block th:case="404">
+<h1>পাতাটি পাওয়া যায়নি</h1>
+<p>ঠিকানাটি ভুল হতে পারে, অথবা পাতাটি এখন আর নেই।</p>
+</th:block>
+<th:block th:case="403">
+<h1>পাতাটি পুরোনো হয়ে গেছে</h1>
+<p>অনেকক্ষণ পরে পাঠালে এমন হতে পারে। পাতাটি আবার খুলে চেষ্টা করুন।</p>
+</th:block>
+<th:block th:case="*">
+<h1>কিছু একটা সমস্যা হয়েছে</h1>
+<p>একটু পরে আবার চেষ্টা করুন।</p>
+</th:block>
+</th:block>
+<a class="button" th:href="@{/}">হোম পাতায় যান</a>
+</main>
+<footer th:replace="~{fragments/footer :: footer}">
+</footer>
+</body>
+</html>

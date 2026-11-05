@@ -8,6 +8,9 @@ spring:
     hikari:
       maximum-pool-size: 5
       connection-init-sql: SET TIME ZONE 'UTC'
+      data-source-properties:
+        # Keeps row contents such as phone numbers out of database errors and logs.
+        logServerErrorDetail: false
   jpa:
     open-in-view: false
     hibernate:
@@ -18,8 +21,9 @@ spring:
     enabled: true
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 20MB
+      # The 5 MB photo rule is enforced in ImageStorage so the editor can explain it.
+      max-file-size: 20MB
+      max-request-size: 21MB
   mvc:
     log-request-details: false
 server:
@@ -28,6 +32,9 @@ server:
     include-binding-errors: never
     include-stacktrace: never
   forward-headers-strategy: none
+  tomcat:
+    # Read over-limit uploads to the end, so browsers get the error page and not a reset.
+    max-swallow-size: 25MB
   servlet:
     session:
       timeout: 8h
@@ -38,6 +45,12 @@ server:
 app:
   business-zone: Asia/Dhaka
   uploads-directory: ${UPLOADS_DIRECTORY:/data/uploads}
+  base-url: ${APP_BASE_URL:}
+  orders:
+    max-per-hour: ${ORDERS_PER_HOUR:5}
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    chat-id: ${TELEGRAM_CHAT_ID:}
   admin:
     username: ${ADMIN_USERNAME:}
     password: ${ADMIN_PASSWORD:}
