@@ -35,6 +35,18 @@ Stopping with `down` preserves the database and uploads volumes. Do not add `-v`
 intend to delete local data. This Compose file binds to localhost and is for development.
 For production with HTTPS and backups, see [DEPLOY.md](DEPLOY.md).
 
+## Test data for local review
+
+```sh
+scripts/demo-data.sh add      # products, photos, contacts and 30 orders in every status
+scripts/demo-data.sh remove   # takes it all out again
+```
+
+This changes only the local `compose.yaml` database and is not a migration, so it cannot reach production.
+All customers, numbers and addresses are made up, and the photos are labelled as samples. The command
+prints order codes and phones you can try on the tracking page. Don't press send on WhatsApp buttons
+for test orders, because a made-up number may belong to a real person.
+
 ## Run with Java 21 on your computer
 
 The Maven Wrapper downloads Maven automatically. It requires Java 21 (not Java 17).
