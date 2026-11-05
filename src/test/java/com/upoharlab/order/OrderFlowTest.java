@@ -112,6 +112,38 @@ class OrderFlowTest {
   }
 
   @Test
+  void orderAddressOpenedDirectlyGoesToTheProduct() throws Exception {
+    var response = new Browser(port).open().get("/p/" + SLUG + "/order");
+    assertThat(response.statusCode()).isEqualTo(302);
+    assertThat(response.headers().firstValue("Location").orElse("")).endsWith("/p/" + SLUG);
+  }
+
+  @Test
+  void formLeftOpenPastSessionTimeoutIsExplainedOnTheProductPage() throws Exception {
+    var client = java.net.http.HttpClient.newHttpClient();
+    var expired =
+        client.send(
+            java.net.http.HttpRequest.newBuilder(
+                    java.net.URI.create("http://localhost:" + port + "/p/" + SLUG + "/order"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString("action=submit&name=Rafi"))
+                .build(),
+            java.net.http.HttpResponse.BodyHandlers.ofString());
+    assertThat(expired.statusCode()).isEqualTo(303);
+    String location = expired.headers().firstValue("Location").orElse("");
+    assertThat(location).startsWith("/p/" + SLUG + "?expired").doesNotContain("Rafi");
+    assertThat(new Browser(port).open().get(location.replace("#order", "")).body())
+        .contains(OrderController.EXPIRED_MESSAGE, "data-order-form");
+    assertThat(db.queryForObject("SELECT count(*) FROM orders", Integer.class)).isZero();
+  }
+
+  @Test
+  void summaryAsksForTheRightThingWhileTheTotalIsMissing() throws Exception {
+    assertThat(browser().order("quote", Map.of("quantity", "99", "area", "INSIDE")).body())
+        .contains("data-line=\"total\">সঠিক পরিমাণ লিখলে দেখাবে");
+  }
+
+  @Test
   void quoteShowsBreakdownAndNeverSaves() throws Exception {
     var page = browser().order("quote", Map.of("quantity", "2"));
     assertThat(page.statusCode()).isEqualTo(200);

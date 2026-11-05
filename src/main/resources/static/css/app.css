@@ -1,5 +1,5 @@
 @font-face{font-family:"Noto Sans Bengali";src:url("/fonts/NotoSansBengali.woff2") format("woff2");font-weight:100 900;font-display:swap}
-:root{--bg:#f7f1e8;--surface:#fffdf9;--text:#2b211c;--muted:#6b5a4e;--primary:#a44922;--primary-dark:#863a1b;--secondary:#e6d3b8;--border:#e2d4c0;--field-border:#8c7868;--error:#922c1d;--error-bg:#fff0eb;--success-bg:#ecf4ec}
+:root{--bg:#f7f1e8;--surface:#fffdf9;--text:#2b211c;--muted:#6b5a4e;--primary:#a44922;--primary-dark:#863a1b;--secondary:#e6d3b8;--border:#e2d4c0;--field-border:#8c7868;--error:#922c1d;--error-bg:#fff0eb;--success-bg:#ecf4ec;--warning-bg:#fbf0d5}
 *{box-sizing:border-box}
 html{scroll-padding-top:1rem}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans Bengali",sans-serif;font-size:17px;line-height:1.75}
@@ -117,7 +117,11 @@ img{max-width:100%}
 .order-code{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:26px;font-weight:700;overflow-wrap:anywhere}
 .order-code .link-button{font-size:16px;font-weight:400}
 .next-steps{padding-left:24px}
-@media(max-width:420px){.order-summary dl{grid-template-columns:1fr}.order-summary dd{text-align:left;margin-bottom:6px}}
+.notice-warning{background:var(--warning-bg)}
+.review-note{flex-basis:100%;margin:0}
+.order-form .input-error{border:2px solid var(--error)}
+#order-message:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+@media(max-width:420px){.order-summary dl{grid-template-columns:1fr}.order-summary dd{text-align:left;margin-bottom:6px}.order-actions .button{width:100%}}
 
 .table-wrap{overflow-x:auto;margin-block:16px}
 .admin-table{width:100%;border-collapse:collapse;font-size:15px;background:var(--surface)}

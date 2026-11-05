@@ -27,7 +27,7 @@
 <p th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}" th:text="${'ডেলিভারি আলাদা: ঢাকায় ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside'])}">
 </p>
 <div class="order-closed" th:if="${!orderable and !showForm and !preview}">
-<p class="notice" role="status" th:text="${product.details.status == 'PAUSED' ? 'এই পণ্যের অর্ডার এখন বন্ধ আছে।' : (#strings.isEmpty(settings['pause_notice']) ? 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।' : settings['pause_notice'])}"></p>
+<p class="notice notice-warning" role="status" th:text="${product.details.status == 'PAUSED' ? 'এই পণ্যের অর্ডার এখন বন্ধ আছে।' : (settings['accepting_orders'] != 'true' and !#strings.isEmpty(settings['pause_notice']) ? settings['pause_notice'] : 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।')}"></p>
 <p th:if="${whatsapp != null}"><a th:href="${whatsapp}">WhatsApp-এ জানতে চান</a></p>
 <p th:if="${whatsapp == null and !#strings.isEmpty(settings['phone'])}">জানতে ফোন করুন: <a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
 </div>

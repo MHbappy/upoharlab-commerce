@@ -1,20 +1,30 @@
 package com.upoharlab.config;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.time.Clock;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.*;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 
 @Configuration
 public class SecurityConfig {
+  private static final Pattern EXPIRED_ORDER_FORM = Pattern.compile("/p/([a-z0-9-]+)/order");
+
   @Bean
   PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
@@ -36,6 +46,20 @@ public class SecurityConfig {
             .stream()
             .findFirst()
             .orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
+  }
+
+  /**
+   * An order form left open past the session timeout fails its CSRF check. That is an ordinary
+   * situation for a customer, so explain it on the product page rather than show an error.
+   */
+  private static void denied(
+      HttpServletRequest req, HttpServletResponse res, AccessDeniedException ex)
+      throws IOException, ServletException {
+    var form = EXPIRED_ORDER_FORM.matcher(req.getRequestURI());
+    if (ex instanceof CsrfException && form.matches()) {
+      res.setStatus(HttpServletResponse.SC_SEE_OTHER);
+      res.setHeader("Location", "/p/" + form.group(1) + "?expired=1#order");
+    } else new AccessDeniedHandlerImpl().handle(req, res, ex);
   }
 
   @Bean
@@ -79,7 +103,8 @@ public class SecurityConfig {
                         new LoginUrlAuthenticationEntryPoint("/admin/login")
                             .commence(req, res, ex);
                       else res.sendError(404);
-                    }))
+                    })
+                    .accessDeniedHandler(SecurityConfig::denied))
         .logout(
             l ->
                 l.logoutUrl("/admin/logout")

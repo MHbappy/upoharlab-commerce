@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class OrderController {
   static final String REVIEW_MESSAGE = "মোট হিসাব দেখে আবার অর্ডার পাঠান।";
+  static final String EXPIRED_MESSAGE =
+      "পাতাটি অনেকক্ষণ খোলা থাকায় আপনার তথ্য পাঠানো যায়নি। অনুগ্রহ করে আবার লিখে অর্ডার পাঠান।";
   private static final String NO_STORE = "no-store";
 
   private final ProductStore products;
@@ -55,11 +57,21 @@ public class OrderController {
 
   @GetMapping("/p/{slug}")
   public String product(
-      @PathVariable String slug, HttpSession session, HttpServletResponse res, Model m) {
+      @PathVariable String slug,
+      @RequestParam(required = false) String expired,
+      HttpSession session,
+      HttpServletResponse res,
+      Model m) {
     res.setHeader("Cache-Control", NO_STORE);
     var product = products.bySlug(slug);
     var token = OrderSession.of(session).issue(product.id());
-    return page(m, product, new OrderForm(), token, false, null);
+    return page(m, product, new OrderForm(), token, false, expired == null ? null : EXPIRED_MESSAGE);
+  }
+
+  /** The form posts to this address, so reloading it from the address bar must not be an error. */
+  @GetMapping("/p/{slug}/order")
+  public String orderAddress(@PathVariable String slug) {
+    return "redirect:/p/{slug}";
   }
 
   @PostMapping("/p/{slug}/order")
@@ -186,6 +198,7 @@ public class OrderController {
     // After a post, keep the customer's typed work on screen even if ordering has just paused.
     m.addAttribute("showForm", (orderable || submitted) && prices.isPresent());
     m.addAttribute("orderMessage", message);
+    m.addAttribute("reviewNeeded", REVIEW_MESSAGE.equals(message));
     m.addAttribute("orderForm", form);
     m.addAttribute("submitToken", token.value);
     if (prices.isPresent()) {

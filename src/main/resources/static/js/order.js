@@ -67,7 +67,8 @@
     });
   }
 
-  var errorSummary = document.getElementById("order-errors");
+  // Errors first; otherwise any message about the order, such as a changed total.
+  var errorSummary = document.getElementById("order-errors") || document.getElementById("order-message");
   // Wait until after load: the browser's jump to #order would otherwise clear the focus.
   if (errorSummary) {
     window.addEventListener("load", function () {

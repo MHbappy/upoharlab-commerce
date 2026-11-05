@@ -18,7 +18,7 @@
     </section>
     <section th:unless="${products.isEmpty()}" id="products" aria-labelledby="catalog-title">
 <h2 id="catalog-title">আপনার জন্য উপহার</h2>
-<p class="notice" role="status" th:if="${settings['accepting_orders'] != 'true'}" th:text="${#strings.isEmpty(settings['pause_notice']) ? 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।' : settings['pause_notice']}"></p>
+<p class="notice notice-warning" role="status" th:if="${settings['accepting_orders'] != 'true'}" th:text="${#strings.isEmpty(settings['pause_notice']) ? 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।' : settings['pause_notice']}"></p>
 <div class="product-grid">
 <article class="panel product-card" th:each="p, row : ${products}">
 <img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" th:attr="loading=${row.index < 3 ? 'eager' : 'lazy'}">
