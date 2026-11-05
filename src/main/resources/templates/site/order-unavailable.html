@@ -1,18 +1,13 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>অর্ডারের তথ্য — উপহার ল্যাব</title>
-<link rel="stylesheet" th:href="@{/css/app.css}">
+<head th:replace="~{fragments/head :: head('অর্ডারের তথ্য — উপহার ল্যাব', null, null, null, true)}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}">
 </header>
-<main class="container product-main form-width">
+<main id="main" class="container product-main form-width">
 <h1>এই পাতাটি এখানে দেখানো যাচ্ছে না</h1>
-<p>অর্ডার করার পরে একই ব্রাউজারে কিছু সময় এই পাতা দেখা যায়। আপনার অর্ডার নিয়ে জানতে অর্ডার কোডসহ আমাদের জানান।</p>
+<p>অর্ডার করার পরে একই ব্রাউজারে কিছু সময় এই পাতা দেখা যায়। অর্ডারের অবস্থা জানতে <a th:href="@{/track}">অর্ডার ট্র্যাক</a> পাতায় অর্ডার কোড ও ফোন নম্বর দিন।</p>
 <a class="button" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ যোগাযোগ করুন</a>
 <a class="button" th:unless="${whatsapp != null}" th:href="@{/}">হোম পাতায় যান</a>
 </main>

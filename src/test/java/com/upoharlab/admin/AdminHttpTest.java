@@ -256,7 +256,7 @@ class AdminHttpTest {
   @Test
   void unknownPublicUrlsAre404NotAdminLogin() throws Exception {
     var client = HttpClient.newHttpClient();
-    for (String path : new String[] {"/about", "/favicon.ico", "/no-such-page", "/p/no-such"}) {
+    for (String path : new String[] {"/no-such-section", "/favicon.ico", "/no-such-page", "/p/no-such"}) {
       var response = get(client, path);
       assertThat(response.statusCode()).as(path).isEqualTo(404);
       assertThat(location(response)).isEmpty();

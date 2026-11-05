@@ -33,7 +33,7 @@
 <input id="quantity" th:field="*{quantity}" type="text" inputmode="numeric" maxlength="2" aria-describedby="quantity-help">
 <p id="quantity-help" class="help">
 <span th:if="${!#strings.isEmpty(product.details.quantityHelp)}" th:text="${product.details.quantityHelp + ' '}"></span>
-১০টির বেশি লাগলে <a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ জানান</a><span th:unless="${whatsapp != null}">আমাদের জানান</span>।
+১০টির বেশি লাগলে <a th:href="@{/bulk}">আমাদের জানান</a>।
 </p>
 <p class="error" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}">
 </p>

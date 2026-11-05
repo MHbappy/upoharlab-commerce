@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="উপহার ল্যাব — নাম খোদাই করা চাবির রিং ও নেমপ্লেট। বানানোর আগে ডিজাইন দেখুন।">
-  <title>উপহার ল্যাব — যত্নে খোদাই করা উপহার</title>
-  <link rel="stylesheet" th:href="@{/css/app.css}">
+<head th:replace="~{fragments/head :: head('উপহার ল্যাব — নাম খোদাই করা উপহার', 'নাম খোদাই করা চাবির রিং, বাসা ও অফিসের নেমপ্লেট। বানানোর আগে ডিজাইন দেখুন।', '/', ${products.isEmpty() or products[0].photos.isEmpty() ? null : '/media/' + products[0].photos[0].filename}, false)}">
 </head>
 <body>
-  <a class="skip-link" href="#main">মূল বিষয়বস্তুতে যান</a>
   <header th:replace="~{fragments/header :: header}">
 </header>
   <main id="main" class="container">
@@ -68,8 +62,7 @@
 <h2>কিছু জানতে চান?</h2>
 <p>পণ্য বা খোদাই করার লেখা নিয়ে আমাদের সঙ্গে কথা বলুন।</p>
 <a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ কথা বলুন</a>
-<p th:if="${!#strings.isEmpty(settings['phone'])}" th:text="${settings['phone']}">
-</p>
+<p th:if="${!#strings.isEmpty(settings['phone'])}"><a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
 </section>
   </main>
   <footer th:replace="~{fragments/footer :: footer}">

@@ -1,18 +1,11 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta th:if="${preview}" name="robots" content="noindex">
-<title th:text="${product.details.title + ' — উপহার ল্যাব'}">
-</title>
-<link rel="stylesheet" th:href="@{/css/app.css}">
-<script th:src="@{/js/order.js}" defer></script>
+<head th:replace="~{fragments/head :: head(${product.details.title + ' — উপহার ল্যাব'}, ${product.details.shortDescription}, ${'/p/' + product.details.slug}, ${product.photos.isEmpty() ? null : '/media/' + product.photos[0].filename}, ${preview})}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}">
 </header>
-<main class="container product-main">
+<main id="main" class="container product-main">
 <a th:href="@{/#products}">← সব পণ্য</a>
 <p class="notice" th:if="${preview}">শুধু অ্যাডমিনের জন্য প্রিভিউ</p>
 <div class="product-layout">
@@ -79,6 +72,7 @@
 <summary>ডিজাইন কোথায় দেখব?</summary>
 <p>বানানোর আগে WhatsApp-এ ডিজাইন পাঠাব। নামের বানান ও ডিজাইন নিশ্চিত হওয়ার পরে বানানো শুরু হবে।</p>
 </details>
+<p class="help-link"><a th:href="@{/faq}">আরও প্রশ্ন</a><th:block th:if="${whatsapp != null}"> · <a th:href="${whatsapp}">WhatsApp-এ জিজ্ঞেস করুন</a></th:block></p>
 </section>
 </main>
 <footer th:replace="~{fragments/footer :: footer}">

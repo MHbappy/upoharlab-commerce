@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('বেশি পরিমাণে অর্ডার — উপহার ল্যাব', 'অফিস, প্রতিষ্ঠান বা অনুষ্ঠানের জন্য ১০টির বেশি পণ্য লাগলে যোগাযোগ করুন।', '/bulk', null, false)}">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}">
+</header>
+<main id="main" class="container product-main reading-width">
+<h1>বেশি পরিমাণে অর্ডার</h1>
+<p class="lead">একসঙ্গে ১০টির বেশি পণ্য লাগলে, অথবা অফিস বা অনুষ্ঠানের জন্য অর্ডার করতে চাইলে আগে দাম জেনে নিন।</p>
+<h2>এই তথ্যগুলো জানান</h2>
+<ul>
+<li>কোন পণ্য লাগবে</li>
+<li>কয়টি লাগবে</li>
+<li>কবের মধ্যে লাগবে</li>
+<li>কী কী লেখা খোদাই হবে</li>
+</ul>
+<p>
+<a class="button" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ জানান</a>
+</p>
+<p th:if="${!#strings.isEmpty(settings['phone'])}">ফোন: <a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
+<p class="muted" th:if="${whatsapp == null and #strings.isEmpty(settings['phone'])}">যোগাযোগের তথ্য শিগগিরই এখানে থাকবে।</p>
+</main>
+<footer th:replace="~{fragments/footer :: footer}">
+</footer>
+</body>
+</html>

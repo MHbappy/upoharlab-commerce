@@ -1,4 +1,4 @@
-@font-face{font-family:"Noto Sans Bengali";src:url("/fonts/NotoSansBengali.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Noto Sans Bengali";src:url("/fonts/NotoSansBengali.woff2") format("woff2");font-weight:100 900;font-display:swap}
 :root{--bg:#f7f1e8;--surface:#fffdf9;--text:#2b211c;--muted:#6b5a4e;--primary:#a44922;--border:#e2d4c0}
 *{box-sizing:border-box}
 html{scroll-padding-top:1rem}
@@ -33,7 +33,7 @@ p{margin:0 0 16px;overflow-wrap:anywhere}
 .step-number{display:block;color:var(--primary);font-size:24px;margin-bottom:12px}
 .steps p{color:var(--muted);font-size:16px;margin-bottom:0}
 .site-footer{border-top:1px solid var(--border);padding-block:24px;color:var(--muted);font-size:14px}
-.site-footer p{margin:0}
+.site-footer p{margin:0 0 4px}
 .skip-link{position:absolute;left:16px;top:-100px;padding:12px;background:var(--surface);z-index:1}
 .skip-link:focus{top:12px}
 @media(max-width:760px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.intro{padding-block:40px}.availability{padding:24px}}
@@ -109,3 +109,20 @@ p{margin:0 0 16px;overflow-wrap:anywhere}
 .history li{padding-block:10px;border-bottom:1px solid var(--border)}
 .history .preserve-lines{display:block}
 @media(max-width:640px){.filter-form{grid-template-columns:1fr}.facts{grid-template-columns:1fr}.facts dd{margin-bottom:8px}}
+
+.footer-inner{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px 40px}
+.footer-brand{font-weight:650;color:var(--text);font-size:16px}
+.footer-contact{display:flex;flex-wrap:wrap;gap:0 16px;margin-top:8px}
+.footer-contact a,.footer-links a{display:inline-flex;align-items:center;min-height:32px}
+.footer-links{display:grid;grid-template-columns:repeat(2,minmax(0,auto));gap:0 24px}
+.footer-links a{color:var(--muted);min-height:32px}
+.track-form .button{margin-top:20px;border:0;cursor:pointer}
+.track-result{margin-bottom:24px}
+.track-status{font-size:19px;font-weight:600}
+.track-help{margin-top:20px}
+.order-next-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin-top:20px}
+.order-next-links .button{margin-top:0}
+.help-link{margin-top:16px}
+.reading-width ul{padding-left:22px}
+.reading-width h2{margin-top:28px}
+.faq-contact{margin-top:24px}

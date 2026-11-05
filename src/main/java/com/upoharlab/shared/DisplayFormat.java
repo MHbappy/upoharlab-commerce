@@ -15,6 +15,11 @@ public class DisplayFormat {
     return instant == null ? "" : ADMIN_TIME.format(instant);
   }
 
+  /** Customer-facing date in Bangla. */
+  public String date(java.time.Instant instant) {
+    return instant == null ? "" : BnDigits.date(instant);
+  }
+
   public String digits(Object value) {
     return value == null ? "" : BnDigits.toBangla(value.toString());
   }

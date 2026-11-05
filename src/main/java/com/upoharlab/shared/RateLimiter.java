@@ -54,6 +54,12 @@ public final class RateLimiter {
     return true;
   }
 
+  /** Checks without counting, for limits that only count failures. */
+  public synchronized boolean isBlocked(String key, int limit) {
+    Window current = windows.get(key);
+    return current != null && current.expires.isAfter(clock.instant()) && current.count >= limit;
+  }
+
   synchronized int size() {
     return windows.size();
   }

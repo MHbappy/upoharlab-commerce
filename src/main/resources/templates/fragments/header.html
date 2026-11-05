@@ -2,12 +2,14 @@
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
 <body>
 <header th:fragment="header" class="site-header">
+  <a class="skip-link" href="#main">মূল বিষয়বস্তুতে যান</a>
   <div class="container header-inner">
     <a class="brand" th:href="@{/}" aria-label="উপহার ল্যাব — হোম">উপহার ল্যাব<span>আপনার নাম, যত্নে খোদাই করা</span>
 </a>
     <nav aria-label="প্রধান নেভিগেশন">
 <a th:href="@{/#products}">পণ্য</a>
-<a th:href="@{/#how-it-works}">অর্ডারের নিয়ম</a>
+<a th:href="@{/track}">অর্ডার ট্র্যাক</a>
+<a th:href="@{/faq}">সাহায্য</a>
 </nav>
   </div>
 </header>

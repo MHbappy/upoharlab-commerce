@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('অর্ডার ট্র্যাক — উপহার ল্যাব', 'অর্ডার কোড ও ফোন নম্বর দিয়ে অর্ডারের অবস্থা দেখুন।', null, null, true)}">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}">
+</header>
+<main id="main" class="container product-main form-width">
+<h1>অর্ডার ট্র্যাক করুন</h1>
+
+<section class="panel track-result" th:if="${result != null}" aria-labelledby="result-title">
+<h2 id="result-title" th:text="${result.code}"></h2>
+<p class="track-status" th:text="${statusLabel}"></p>
+<dl class="facts">
+<dt>অর্ডারের তারিখ</dt>
+<dd th:text="${@bn.date(result.placedAt)}"></dd>
+<th:block th:if="${result.approvedAt != null}">
+<dt>ডিজাইনে সম্মতি</dt>
+<dd th:text="${@bn.date(result.approvedAt)}"></dd>
+</th:block>
+<th:block th:if="${result.courier != null}">
+<dt>কুরিয়ার</dt>
+<dd th:text="${result.courier}"></dd>
+<dt>ট্র্যাকিং নম্বর</dt>
+<dd th:text="${result.trackingNo}"></dd>
+</th:block>
+<th:block th:if="${result.deliveredAt != null}">
+<dt>পৌঁছেছে</dt>
+<dd th:text="${@bn.date(result.deliveredAt)}"></dd>
+</th:block>
+</dl>
+</section>
+
+<p class="error" role="alert" th:if="${notFound}">এই তথ্যে কোনো অর্ডার পাওয়া যায়নি। অর্ডার কোড আর অর্ডারে দেওয়া পুরো ফোন নম্বর মিলিয়ে দেখুন।</p>
+<p class="error" role="alert" th:if="${rateLimited}">অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।</p>
+
+<form class="track-form" th:action="@{/track}" method="post">
+<label for="code">অর্ডার কোড</label>
+<input id="code" name="code" type="text" required autocomplete="off" placeholder="UL-202611-001" th:value="${code}">
+<label for="phone">অর্ডারে দেওয়া ফোন নম্বর</label>
+<input id="phone" name="phone" type="tel" required autocomplete="tel" th:value="${result == null ? phone : null}">
+<button class="button">অবস্থা দেখুন</button>
+</form>
+<p class="muted track-help" th:if="${whatsapp != null}">কোড খুঁজে পাচ্ছেন না? <a th:href="${whatsapp}">WhatsApp-এ জানান</a>।</p>
+</main>
+<footer th:replace="~{fragments/footer :: footer}">
+</footer>
+</body>
+</html>

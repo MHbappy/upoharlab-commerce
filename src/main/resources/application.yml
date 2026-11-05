@@ -26,6 +26,16 @@ spring:
       max-request-size: 21MB
   mvc:
     log-request-details: false
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 365d
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /**
 server:
   error:
     include-message: never
@@ -48,6 +58,9 @@ app:
   base-url: ${APP_BASE_URL:}
   orders:
     max-per-hour: ${ORDERS_PER_HOUR:5}
+  tracking:
+    max-per-ip: ${TRACKING_PER_15_MINUTES:10}
+    max-failures-per-code: ${TRACKING_FAILURES_PER_HOUR:5}
   telegram:
     bot-token: ${TELEGRAM_BOT_TOKEN:}
     chat-id: ${TELEGRAM_CHAT_ID:}

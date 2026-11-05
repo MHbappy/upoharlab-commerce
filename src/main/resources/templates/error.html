@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>উপহার ল্যাব</title>
-<link rel="stylesheet" th:href="@{/css/app.css}">
+<head th:replace="~{fragments/head :: head('উপহার ল্যাব', null, null, null, true)}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}">
 </header>
-<main class="container product-main reading-width">
+<main id="main" class="container product-main reading-width">
 <th:block th:switch="${status}">
 <th:block th:case="404">
 <h1>পাতাটি পাওয়া যায়নি</h1>

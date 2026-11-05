@@ -88,7 +88,7 @@ Other launch tables are created now and will receive application mappings as the
 - PostgreSQL image: **16.15-alpine**, used in Compose and tests.
 - Docker Java images: Eclipse Temurin **21-jdk-jammy / 21-jre-jammy** (Java 21 tags receive maintenance updates; production image pinning is Phase 7).
 - Flyway, Hibernate, Spring Security, JUnit and Testcontainers versions are managed by the Spring Boot BOM.
-- Noto Sans Bengali is self-hosted; its SIL Open Font License is in `static/fonts/OFL.txt`.
+- Noto Sans Bengali is self-hosted as a Bengali + Latin WOFF2 subset; its SIL Open Font License is in `static/fonts/OFL.txt`.
 
 `src/main/java/com/upoharlab` contains the application, security/time configuration, Product
 mapping and shared helpers. Templates use header/footer fragments and one plain stylesheet.
@@ -133,7 +133,6 @@ Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` for optional owner ale
 `APP_BASE_URL` to include an admin link in them. Alerts never contain a phone or address, and a
 failed alert does not affect the order. `ORDERS_PER_HOUR` limits new orders per IP address.
 
-Tracking arrives in Phase 6, so the confirmation page has no tracking link yet.
 
 ## Managing orders (Phase 4)
 

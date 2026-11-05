@@ -36,7 +36,7 @@ public class OrderValidator {
   public void validateQuote(OrderForm form, Errors errors, boolean areaRequired) {
     if (quantity(form.getQuantity()) == null)
       errors.rejectValue(
-          "quantity", "invalid", "পরিমাণ ১ থেকে ১০-এর মধ্যে লিখুন। বেশি হলে WhatsApp-এ জানান।");
+          "quantity", "invalid", "পরিমাণ ১ থেকে ১০-এর মধ্যে লিখুন। বেশি লাগলে আমাদের জানান।");
     if (area(form.getArea()) == null && (areaRequired || !isBlank(form.getArea())))
       errors.rejectValue("area", "required", "ঢাকার ভেতরে না বাইরে, একটি বেছে নিন।");
   }

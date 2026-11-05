@@ -40,6 +40,24 @@ public class SettingsService {
     return values;
   }
 
+  /**
+   * Contact details for the shared footer. It also renders on error pages, so a database problem
+   * must leave the footer without contacts rather than break the page.
+   */
+  public Map<String, String> publicContact() {
+    Map<String, String> contact = new HashMap<>();
+    try {
+      Map<String, String> s = all();
+      if (whatsapp(s) != null) contact.put("whatsappLink", whatsapp(s));
+      if (!s.getOrDefault("phone", "").isBlank()) contact.put("phone", s.get("phone"));
+      if (!s.getOrDefault("business_email", "").isBlank())
+        contact.put("email", s.get("business_email"));
+    } catch (org.springframework.dao.DataAccessException ignored) {
+      return Map.of();
+    }
+    return contact;
+  }
+
   public String whatsapp(Map<String, String> s) {
     String p = s.getOrDefault("whatsapp", "");
     return p.isBlank() ? null : "https://wa.me/88" + p;
