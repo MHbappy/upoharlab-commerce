@@ -54,7 +54,7 @@ server:
         secure: false
 app:
   business-zone: Asia/Dhaka
-  uploads-directory: ${UPLOADS_DIRECTORY:/data/uploads}
+  uploads-directory: ${UPLOADS_DIRECTORY:./uploads}
   base-url: ${APP_BASE_URL:}
   orders:
     max-per-hour: ${ORDERS_PER_HOUR:5}

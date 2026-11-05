@@ -5,3 +5,7 @@ target
 .DS_Store
 uploads
 prompts
+application-local.yml
+*.dump
+.idea
+scripts

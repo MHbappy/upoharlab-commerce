@@ -75,6 +75,10 @@ class FoundationTest {
     assertThatThrownBy(
             () -> jdbc.update("UPDATE product SET price = -1 WHERE slug = 'keyring-gift-pair'"))
         .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    assertThatThrownBy(
+            () ->
+                jdbc.update("UPDATE product SET price = 1000001 WHERE slug = 'keyring-gift-pair'"))
+        .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
   }
 
   @Test

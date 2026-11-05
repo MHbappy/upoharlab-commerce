@@ -149,7 +149,6 @@ class PublicPagesTest {
     var icon = Pattern.compile("href=\"(/favicon-[0-9a-f]{32}\\.svg)\"").matcher(home.body());
     assertThat(icon.find()).as("hashed icon link").isTrue();
     assertThat(get(icon.group(1)).statusCode()).isEqualTo(200);
-    var script = Pattern.compile("src=\"(/js/order-[0-9a-f]{32}\\.js)\"").matcher(home.body());
-    assertThat(script.find()).as("hashed script link").isTrue();
+    assertThat(home.body()).as("order script loads only where it is used").doesNotContain("/js/order");
   }
 }

@@ -11,6 +11,7 @@ RUN groupadd --system app && useradd --system --gid app app && mkdir -p /data/up
 WORKDIR /app
 COPY --from=build /build/target/upoharlab-0.0.1-SNAPSHOT.jar app.jar
 USER app
+ENV UPLOADS_DIRECTORY=/data/uploads
 # Heap follows the container memory limit. Adjust APP_MEMORY_LIMIT for your server.
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=60 -Duser.timezone=UTC"
 EXPOSE 8080

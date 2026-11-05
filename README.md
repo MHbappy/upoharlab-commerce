@@ -2,9 +2,9 @@
 
 A small Bangla ordering website using Java 21, Spring Boot, Thymeleaf and PostgreSQL.
 
-Phases 1–3 provide the application foundation, admin login, product and photo editing,
-business settings, home/product pages, the customer order form and local Docker setup.
-Existing products remain draft until you complete and publish them.
+Customers browse products, order without an account and track their order. One admin manages
+products, orders, payment records and business settings. Products stay draft until you complete
+and publish them, and ordering stays off until you enable it in Settings.
 
 ## Run locally with Docker
 
@@ -74,6 +74,25 @@ For Windows, set the same environment variables and use `mvnw.cmd`.
 Stop the Compose app first if it already uses port 8080. Local PostgreSQL is available only on
 127.0.0.1:5433 by default; the app container uses the internal postgres:5432 address.
 
+### Personal settings for an IDE or another database
+
+To run from an IDE, or against a different database, put your values in `application-local.yml` in
+the project root and start with the Spring profile `local` (in IntelliJ: Run configuration → Active
+profiles → `local`). The file is ignored by Git and Docker, so it never reaches an image or production.
+Never put credentials in `src/main/resources/application.yml`; a test fails if a password appears there.
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/upoharlab
+    username: upoharlab
+    password: your-local-password
+app:
+  admin:
+    username: owner
+    password: your-private-password-of-12-to-72-characters
+```
+
 ## Checks
 
 With Java 21 and Docker running:
@@ -89,8 +108,8 @@ admin routes. A Docker failure is a failed integration check, not silently skipp
 
 Flyway runs migrations once. Later startups validate their checksums and do not overwrite
 product/settings edits. Modify schema with a new migration, not by editing an applied file.
-Hibernate schema validation is enabled; the initial Product mapping is checked at startup.
-Other launch tables are created now and will receive application mappings as their phases are built.
+Hibernate schema validation is enabled for the Product mapping. Orders, payments, settings and
+admin accounts use SQL through `JdbcTemplate`, with database constraints as a backstop.
 
 ## Structure and versions
 
@@ -104,25 +123,25 @@ Other launch tables are created now and will receive application mappings as the
 - Noto Sans Bengali is self-hosted as a Bengali + Latin WOFF2 subset; its SIL Open Font License is in `static/fonts/OFL.txt`.
 
 `src/main/java/com/upoharlab` contains the application, security/time configuration, Product
-mapping and shared helpers. Templates use header/footer fragments and one plain stylesheet.
-`src/main/resources/db/migration` contains the schema and draft-only seed migration.
+mapping and the `product`, `order`, `admin`, `settings`, `config` and `shared` packages. Templates
+use header/footer fragments and one plain stylesheet whose colours are tokens at the top of `app.css`.
+`src/main/resources/db/migration` contains the schema and draft-only seed migrations.
 
 Database timestamps and JVM/Hibernate storage use UTC. Business-date formatting and the injected
 business clock use `Asia/Dhaka`. SQL logging of parameters is not enabled.
 
-The app uses the `/data/uploads` persistent volume for later photo uploads. Secrets use environment
-variables. The first account is created from `ADMIN_USERNAME` and `ADMIN_PASSWORD` only when the admin
+In Docker, photos are stored on the `/data/uploads` persistent volume; outside Docker the default
+is `./uploads`. Secrets use environment variables. The first account is created from `ADMIN_USERNAME` and `ADMIN_PASSWORD` only when the admin
 table is empty. Later restarts keep the existing password. CSRF stays enabled on every form; login is rate-limited by
 username and IP. Admin pages are uncached and marked noindex. Unimplemented routes remain closed.
 
 The `prod` profile enables secure cookies and reads client addresses only from Caddy. It refuses
 to start without an `https://` site address. See [DEPLOY.md](DEPLOY.md).
 
-## Use the Phase 2 admin
+## Use the admin
 
-Open **http://localhost:8080/admin/login**. For this local workspace, a private bootstrap
-username/password were generated in the ignored `.env` file. Read `ADMIN_USERNAME` and
-`ADMIN_PASSWORD` there with your editor; they are not printed in logs or committed.
+Open **http://localhost:8080/admin/login** and sign in with the `ADMIN_USERNAME` and `ADMIN_PASSWORD`
+from your ignored `.env` file. They are not printed in logs or committed.
 Keep that file private. After the first bootstrap, editing its password does not reset
 the database account. A missing first-boot credential causes a clear startup failure.
 
@@ -136,7 +155,7 @@ the database account. A missing first-boot credential causes a clear startup fai
   reply hours and shop pause notice. All required business details must be valid before
   enabling the order-taking setting. Unknown optional values may stay empty.
 
-## Ordering (Phase 3)
+## Ordering
 
 The order form appears on active products once **Accepting new orders** is enabled in Settings.
 Customers pay nothing on the website. The server recalculates every amount, and saves an order
@@ -146,8 +165,7 @@ Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` for optional owner ale
 `APP_BASE_URL` to include an admin link in them. Alerts never contain a phone or address, and a
 failed alert does not affect the order. `ORDERS_PER_HOUR` limits new orders per IP address.
 
-
-## Managing orders (Phase 4)
+## Managing orders
 
 Open **Orders** in the admin. Search by code or phone, then work an order through its steps:
 

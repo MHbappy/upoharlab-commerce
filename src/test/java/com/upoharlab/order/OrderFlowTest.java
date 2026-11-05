@@ -79,6 +79,16 @@ class OrderFlowTest {
   }
 
   @Test
+  void productPageLoadsVersionedOrderScript() throws Exception {
+    var browser = new Browser(port).open();
+    var script =
+        java.util.regex.Pattern.compile("src=\"(/js/order-[0-9a-f]{32}\\.js)\"")
+            .matcher(browser.get("/p/" + SLUG).body());
+    assertThat(script.find()).as("hashed script link").isTrue();
+    assertThat(browser.get(script.group(1)).statusCode()).isEqualTo(200);
+  }
+
+  @Test
   void quoteShowsBreakdownAndNeverSaves() throws Exception {
     var page = browser().order("quote", Map.of("quantity", "2"));
     assertThat(page.statusCode()).isEqualTo(200);
