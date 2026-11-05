@@ -20,6 +20,8 @@
 <h2>সংশোধন বা মুছে ফেলা</h2>
 <p>আপনার তথ্য সংশোধন বা মুছে ফেলতে চাইলে অর্ডার কোডসহ আমাদের জানান। ব্যাকআপ থেকে তথ্য সঙ্গে সঙ্গে মুছে যায় না; নির্ধারিত সময় পরে ব্যাকআপ থেকেও সরে যায়।</p>
 <p th:if="${whatsapp != null}"><a th:href="${whatsapp}">WhatsApp-এ জানান</a></p>
+<p th:if="${!#strings.isEmpty(settings['phone'])}">ফোন: <a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
+<p th:if="${!#strings.isEmpty(settings['business_email'])}">ইমেইল: <a th:href="${'mailto:' + settings['business_email']}" th:text="${settings['business_email']}"></a></p>
 </main>
 <footer th:replace="~{fragments/footer :: footer}">
 </footer>

@@ -27,6 +27,9 @@ public class TrackingController {
           "DELIVERED", "পৌঁছে গেছে।",
           "CANCELLED", "অর্ডারটি বাতিল হয়েছে।");
 
+  private static final String APPROVED_AWAITING_ADVANCE =
+      "ডিজাইনে আপনার সম্মতি পেয়েছি। অগ্রিম পেলে বানানো শুরু হবে।";
+
   private final TrackingService tracking;
   private final SettingsService settings;
   private final RateLimiter attemptsByIp;
@@ -51,7 +54,7 @@ public class TrackingController {
   @GetMapping("/track")
   String form(HttpServletResponse res, Model m) {
     privateResponse(res);
-    m.addAttribute("whatsapp", settings.whatsapp(settings.all()));
+    contact(m);
     return "site/track";
   }
 
@@ -64,7 +67,7 @@ public class TrackingController {
       HttpServletResponse res,
       Model m) {
     privateResponse(res);
-    m.addAttribute("whatsapp", settings.whatsapp(settings.all()));
+    contact(m);
     m.addAttribute("code", code);
     m.addAttribute("phone", phone);
     String normalized = TrackingService.normalizeCode(code);
@@ -84,8 +87,21 @@ public class TrackingController {
       return "site/track";
     }
     m.addAttribute("result", found.get());
-    m.addAttribute("statusLabel", LABELS.get(found.get().status()));
+    m.addAttribute("statusLabel", label(found.get()));
     return "site/track";
+  }
+
+  /** Approval does not change the status, because the order also needs its advance to move on. */
+  private static String label(TrackingService.Status order) {
+    return "DESIGN_SENT".equals(order.status()) && order.approvedAt() != null
+        ? APPROVED_AWAITING_ADVANCE
+        : LABELS.get(order.status());
+  }
+
+  private void contact(Model m) {
+    Map<String, String> values = settings.all();
+    m.addAttribute("whatsapp", settings.whatsapp(values));
+    m.addAttribute("businessPhone", values.getOrDefault("phone", ""));
   }
 
   private void privateResponse(HttpServletResponse res) {

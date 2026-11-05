@@ -72,6 +72,7 @@ class PublicPagesTest {
           .contains("lang=\"bn\"", page[1], "name=\"description\"", "href=\"/policies/privacy\"")
           .contains("href=\"#main\"", "id=\"main\"")
           .doesNotContain("th:", "approve", "advance");
+      assertThat(response.body()).as(page[0] + " has no empty blocks").doesNotContainPattern("<p[^>]*>\\s*</p>");
       assertThat(Pattern.compile("<h1[ >]").matcher(response.body()).results().count())
           .as(page[0])
           .isEqualTo(1);
@@ -94,6 +95,9 @@ class PublicPagesTest {
     var bulk = get("/bulk").body();
     assertThat(bulk).contains("যোগাযোগের তথ্য শিগগিরই").doesNotContain("wa.me", "tel:");
     assertThat(get("/about").body()).doesNotContain("wa.me", "tel:", "mailto:");
+    assertThat(get("/policies/delivery").body())
+        .as("no note about estimates while no courier times are set")
+        .doesNotContain("আনুমানিক");
   }
 
   @Test

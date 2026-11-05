@@ -82,6 +82,16 @@ class TrackingTest {
   }
 
   @Test
+  void approvedOrderAwaitingAdvanceDoesNotAskForApprovalAgain() throws Exception {
+    admin.changeStatus(code, "DESIGN_SENT", null, null, null, ADMIN);
+    assertThat(track(new Browser(port), code, PHONE).body()).contains("আপনার সম্মতির অপেক্ষায়");
+    admin.approveDesign(code, ADMIN);
+    assertThat(track(new Browser(port), code, PHONE).body())
+        .contains("অগ্রিম পেলে বানানো শুরু হবে", "ডিজাইনে সম্মতি")
+        .doesNotContain("আপনার সম্মতির অপেক্ষায়");
+  }
+
+  @Test
   void correctCodeAndFullPhoneShowStatusOnly() throws Exception {
     admin.addNote(code, "গোপন-ভেতরের-নোট", ADMIN);
     admin.changeStatus(code, "DESIGN_SENT", null, null, null, ADMIN);

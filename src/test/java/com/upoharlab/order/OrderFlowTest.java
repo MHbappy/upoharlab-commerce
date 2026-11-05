@@ -116,7 +116,9 @@ class OrderFlowTest {
     String html = new Browser(port).open().get("/p/" + SLUG).body();
     String note = "এখন টাকা দিতে হবে না";
     assertThat(html.indexOf(note)).as("payment timing comes before the form").isLessThan(html.indexOf("id=\"order\""));
-    assertThat(html).contains("অর্ডারের পরে কী হবে", "href=\"#order\"");
+    assertThat(html)
+        .contains("অর্ডারের পরে কী হবে", "href=\"#order\"")
+        .contains("href=\"/policies/delivery\"", "href=\"/policies/returns\"");
   }
 
   @Test

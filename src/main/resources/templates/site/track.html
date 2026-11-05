@@ -42,6 +42,7 @@
 <button class="button">অবস্থা দেখুন</button>
 </form>
 <p class="muted track-help" th:if="${whatsapp != null}">কোড খুঁজে পাচ্ছেন না? <a th:href="${whatsapp}">WhatsApp-এ জানান</a>।</p>
+<p class="muted track-help" th:if="${whatsapp == null and !#strings.isEmpty(businessPhone)}">কোড খুঁজে পাচ্ছেন না? ফোন করুন: <a th:href="${'tel:' + businessPhone}" th:text="${businessPhone}"></a></p>
 </main>
 <footer th:replace="~{fragments/footer :: footer}">
 </footer>

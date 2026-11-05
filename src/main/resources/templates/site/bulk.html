@@ -12,12 +12,10 @@
 <ul>
 <li>কোন পণ্য লাগবে</li>
 <li>কয়টি লাগবে</li>
-<li>কবের মধ্যে লাগবে</li>
+<li>কবে নাগাদ লাগবে</li>
 <li>কী কী লেখা খোদাই হবে</li>
 </ul>
-<p>
-<a class="button" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ জানান</a>
-</p>
+<p th:if="${whatsapp != null}"><a class="button" th:href="${whatsapp}">WhatsApp-এ জানান</a></p>
 <p th:if="${!#strings.isEmpty(settings['phone'])}">ফোন: <a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
 <p class="muted" th:if="${whatsapp == null and #strings.isEmpty(settings['phone'])}">যোগাযোগের তথ্য শিগগিরই এখানে থাকবে।</p>
 </main>

@@ -10,10 +10,10 @@
 <p class="notice" th:if="${preview}">শুধু অ্যাডমিনের জন্য প্রিভিউ</p>
 <div class="product-layout">
 <section aria-label="পণ্যের ছবি">
-<img class="main-photo" th:if="${!product.photos.isEmpty()}" th:src="@{/media/{name}(name=${product.photos[0].filename})}" th:alt="${product.photos[0].alt}">
+<img class="main-photo" fetchpriority="high" th:if="${!product.photos.isEmpty()}" th:src="@{/media/{name}(name=${product.photos[0].filename})}" th:alt="${product.photos[0].alt}">
 <div class="thumbnails" th:if="${product.photos.size() > 1}">
 <a th:each="photo : ${product.photos}" th:href="@{/media/{name}(name=${photo.filename})}">
-<img th:src="@{/media/{name}(name=${'thumb-' + photo.filename})}" th:alt="${photo.alt}" loading="lazy">
+<img th:src="@{/media/{name}(name=${'thumb-' + photo.filename})}" th:alt="${photo.alt}" width="80" height="80">
 </a>
 </div>
 </section>
@@ -71,6 +71,7 @@
 <li>কুরিয়ারে পাঠাব। বাকি টাকা ডেলিভারিতে দেবেন।</li>
 </ol>
 <p class="help-link" th:if="${whatsapp != null}"><a th:href="${whatsapp}">কিছু জানতে WhatsApp করুন</a></p>
+<p class="help-link"><a th:href="@{/policies/delivery}">ডেলিভারির তথ্য</a> · <a th:href="@{/policies/returns}">ফেরত ও বাতিল</a></p>
 </aside>
 </div>
 <section class="reading-width" th:if="${!#strings.isEmpty(product.details.description)}">

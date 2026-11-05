@@ -20,8 +20,10 @@
 <h3>মোট দামে কী কী থাকে?</h3>
 <p>পণ্যের দাম আর ডেলিভারি চার্জ। অর্ডার পাঠানোর আগেই ফর্মে মোট হিসাব দেখতে পাবেন।</p>
 <h2>ডেলিভারি</h2>
+<th:block th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}">
 <h3>ডেলিভারি চার্জ কত?</h3>
-<p th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}" th:text="${'ঢাকার ভেতরে ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside']) + '।'}"></p>
+<p th:text="${'ঢাকার ভেতরে ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside']) + '।'}"></p>
+</th:block>
 <h3>কবে পাব?</h3>
 <p>ডিজাইনে সম্মতি ও অগ্রিম পাওয়ার পরে বানানো শুরু হয়। বানাতে কত দিন লাগবে তা পণ্যের পাতায় আছে, তারপর কুরিয়ারের সময় যোগ হবে। <a th:href="@{/policies/delivery}">ডেলিভারির তথ্য দেখুন</a>।</p>
 <h3>অর্ডারের অবস্থা কীভাবে দেখব?</h3>
