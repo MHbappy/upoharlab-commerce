@@ -1,5 +1,12 @@
-# Phase 7 will add HTTPS proxy configuration and production validation.
+# Production runs behind Caddy on a private network; see compose.prod.yaml.
 server:
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      # Only Caddy may state the client address and protocol. Anything else is ignored.
+      internal-proxies: 172\.30\.57\.20
+      remote-ip-header: X-Forwarded-For
+      protocol-header: X-Forwarded-Proto
   servlet:
     session:
       cookie:

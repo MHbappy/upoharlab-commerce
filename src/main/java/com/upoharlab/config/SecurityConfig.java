@@ -56,7 +56,7 @@ public class SecurityConfig {
                         "/policies/**",
                         "/sitemap.xml",
                         "/robots.txt",
-                        "/favicon.svg",
+                        "/favicon*.svg",
                         "/media/**",
                         "/admin/login",
                         "/error")
@@ -90,6 +90,8 @@ public class SecurityConfig {
         .headers(
             h ->
                 h.referrerPolicy(r -> r.policy(ReferrerPolicy.NO_REFERRER))
+                    .httpStrictTransportSecurity(
+                        t -> t.includeSubDomains(false).maxAgeInSeconds(15552000))
                     .contentSecurityPolicy(
                         c ->
                             c.policyDirectives(

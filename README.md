@@ -32,8 +32,8 @@ docker compose down
 ```
 
 Stopping with `down` preserves the database and uploads volumes. Do not add `-v` unless you
-intend to delete local data. This Compose file binds to localhost and is for development;
-HTTPS deployment and backups are Phase 7.
+intend to delete local data. This Compose file binds to localhost and is for development.
+For production with HTTPS and backups, see [DEPLOY.md](DEPLOY.md).
 
 ## Run with Java 21 on your computer
 
@@ -86,7 +86,8 @@ Other launch tables are created now and will receive application mappings as the
 - Spring Boot: **4.1.2**, pinned in `pom.xml`; see [official requirements](https://docs.spring.io/spring-boot/system-requirements.html).
 - Maven: **3.9.11**, Wrapper **3.3.4**.
 - PostgreSQL image: **16.15-alpine**, used in Compose and tests.
-- Docker Java images: Eclipse Temurin **21-jdk-jammy / 21-jre-jammy** (Java 21 tags receive maintenance updates; production image pinning is Phase 7).
+- Docker Java images: Eclipse Temurin **21.0.13_9-jdk-jammy / 21.0.13_9-jre-jammy**.
+- Caddy image: **2.10.2-alpine** (production only).
 - Flyway, Hibernate, Spring Security, JUnit and Testcontainers versions are managed by the Spring Boot BOM.
 - Noto Sans Bengali is self-hosted as a Bengali + Latin WOFF2 subset; its SIL Open Font License is in `static/fonts/OFL.txt`.
 
@@ -102,8 +103,8 @@ variables. The first account is created from `ADMIN_USERNAME` and `ADMIN_PASSWOR
 table is empty. Later restarts keep the existing password. CSRF stays enabled on every form; login is rate-limited by
 username and IP. Admin pages are uncached and marked noindex. Unimplemented routes remain closed.
 
-The `prod` profile enables secure cookies. It is a starting configuration, not a completed
-production deployment. See [the phase guide](prompts/upoharlab/README.md) for the next steps.
+The `prod` profile enables secure cookies and reads client addresses only from Caddy. It refuses
+to start without an `https://` site address. See [DEPLOY.md](DEPLOY.md).
 
 ## Use the Phase 2 admin
 

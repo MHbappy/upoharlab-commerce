@@ -126,3 +126,8 @@ p{margin:0 0 16px;overflow-wrap:anywhere}
 .reading-width ul{padding-left:22px}
 .reading-width h2{margin-top:28px}
 .faq-contact{margin-top:24px}
+
+/* Reserve photo space so the page does not jump while images load. */
+.main-photo{display:block;width:100%;aspect-ratio:4/3;object-fit:contain}
+.thumbnails img{aspect-ratio:1;object-fit:cover}
+.panel img{aspect-ratio:auto}

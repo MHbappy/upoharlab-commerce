@@ -146,6 +146,9 @@ class PublicPagesTest {
     assertThat(font.find()).as("font link in stylesheet").isTrue();
     assertThat(get(font.group(1)).statusCode()).isEqualTo(200);
     assertThat(get("/favicon.svg").statusCode()).isEqualTo(200);
+    var icon = Pattern.compile("href=\"(/favicon-[0-9a-f]{32}\\.svg)\"").matcher(home.body());
+    assertThat(icon.find()).as("hashed icon link").isTrue();
+    assertThat(get(icon.group(1)).statusCode()).isEqualTo(200);
     var script = Pattern.compile("src=\"(/js/order-[0-9a-f]{32}\\.js)\"").matcher(home.body());
     assertThat(script.find()).as("hashed script link").isTrue();
   }
