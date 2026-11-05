@@ -20,45 +20,59 @@
 <section>
 <h1 th:text="${product.details.title}">
 </h1>
+<p class="badge" th:if="${product.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
 <p class="lead" th:text="${product.details.shortDescription}">
 </p>
 <p class="price" th:if="${product.details.price != null}" th:text="${@bn.money(product.details.price)}">
 </p>
 <p th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}" th:text="${'ডেলিভারি আলাদা: ঢাকায় ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside'])}">
 </p>
+<div class="order-cta" th:if="${orderable}">
+<a class="button" href="#order">অর্ডার করুন</a>
+<p class="muted">এখন টাকা দিতে হবে না। আগে WhatsApp-এ ডিজাইন দেখাব। আপনি সম্মতি দিলে ৫০% অগ্রিম দেবেন।</p>
+</div>
 <div class="order-closed" th:if="${!orderable and !showForm and !preview}">
 <p class="notice notice-warning" role="status" th:text="${product.details.status == 'PAUSED' ? 'এই পণ্যের অর্ডার এখন বন্ধ আছে।' : (settings['accepting_orders'] != 'true' and !#strings.isEmpty(settings['pause_notice']) ? settings['pause_notice'] : 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।')}"></p>
 <p th:if="${whatsapp != null}"><a th:href="${whatsapp}">WhatsApp-এ জানতে চান</a></p>
 <p th:if="${whatsapp == null and !#strings.isEmpty(settings['phone'])}">জানতে ফোন করুন: <a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
 </div>
-<p class="badge" th:if="${product.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
-<p th:if="${!#strings.isEmpty(product.details.quantityHelp)}" th:text="${product.details.quantityHelp}">
+<p th:if="${!showForm and !#strings.isEmpty(product.details.quantityHelp)}" th:text="${product.details.quantityHelp}">
 </p>
-<dl>
+<dl class="product-facts">
 <th:block th:each="fact : ${ {'কী পাবেন': product.details.includes, 'মাপ': product.details.size, 'উপাদান': product.details.material, 'কী লেখা যাবে': product.details.engravingHelp} }">
 <dt th:if="${!#strings.isEmpty(fact.value)}" th:text="${fact.key}">
 </dt>
 <dd th:if="${!#strings.isEmpty(fact.value)}" th:text="${fact.value}">
 </dd>
 </th:block>
+<th:block th:if="${product.details.makingDaysMin != null and product.details.makingDaysMax != null}">
+<dt>বানাতে সময়</dt>
+<dd th:text="${@bn.digits(product.details.makingDaysMin) + '–' + @bn.digits(product.details.makingDaysMax) + ' দিন। ডিজাইনে সম্মতি ও অগ্রিম পাওয়ার পরে শুরু হবে।'}"></dd>
+</th:block>
+<th:block th:if="${!#strings.isEmpty(settings['courier_days_inside_min']) or !#strings.isEmpty(settings['courier_days_outside_min'])}">
+<dt>কুরিয়ারে সময়</dt>
+<dd class="courier-times">
+<span th:if="${!#strings.isEmpty(settings['courier_days_inside_min'])}" th:text="${'ঢাকায় ' + @bn.digits(settings['courier_days_inside_min']) + '–' + @bn.digits(settings['courier_days_inside_max']) + ' দিন। '}"></span>
+<span th:if="${!#strings.isEmpty(settings['courier_days_outside_min'])}" th:text="${'ঢাকার বাইরে ' + @bn.digits(settings['courier_days_outside_min']) + '–' + @bn.digits(settings['courier_days_outside_max']) + ' দিন।'}"></span>
+</dd>
+</th:block>
 </dl>
-<section th:if="${product.details.makingDaysMin != null and product.details.makingDaysMax != null}">
-<h2>কত দিন লাগবে?</h2>
-<p th:text="${'বানাতে ' + @bn.digits(product.details.makingDaysMin) + '–' + @bn.digits(product.details.makingDaysMax) + ' দিন।'}">
-</p>
-<p>ডিজাইনে সম্মতি ও অগ্রিম পাওয়ার পরে বানানো শুরু হবে। কুরিয়ারের সময় আলাদা।</p>
-<p th:if="${!#strings.isEmpty(settings['courier_days_inside_min'])}" th:text="${'ঢাকায় কুরিয়ার: ' + @bn.digits(settings['courier_days_inside_min']) + '–' + @bn.digits(settings['courier_days_inside_max']) + ' দিন।'}">
-</p>
-<p th:if="${!#strings.isEmpty(settings['courier_days_outside_min'])}" th:text="${'ঢাকার বাইরে কুরিয়ার: ' + @bn.digits(settings['courier_days_outside_min']) + '–' + @bn.digits(settings['courier_days_outside_max']) + ' দিন।'}">
-</p>
-</section>
-<a class="button" th:if="${orderable}" href="#order">অর্ডার করুন</a>
 </section>
 </div>
-<th:block th:if="${orderable or showForm}">
+<div class="order-layout" th:if="${orderable or showForm}">
 <section th:replace="~{fragments/order-form :: order}">
 </section>
-</th:block>
+<aside class="order-after" aria-labelledby="after-title">
+<h2 id="after-title">অর্ডারের পরে কী হবে</h2>
+<ol class="next-steps">
+<li th:text="${#strings.isEmpty(settings['reply_hours']) ? 'আমরা WhatsApp-এ ডিজাইন পাঠাব।' : @bn.digits(settings['reply_hours']) + ' ঘণ্টার মধ্যে আমরা WhatsApp-এ যোগাযোগ করব।'}"></li>
+<li>ডিজাইন ও বানান দেখে সম্মতি দিন।</li>
+<li>সম্মতির পরে ৫০% অগ্রিম দেবেন। তারপর বানানো শুরু হবে।</li>
+<li>কুরিয়ারে পাঠাব। বাকি টাকা ডেলিভারিতে দেবেন।</li>
+</ol>
+<p class="help-link" th:if="${whatsapp != null}"><a th:href="${whatsapp}">কিছু জানতে WhatsApp করুন</a></p>
+</aside>
+</div>
 <section class="reading-width" th:if="${!#strings.isEmpty(product.details.description)}">
 <h2>আরও বিস্তারিত</h2>
 <p class="preserve-lines" th:text="${product.details.description}">
@@ -70,6 +84,7 @@
 </p>
 </section>
 <section class="reading-width">
+<th:block th:unless="${orderable or showForm}">
 <h2>কিছু সাধারণ প্রশ্ন</h2>
 <details>
 <summary>কখন অগ্রিম দিতে হবে?</summary>
@@ -79,6 +94,7 @@
 <summary>ডিজাইন কোথায় দেখব?</summary>
 <p>বানানোর আগে WhatsApp-এ ডিজাইন পাঠাব। নামের বানান ও ডিজাইন নিশ্চিত হওয়ার পরে বানানো শুরু হবে।</p>
 </details>
+</th:block>
 <p class="help-link"><a th:href="@{/faq}">আরও প্রশ্ন</a><th:block th:if="${whatsapp != null}"> · <a th:href="${whatsapp}">WhatsApp-এ জিজ্ঞেস করুন</a></th:block></p>
 </section>
 </main>

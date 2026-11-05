@@ -112,6 +112,14 @@ class OrderFlowTest {
   }
 
   @Test
+  void productPageExplainsPaymentTimingAndNextStepsAroundTheForm() throws Exception {
+    String html = new Browser(port).open().get("/p/" + SLUG).body();
+    String note = "এখন টাকা দিতে হবে না";
+    assertThat(html.indexOf(note)).as("payment timing comes before the form").isLessThan(html.indexOf("id=\"order\""));
+    assertThat(html).contains("অর্ডারের পরে কী হবে", "href=\"#order\"");
+  }
+
+  @Test
   void orderAddressOpenedDirectlyGoesToTheProduct() throws Exception {
     var response = new Browser(port).open().get("/p/" + SLUG + "/order");
     assertThat(response.statusCode()).isEqualTo(302);
