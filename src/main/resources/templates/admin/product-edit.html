@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Upohar Lab · Admin</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/admin :: header}">
+</header>
+<main class="container admin-main">
+<p class="notice" role="status" th:if="${message}" th:text="${message}">
+</p>
+<p class="error" role="alert" th:if="${error}" th:text="${error}">
+</p>
+<a th:href="@{/admin/products}">← Products</a>
+<h1 th:text="${productId == null ? 'Add product' : 'Edit product'}">
+</h1>
+<p>Save a draft first, add photos, then publish when details are ready.</p>
+<a th:if="${productId != null}" th:href="@{/admin/products/{id}/preview(id=${productId})}">Preview product</a>
+<form class="product-form" th:object="${productForm}" th:action="${productId == null ? '/admin/products/new' : '/admin/products/' + productId}" method="post">
+<div th:if="${#fields.hasAnyErrors()}" class="error" role="alert">
+<p>Please correct the fields below.</p>
+</div>
+<div class="field">
+<label for="title">Product name (Bangla)</label>
+<input id="title" th:field="*{title}" type="text">
+<p class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">
+</p>
+</div>
+<div class="field">
+<label for="slug">Product URL slug</label>
+<input id="slug" th:field="*{slug}" type="text">
+<p class="error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">
+</p>
+</div>
+<div class="field">
+<label for="shortDescription">Short description</label>
+<textarea id="shortDescription" th:field="*{shortDescription}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('shortDescription')}" th:errors="*{shortDescription}">
+</p>
+</div>
+<div class="field">
+<label for="description">Extra details (optional)</label>
+<textarea id="description" th:field="*{description}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">
+</p>
+</div>
+<div class="field">
+<label for="includes">What is included</label>
+<textarea id="includes" th:field="*{includes}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('includes')}" th:errors="*{includes}">
+</p>
+</div>
+<div class="field">
+<label for="material">Material</label>
+<textarea id="material" th:field="*{material}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('material')}" th:errors="*{material}">
+</p>
+</div>
+<div class="field">
+<label for="size">Size</label>
+<textarea id="size" th:field="*{size}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('size')}" th:errors="*{size}">
+</p>
+</div>
+<div class="field">
+<label for="engravingHelp">Engraving instructions and limits</label>
+<textarea id="engravingHelp" th:field="*{engravingHelp}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('engravingHelp')}" th:errors="*{engravingHelp}">
+</p>
+</div>
+<div class="field">
+<label for="care">Care (optional)</label>
+<textarea id="care" th:field="*{care}" rows="3">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('care')}" th:errors="*{care}">
+</p>
+</div>
+<div class="field">
+<label for="price">Price (whole taka)</label>
+<input id="price" th:field="*{price}" type="number">
+<p class="error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">
+</p>
+</div>
+<div class="field">
+<label for="makingDaysMin">Making days — minimum</label>
+<input id="makingDaysMin" th:field="*{makingDaysMin}" type="number">
+<p class="error" th:if="${#fields.hasErrors('makingDaysMin')}" th:errors="*{makingDaysMin}">
+</p>
+</div>
+<div class="field">
+<label for="makingDaysMax">Making days — maximum</label>
+<input id="makingDaysMax" th:field="*{makingDaysMax}" type="number">
+<p class="error" th:if="${#fields.hasErrors('makingDaysMax')}" th:errors="*{makingDaysMax}">
+</p>
+</div>
+<div class="field">
+<label for="indoorOnly">Indoor use only</label>
+<input type="checkbox" id="indoorOnly" th:field="*{indoorOnly}">
+<span>Indoor use only (kept once enabled)</span>
+<p class="error" th:if="${#fields.hasErrors('indoorOnly')}" th:errors="*{indoorOnly}">
+</p>
+</div>
+<div class="field">
+<label for="status">Publishing status</label>
+<select id="status" th:field="*{status}">
+<option value="DRAFT">Draft — hidden from customers</option>
+<option value="ACTIVE">Active — visible in the shop</option>
+<option value="PAUSED">Paused — visible, ordering paused</option>
+</select>
+<p class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">
+</p>
+</div>
+<div class="field">
+<label for="sortOrder">Display order</label>
+<input id="sortOrder" th:field="*{sortOrder}" type="number">
+<p class="error" th:if="${#fields.hasErrors('sortOrder')}" th:errors="*{sortOrder}">
+</p>
+</div>
+<button class="button">Save product</button>
+</form>
+<section th:if="${productId != null}" class="photos-editor">
+<h2>Product photos</h2>
+<p>Use your own JPEG or PNG product photos. Maximum 5 MB and 20 megapixels.</p>
+<div class="photo-row" th:each="photo : ${photos}">
+<img th:src="@{/media/{name}(name=${photo.filename})}" th:alt="${photo.alt}" width="120">
+<div>
+<p th:text="${photo.alt}">
+</p>
+<div class="photo-actions">
+<form th:action="@{/admin/products/{id}/photos/{photo}/move(id=${productId},photo=${photo.id})}" method="post">
+<button name="direction" value="up">Move up</button>
+<button name="direction" value="down">Move down</button>
+</form>
+<form th:action="@{/admin/products/{id}/photos/{photo}/remove(id=${productId},photo=${photo.id})}" method="post">
+<button>Remove photo</button>
+</form>
+</div>
+</div>
+</div>
+<form th:action="@{/admin/products/{id}/photos(id=${productId})}" method="post" enctype="multipart/form-data">
+<label for="photo">Photo</label>
+<input id="photo" name="photo" type="file" accept="image/jpeg,image/png" required>
+<label for="alt">Describe this photo (Bangla)</label>
+<input id="alt" name="alt" maxlength="250" required>
+<button class="button">Add photo</button>
+</form>
+</section>
+</main>
+</body>
+</html>

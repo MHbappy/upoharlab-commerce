@@ -1,0 +1,6 @@
+# Phase 7 will add HTTPS proxy configuration and production validation.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true

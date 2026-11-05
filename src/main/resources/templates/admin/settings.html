@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Upohar Lab · Admin</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/admin :: header}">
+</header>
+<main class="container admin-main">
+<p class="notice" role="status" th:if="${message}" th:text="${message}">
+</p>
+<p class="error" role="alert" th:if="${error}" th:text="${error}">
+</p>
+<h1>Business settings</h1>
+<p>Keep unknown values empty. Check all contacts, charges and durations before enabling orders. The order form itself comes in Phase 3.</p>
+<form class="form-width" th:object="${settingsForm}" th:action="@{/admin/settings}" method="post">
+<p th:if="${#fields.hasAnyErrors()}" class="error" role="alert">Please correct the fields below.</p>
+<div class="field">
+<label for="phone">Business phone</label>
+<input id="phone" th:field="*{values[phone]}" type="text">
+<p class="error" th:if="${#fields.hasErrors('values[phone]')}" th:errors="*{values[phone]}">
+</p>
+</div>
+<div class="field">
+<label for="whatsapp">WhatsApp mobile number</label>
+<input id="whatsapp" th:field="*{values[whatsapp]}" type="text">
+<p class="error" th:if="${#fields.hasErrors('values[whatsapp]')}" th:errors="*{values[whatsapp]}">
+</p>
+</div>
+<div class="field">
+<label for="bkash_number">bKash number</label>
+<input id="bkash_number" th:field="*{values[bkash_number]}" type="text">
+<p class="error" th:if="${#fields.hasErrors('values[bkash_number]')}" th:errors="*{values[bkash_number]}">
+</p>
+</div>
+<div class="field">
+<label for="business_email">Business email (optional)</label>
+<input id="business_email" th:field="*{values[business_email]}" type="text">
+<p class="error" th:if="${#fields.hasErrors('values[business_email]')}" th:errors="*{values[business_email]}">
+</p>
+</div>
+<div class="field">
+<label for="delivery_inside">Delivery inside Dhaka (taka)</label>
+<input id="delivery_inside" th:field="*{values[delivery_inside]}" type="number">
+<p class="error" th:if="${#fields.hasErrors('values[delivery_inside]')}" th:errors="*{values[delivery_inside]}">
+</p>
+</div>
+<div class="field">
+<label for="delivery_outside">Delivery outside Dhaka (taka)</label>
+<input id="delivery_outside" th:field="*{values[delivery_outside]}" type="number">
+<p class="error" th:if="${#fields.hasErrors('values[delivery_outside]')}" th:errors="*{values[delivery_outside]}">
+</p>
+</div>
+<div class="field">
+<label for="courier_days_inside_min">Inside Dhaka courier days — minimum</label>
+<input id="courier_days_inside_min" th:field="*{values[courier_days_inside_min]}" type="number">
+<p class="error" th:if="${#fields.hasErrors('values[courier_days_inside_min]')}" th:errors="*{values[courier_days_inside_min]}">
+</p>
+</div>
+<div class="field">
+<label for="courier_days_inside_max">Inside Dhaka courier days — maximum</label>
+<input id="courier_days_inside_max" th:field="*{values[courier_days_inside_max]}" type="number">
+<p class="error" th:if="${#fields.hasErrors('values[courier_days_inside_max]')}" th:errors="*{values[courier_days_inside_max]}">
+</p>
+</div>
+<div class="field">
+<label for="courier_days_outside_min">Outside Dhaka courier days — minimum</label>
+<input id="courier_days_outside_min" th:field="*{values[courier_days_outside_min]}" type="number">
+<p class="error" th:if="${#fields.hasErrors('values[courier_days_outside_min]')}" th:errors="*{values[courier_days_outside_min]}">
+</p>
+</div>
+<div class="field">
+<label for="courier_days_outside_max">Outside Dhaka courier days — maximum</label>
+<input id="courier_days_outside_max" th:field="*{values[courier_days_outside_max]}" type="number">
+<p class="error" th:if="${#fields.hasErrors('values[courier_days_outside_max]')}" th:errors="*{values[courier_days_outside_max]}">
+</p>
+</div>
+<div class="field">
+<label for="reply_hours">Reply within (hours)</label>
+<input id="reply_hours" th:field="*{values[reply_hours]}" type="number">
+<p class="error" th:if="${#fields.hasErrors('values[reply_hours]')}" th:errors="*{values[reply_hours]}">
+</p>
+</div>
+<div class="field">
+<label for="accepting_orders">Accepting new orders</label>
+<select id="accepting_orders" th:field="*{values[accepting_orders]}">
+<option value="false">Paused</option>
+<option value="true">Enabled</option>
+</select>
+<p class="error" th:if="${#fields.hasErrors('values[accepting_orders]')}" th:errors="*{values[accepting_orders]}">
+</p>
+</div>
+<div class="field">
+<label for="pause_notice">Notice while ordering is paused (Bangla)</label>
+<textarea id="pause_notice" th:field="*{values[pause_notice]}" rows="3" maxlength="500">
+</textarea>
+<p class="error" th:if="${#fields.hasErrors('values[pause_notice]')}" th:errors="*{values[pause_notice]}">
+</p>
+</div>
+<button class="button">Save settings</button>
+</form>
+</main>
+</body>
+</html>

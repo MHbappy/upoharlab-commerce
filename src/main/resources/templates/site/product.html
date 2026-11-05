@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta th:if="${preview}" name="robots" content="noindex">
+<title th:text="${product.details.title + ' — উপহার ল্যাব'}">
+</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}">
+</header>
+<main class="container product-main">
+<a th:href="@{/#products}">← সব পণ্য</a>
+<p class="notice" th:if="${preview}">শুধু অ্যাডমিনের জন্য প্রিভিউ</p>
+<div class="product-layout">
+<section aria-label="পণ্যের ছবি">
+<img class="main-photo" th:if="${!product.photos.isEmpty()}" th:src="@{/media/{name}(name=${product.photos[0].filename})}" th:alt="${product.photos[0].alt}">
+<div class="thumbnails">
+<a th:each="photo : ${product.photos}" th:href="@{/media/{name}(name=${photo.filename})}">
+<img th:src="@{/media/{name}(name=${'thumb-' + photo.filename})}" th:alt="${photo.alt}" loading="lazy">
+</a>
+</div>
+</section>
+<section>
+<h1 th:text="${product.details.title}">
+</h1>
+<p class="lead" th:text="${product.details.shortDescription}">
+</p>
+<p class="price" th:if="${product.details.price != null}" th:text="${@bn.money(product.details.price)}">
+</p>
+<p th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}" th:text="${'ডেলিভারি আলাদা: ঢাকায় ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside'])}">
+</p>
+<p class="badge" th:if="${product.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
+<p th:if="${product.details.slug == 'keyring-gift-pair'}">প্রতি সেটে দুটি চাবির রিং পাবেন। পরিমাণ ১ মানে এক জোড়া।</p>
+<dl>
+<th:block th:each="fact : ${ {'কী পাবেন': product.details.includes, 'মাপ': product.details.size, 'উপাদান': product.details.material, 'কী লেখা যাবে': product.details.engravingHelp} }">
+<dt th:if="${!#strings.isEmpty(fact.value)}" th:text="${fact.key}">
+</dt>
+<dd th:if="${!#strings.isEmpty(fact.value)}" th:text="${fact.value}">
+</dd>
+</th:block>
+</dl>
+<section th:if="${product.details.makingDaysMin != null and product.details.makingDaysMax != null}">
+<h2>কত দিন লাগবে?</h2>
+<p th:text="${'বানাতে ' + @bn.digits(product.details.makingDaysMin) + '–' + @bn.digits(product.details.makingDaysMax) + ' দিন।'}">
+</p>
+<p>ডিজাইনে সম্মতি ও অগ্রিম পাওয়ার পরে বানানো শুরু হবে। কুরিয়ারের সময় আলাদা।</p>
+<p th:if="${!#strings.isEmpty(settings['courier_days_inside_min'])}" th:text="${'ঢাকায় কুরিয়ার: ' + @bn.digits(settings['courier_days_inside_min']) + '–' + @bn.digits(settings['courier_days_inside_max']) + ' দিন।'}">
+</p>
+<p th:if="${!#strings.isEmpty(settings['courier_days_outside_min'])}" th:text="${'ঢাকার বাইরে কুরিয়ার: ' + @bn.digits(settings['courier_days_outside_min']) + '–' + @bn.digits(settings['courier_days_outside_max']) + ' দিন।'}">
+</p>
+</section>
+<section id="order" class="panel">
+<p th:if="${product.details.status == 'PAUSED'}">এই পণ্যের অর্ডার এখন বন্ধ আছে।</p>
+<p th:unless="${product.details.status == 'PAUSED'}" th:text="${settings['accepting_orders'] == 'false' and !#strings.isEmpty(settings['pause_notice']) ? settings['pause_notice'] : 'অনলাইনে অর্ডার নেওয়া এখনো চালু হয়নি।'}">
+</p>
+<a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ জানতে চান</a>
+</section>
+</section>
+</div>
+<section class="reading-width" th:if="${!#strings.isEmpty(product.details.description)}">
+<h2>আরও বিস্তারিত</h2>
+<p class="preserve-lines" th:text="${product.details.description}">
+</p>
+</section>
+<section class="reading-width" th:if="${!#strings.isEmpty(product.details.care)}">
+<h2>যত্ন</h2>
+<p class="preserve-lines" th:text="${product.details.care}">
+</p>
+</section>
+<section class="reading-width">
+<h2>কিছু সাধারণ প্রশ্ন</h2>
+<details>
+<summary>কখন অগ্রিম দিতে হবে?</summary>
+<p>ডিজাইন দেখে সম্মতি দেওয়ার পরে মোট দামের ৫০% অগ্রিম দিতে হবে। বাকি টাকা ডেলিভারিতে।</p>
+</details>
+<details>
+<summary>ডিজাইন কোথায় দেখব?</summary>
+<p>বানানোর আগে WhatsApp-এ ডিজাইন পাঠাব। নামের বানান ও ডিজাইন নিশ্চিত হওয়ার পরে বানানো শুরু হবে।</p>
+</details>
+</section>
+</main>
+<footer th:replace="~{fragments/footer :: footer}">
+</footer>
+</body>
+</html>

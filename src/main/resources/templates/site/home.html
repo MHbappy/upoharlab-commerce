@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="উপহার ল্যাব — নাম খোদাই করা চাবির রিং ও নেমপ্লেট। বানানোর আগে ডিজাইন দেখুন।">
+  <title>উপহার ল্যাব — যত্নে খোদাই করা উপহার</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+  <a class="skip-link" href="#main">মূল বিষয়বস্তুতে যান</a>
+  <header th:replace="~{fragments/header :: header}">
+</header>
+  <main id="main" class="container">
+    <section class="intro" aria-labelledby="welcome-title">
+      <p class="eyebrow">একটি নাম, একটি আপন উপহার</p>
+      <h1 id="welcome-title">আপনার প্রিয়জনের নাম,<br>যত্নে খোদাই করা</h1>
+      <p class="lead">নামের চাবির রিং, বাসা ও অফিসের নেমপ্লেট। বানানোর আগে ডিজাইন দেখাব।</p>
+      <a class="button" href="#products">পণ্যের খবর দেখুন <span aria-hidden="true">↓</span>
+</a>
+    </section>
+    <section th:if="${products.isEmpty()}" id="products" class="availability" aria-labelledby="products-title">
+      <p class="eyebrow">আমাদের পণ্য</p>
+      <h2 id="products-title">আপনার জন্য প্রস্তুত হচ্ছে</h2>
+      <p>পণ্যের ছবি, বিস্তারিত ও দাম প্রস্তুত হলে এখানে পাবেন। এখনো অনলাইনে অর্ডার নেওয়া শুরু হয়নি।</p>
+      <p class="muted">নামের চাবির রিং · উপহার-জোড়া · বাসা ও অফিসের নেমপ্লেট</p>
+    </section>
+    <section th:unless="${products.isEmpty()}" id="products" aria-labelledby="catalog-title">
+<h2 id="catalog-title">আপনার জন্য উপহার</h2>
+<div class="product-grid">
+<article class="panel" th:each="p : ${products}">
+<a th:href="@{/p/{slug}(slug=${p.details.slug})}">
+<img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" loading="lazy">
+<h3 th:text="${p.details.title}">
+</h3>
+</a>
+<p th:text="${@bn.money(p.details.price)}">
+</p>
+</article>
+</div>
+</section>
+    <section id="how-it-works" class="process" aria-labelledby="process-title">
+      <h2 id="process-title">অর্ডার যেভাবে হবে</h2>
+      <ol class="steps">
+        <li>
+<span class="step-number" aria-hidden="true">০১</span>
+<h3>পণ্য ও লেখা বাছুন</h3>
+<p>পছন্দের পণ্য আর খোদাই করার নাম জানান।</p>
+</li>
+        <li>
+<span class="step-number" aria-hidden="true">০২</span>
+<h3>ডিজাইন দেখে সম্মতি দিন</h3>
+<p>WhatsApp-এ ডিজাইন দেখে বানান নিশ্চিত করুন।</p>
+</li>
+        <li>
+<span class="step-number" aria-hidden="true">০৩</span>
+<h3>অগ্রিম দিন</h3>
+<p>ডিজাইনে সম্মতির পরে ৫০% অগ্রিম দেবেন।</p>
+</li>
+        <li>
+<span class="step-number" aria-hidden="true">০৪</span>
+<h3>উপহার বুঝে নিন</h3>
+<p>বানানো শেষে কুরিয়ারে পাঠাব। বাকি টাকা ডেলিভারিতে।</p>
+</li>
+      </ol>
+    </section>
+    <section class="contact" th:if="${whatsapp != null or !#strings.isEmpty(settings['phone'])}">
+<h2>কিছু জানতে চান?</h2>
+<p>পণ্য বা খোদাই করার লেখা নিয়ে আমাদের সঙ্গে কথা বলুন।</p>
+<a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ কথা বলুন</a>
+<p th:if="${!#strings.isEmpty(settings['phone'])}" th:text="${settings['phone']}">
+</p>
+</section>
+  </main>
+  <footer th:replace="~{fragments/footer :: footer}">
+</footer>
+</body>
+</html>

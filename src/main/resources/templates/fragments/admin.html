@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header" class="site-header">
+<div class="container header-inner">
+<a class="brand" th:href="@{/admin}">Upohar Lab <span>Shop administration</span>
+</a>
+<nav aria-label="Admin navigation">
+<a th:href="@{/admin}">Dashboard</a>
+<a th:href="@{/admin/orders}">Orders</a>
+<a th:href="@{/admin/products}">Products</a>
+<a th:href="@{/admin/settings}">Settings</a>
+<form th:action="@{/admin/logout}" method="post">
+<button class="link-button">Log out</button>
+</form>
+</nav>
+</div>
+</header>
+</body>
+</html>

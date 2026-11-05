@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Upohar Lab · Admin</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/admin :: header}">
+</header>
+<main class="container admin-main">
+<p class="notice" role="status" th:if="${message}" th:text="${message}">
+</p>
+<p class="error" role="alert" th:if="${error}" th:text="${error}">
+</p>
+<h1>Dashboard</h1>
+<p>Keep your shop details and products ready in one place.</p>
+<div class="admin-links">
+<a class="panel" th:href="@{/admin/products}">
+<h2>Products</h2>
+<p>Edit details, photos and availability.</p>
+</a>
+<a class="panel" th:href="@{/admin/settings}">
+<h2>Business settings</h2>
+<p>Check contacts, delivery charges and reply times.</p>
+</a>
+</div>
+<p class="muted">Order submission is being built in Phase 3. Order management follows in Phase 4.</p>
+</main>
+</body>
+</html>

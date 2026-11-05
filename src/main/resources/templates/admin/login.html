@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin login · Upohar Lab</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container form-width admin-main">
+<a th:href="@{/}">← Back to shop</a>
+<h1>Admin login</h1>
+<p>Manage your products and business details.</p>
+<p th:if="${param.error}" class="error" role="alert">Unable to sign in. Check your details and try again.</p>
+<p th:if="${param.logout}" class="notice">You have been logged out.</p>
+<form th:action="@{/admin/login}" method="post">
+<label for="username">Username</label>
+<input id="username" name="username" required autocomplete="username" maxlength="64">
+<label for="password">Password</label>
+<input type="password" id="password" name="password" required autocomplete="current-password">
+<button class="button">Log in</button>
+</form>
+</main>
+</body>
+</html>

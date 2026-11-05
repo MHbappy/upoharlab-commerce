@@ -1,0 +1,7 @@
+target
+.git
+.env
+.env.*
+.DS_Store
+uploads
+prompts
