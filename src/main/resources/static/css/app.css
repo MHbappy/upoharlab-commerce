@@ -140,7 +140,7 @@ img{max-width:100%}
 .order-panel h2{font-size:22px}
 .order-panel form+form{margin-top:12px}
 .order-panel details{margin-top:16px}
-.order-panel summary{cursor:pointer;min-height:32px}
+.order-panel summary{cursor:pointer;padding-block:10px;font-weight:600}
 .order-panel form button{margin-top:14px}
 .order-panel form .button{margin-top:0}
 .order-panel .form-width .button{margin-top:14px}
@@ -208,3 +208,19 @@ button:disabled{opacity:.5;cursor:not-allowed}
 button:disabled:hover{background:var(--surface)}
 .photos-editor{padding-top:20px}
 .photos-editor h2{font-size:19px;margin-bottom:8px}
+
+.status-NEW{background:var(--warning-bg)}
+.status-DELIVERED{background:var(--success-bg)}
+.status-CANCELLED{background:var(--error-bg);color:var(--error)}
+.order-panel .wa-links{margin-block:0 12px}
+@media(max-width:640px){
+.orders-table thead{display:none}
+.orders-table,.orders-table tbody,.orders-table tr,.orders-table td{display:block;width:100%}
+.orders-table{background:none}
+.orders-table tr{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.orders-table td{display:flex;justify-content:space-between;gap:16px;border:0;padding:3px 0;white-space:normal;text-align:right}
+.orders-table td::before{content:attr(data-label);color:var(--muted);text-align:left;flex:none}
+.orders-table .order-code-cell{font-size:17px;font-weight:700;padding-bottom:6px}
+.orders-table .order-code-cell a{display:inline-flex;align-items:center;min-height:48px}
+}
+.filter-form input,.filter-form select{height:52px}

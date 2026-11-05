@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="table(rows)" class="table-wrap">
-<table class="admin-table">
+<table class="admin-table orders-table">
 <thead>
 <tr>
 <th scope="col">Order</th>
@@ -16,13 +16,13 @@
 </thead>
 <tbody>
 <tr th:each="o : ${rows}">
-<td><a th:href="@{/admin/orders/{code}(code=${o.code})}" th:text="${o.code}"></a></td>
-<td th:text="${@bn.time(o.createdAt)}"></td>
-<td th:text="${o.productTitle + ' × ' + o.quantity}"></td>
-<td th:text="${o.customerName}"></td>
-<td th:text="${o.maskedPhone}"></td>
-<td th:text="${'৳' + o.total}"></td>
-<td><span class="status-pill" th:text="${o.status}"></span></td>
+<td class="order-code-cell"><a th:href="@{/admin/orders/{code}(code=${o.code})}" th:text="${o.code}"></a></td>
+<td data-label="Placed" th:text="${@bn.time(o.createdAt)}"></td>
+<td data-label="Product" th:text="${o.productTitle + ' × ' + o.quantity}"></td>
+<td data-label="Customer" th:text="${o.customerName}"></td>
+<td data-label="Phone" th:text="${o.maskedPhone}"></td>
+<td data-label="Total" th:text="${'৳' + o.total}"></td>
+<td data-label="Status"><span class="status-pill" th:classappend="${'status-' + o.status}" th:text="${@bn.status(o.status)}"></span></td>
 </tr>
 </tbody>
 </table>

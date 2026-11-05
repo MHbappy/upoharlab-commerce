@@ -23,6 +23,19 @@ public enum OrderStatus {
     };
   }
 
+  /** The owner-facing name, in English like the rest of the admin pages. */
+  public String label() {
+    return switch (this) {
+      case NEW -> "New";
+      case DESIGN_SENT -> "Design sent";
+      case CONFIRMED -> "Confirmed";
+      case MAKING -> "Being made";
+      case SHIPPED -> "Shipped";
+      case DELIVERED -> "Delivered";
+      case CANCELLED -> "Cancelled";
+    };
+  }
+
   public boolean beforeShipping() {
     return this == NEW || this == DESIGN_SENT || this == CONFIRMED || this == MAKING;
   }

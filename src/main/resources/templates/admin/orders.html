@@ -22,13 +22,16 @@
 <label for="status">Status</label>
 <select id="status" name="status">
 <option value="">All</option>
-<option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.name()}" th:selected="${s.name() == selectedStatus}"></option>
+<option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label()}" th:selected="${s.name() == selectedStatus}"></option>
 </select>
 </div>
 <button class="button">Search</button>
 </form>
+<p th:if="${searching}"><a th:href="@{/admin/orders}">Clear search and show all orders</a></p>
 <p th:text="${results.totalRows + (results.totalRows == 1 ? ' order' : ' orders')}"></p>
-<div th:if="${!results.rows.isEmpty()}" th:replace="~{fragments/admin-orders :: table(${results.rows})}"></div>
+<th:block th:if="${!results.rows.isEmpty()}">
+<div th:replace="~{fragments/admin-orders :: table(${results.rows})}"></div>
+</th:block>
 <form class="pagination" th:if="${results.totalPages > 1}" th:action="@{/admin/orders/search}" method="post">
 <input type="hidden" name="q" th:value="${q}">
 <input type="hidden" name="status" th:value="${selectedStatus}">

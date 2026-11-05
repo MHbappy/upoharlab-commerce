@@ -17,7 +17,7 @@
 <a th:href="@{/admin/orders}">← Orders</a>
 <div class="section-heading">
 <h1 th:text="${order.code}"></h1>
-<span class="status-pill" th:text="${order.status}"></span>
+<span class="status-pill" th:classappend="${'status-' + order.status}" th:text="${@bn.status(order.status)}"></span>
 </div>
 <p class="muted" th:text="${'Placed ' + @bn.time(order.createdAt)}"></p>
 
@@ -25,6 +25,7 @@
 <h2 id="next-title">Next step</h2>
 <form th:if="${order.status == 'NEW'}" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
 <p>Send the design on WhatsApp, then record it here.</p>
+<p class="wa-links"><a th:href="${whatsappLinks['Design message']}" target="_blank" rel="noopener noreferrer">Open design message</a></p>
 <input type="hidden" name="to" value="DESIGN_SENT">
 <button class="button">Mark design sent</button>
 </form>
@@ -36,6 +37,10 @@
 <button class="button">Design approved on WhatsApp</button>
 </form>
 <p th:if="${order.designApprovedAt != null}" th:text="${'Approved ' + @bn.time(order.designApprovedAt)}"></p>
+<p class="wa-links" th:if="${order.netPaid < order.advanceRequired and order.designApprovedAt != null}">
+<a th:if="${whatsappLinks['Advance message'] != null}" th:href="${whatsappLinks['Advance message']}" target="_blank" rel="noopener noreferrer">Open advance message</a>
+<a href="#money-title">Record the advance</a>
+</p>
 <form th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post" th:if="${order.missingForConfirmation.isEmpty()}">
 <input type="hidden" name="to" value="CONFIRMED">
 <button class="button">Confirm order</button>
@@ -59,7 +64,9 @@
 <th:block th:if="${order.status == 'SHIPPED'}">
 <form th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
 <input type="hidden" name="to" value="DELIVERED">
+<p class="wa-links" th:if="${whatsappLinks['Shipping message'] != null}"><a th:href="${whatsappLinks['Shipping message']}" target="_blank" rel="noopener noreferrer">Open shipping message</a></p>
 <button class="button">Mark delivered</button>
+<p class="muted">Delivery cannot be undone, and it does not mark the balance as paid.</p>
 </form>
 <details>
 <summary>Correct courier details</summary>
@@ -128,13 +135,16 @@
 <dt>Delivery</dt><dd th:text="${'৳' + order.delivery}"></dd>
 <dt>Total</dt><dd th:text="${'৳' + order.total}"></dd>
 <dt>Advance required</dt><dd th:text="${'৳' + order.advanceRequired}"></dd>
-<dt th:text="${order.status == 'CANCELLED' ? 'Net money held' : 'Net paid'}"></dt><dd class="strong" th:text="${'৳' + order.netPaid}"></dd>
+<dt th:text="${order.status == 'CANCELLED' ? 'Money still held' : 'Net paid'}"></dt><dd class="strong" th:text="${'৳' + order.netPaid}"></dd>
 <th:block th:if="${order.balance != null}">
 <dt>Remaining balance</dt><dd class="strong" th:text="${'৳' + order.balance}"></dd>
 </th:block>
 </dl>
 <p class="notice" th:if="${order.status == 'CANCELLED' and order.netPaid > 0}">Apply the agreed cancellation terms, refund outside the website, then record the verified refund here.</p>
-<p class="notice" th:if="${order.status == 'DELIVERED' and order.balance > 0}">Delivered, but this money is still awaiting customer or courier settlement.</p>
+<th:block th:if="${order.status == 'DELIVERED' and order.balance > 0}" th:with="refunded=${!order.payments.?[kind == 'REFUND'].isEmpty()}">
+<p class="notice notice-warning" th:unless="${refunded}">Delivered, but this money is still awaiting customer or courier settlement.</p>
+<p class="notice notice-warning" th:if="${refunded}">A refund is recorded on this order. The remaining balance is the total minus net paid, so it may include money you refunded on purpose rather than money still owed.</p>
+</th:block>
 <div class="table-wrap" th:unless="${order.payments.isEmpty()}">
 <table class="admin-table">
 <thead><tr><th scope="col">When</th><th scope="col">Type</th><th scope="col">Method</th><th scope="col">Amount</th><th scope="col">Reference</th><th scope="col">By</th></tr></thead>
@@ -150,13 +160,13 @@
 </tbody>
 </table>
 </div>
-<details th:open="${moneyAmount != null}">
-<summary>Record verified payment or refund</summary>
+<details th:unless="${order.status == 'CANCELLED' and order.netPaid == 0}" th:open="${moneyAmount != null or (order.status == 'DESIGN_SENT' and order.netPaid < order.advanceRequired and order.designApprovedAt != null) or (order.status == 'DELIVERED' and order.balance > 0)}">
+<summary th:text="${order.status == 'CANCELLED' ? 'Record verified refund' : 'Record verified payment or refund'}"></summary>
 <form class="form-width" th:action="@{/admin/orders/{c}/money(c=${order.code})}" method="post">
 <p class="muted">First check your bKash account or the actual cash or courier settlement. A customer's screenshot alone is not verification.</p>
 <label for="money-kind">Type</label>
 <select id="money-kind" name="kind">
-<option value="PAYMENT" th:selected="${moneyKind != 'REFUND'}">Payment received</option>
+<option value="PAYMENT" th:unless="${order.status == 'CANCELLED'}" th:selected="${moneyKind != 'REFUND'}">Payment received</option>
 <option value="REFUND" th:selected="${moneyKind == 'REFUND'}">Refund sent</option>
 </select>
 <label for="money-method">Method</label>
@@ -166,6 +176,8 @@
 <option value="COD" th:selected="${moneyMethod == 'COD'}">Courier cash on delivery</option>
 </select>
 <label for="money-amount">Amount (whole taka)</label>
+<p class="muted" th:if="${order.balance != null and order.balance > 0}" th:text="${(order.netPaid < order.advanceRequired ? 'Advance still needed: ৳' + (order.advanceRequired - order.netPaid) + '. ' : '') + 'Remaining balance: ৳' + order.balance + '.'}"></p>
+<p class="muted" th:if="${order.status == 'CANCELLED'}" th:text="${'You can refund up to ৳' + order.netPaid + '.'}"></p>
 <input id="money-amount" name="amount" inputmode="numeric" required th:value="${moneyAmount}">
 <label for="money-reference">Transaction reference (required for bKash)</label>
 <input id="money-reference" name="reference" maxlength="100" autocomplete="off" th:value="${moneyReference}">
@@ -181,7 +193,7 @@
 <span class="muted" th:text="${@bn.time(e.at) + ' · ' + e.actor}"></span><br>
 <strong th:switch="${e.type}">
 <span th:case="'CREATED'">Order placed</span>
-<span th:case="'STATUS_CHANGED'" th:text="${e.fromStatus + ' → ' + e.toStatus}"></span>
+<span th:case="'STATUS_CHANGED'" th:text="${@bn.status(e.fromStatus) + ' → ' + @bn.status(e.toStatus)}"></span>
 <span th:case="'DESIGN_APPROVED'">Design approved on WhatsApp</span>
 <span th:case="'PAYMENT_RECORDED'">Payment recorded</span>
 <span th:case="'REFUND_RECORDED'">Refund recorded</span>
@@ -203,6 +215,7 @@
 <h2 id="cancel-title">Cancel order</h2>
 <form class="form-width" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
 <input type="hidden" name="to" value="CANCELLED">
+<p class="muted">Cancelling cannot be undone. For a change of product, quantity or engraving, cancel and take a new agreed order.</p>
 <label for="cancel-reason">Reason</label>
 <input id="cancel-reason" name="reason" maxlength="500" required>
 <button>Cancel this order</button>

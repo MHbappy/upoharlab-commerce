@@ -58,6 +58,7 @@ public class AdminOrderController {
     m.addAttribute("selectedStatus", status);
     m.addAttribute("q", q);
     m.addAttribute("statuses", OrderStatus.values());
+    m.addAttribute("searching", (q != null && !q.isBlank()) || (status != null && !status.isBlank()));
     return "admin/orders";
   }
 
@@ -73,14 +74,19 @@ public class AdminOrderController {
     String base = "https://wa.me/88" + order.phone();
     Map<String, String> links = new LinkedHashMap<>();
     links.put("Open chat", base);
-    links.put(
-        "Design message",
-        withText(
-            base,
-            "আপনার অর্ডার " + order.code() + "-এর ডিজাইন পাঠালাম। ডিজাইন ও বানান দেখে সম্মতি জানান।"));
+    OrderStatus status = OrderStatus.valueOf(order.status());
+    if (status == OrderStatus.NEW || status == OrderStatus.DESIGN_SENT)
+      links.put(
+          "Design message",
+          withText(
+              base,
+              "আপনার অর্ডার " + order.code() + "-এর ডিজাইন পাঠালাম। ডিজাইন ও বানান দেখে সম্মতি জানান।"));
     long advanceDue = order.advanceRequired() - order.netPaid();
     String bkash = values.getOrDefault("bkash_number", "");
-    if (advanceDue > 0 && !bkash.isBlank())
+    // Asking for money is only right once the design has gone out, and never on a closed order.
+    if ((status == OrderStatus.DESIGN_SENT || status == OrderStatus.CONFIRMED)
+        && advanceDue > 0
+        && !bkash.isBlank())
       links.put(
           "Advance message",
           withText(
@@ -91,7 +97,7 @@ public class AdminOrderController {
                   + bkash
                   + " নম্বরে পাঠিয়ে Transaction ID জানান। অর্ডার কোড: "
                   + order.code()));
-    if (order.courier() != null)
+    if (order.courier() != null && status != OrderStatus.CANCELLED)
       links.put(
           "Shipping message",
           withText(

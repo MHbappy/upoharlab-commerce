@@ -36,7 +36,9 @@
 <a th:href="@{/admin/orders}">All orders</a>
 </div>
 <p th:if="${recent.isEmpty()}">No orders yet.</p>
-<div th:unless="${recent.isEmpty()}" th:replace="~{fragments/admin-orders :: table(${recent})}"></div>
+<th:block th:unless="${recent.isEmpty()}">
+<div th:replace="~{fragments/admin-orders :: table(${recent})}"></div>
+</th:block>
 </main>
 </body>
 </html>

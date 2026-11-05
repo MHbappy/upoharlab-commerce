@@ -436,7 +436,11 @@ class AdminOrderTest {
     pool.shutdown();
   }
 
+  /** One shared session, because the suite would otherwise reach the login rate limit. */
+  private static Browser loggedIn;
+
   private Browser login() throws Exception {
+    if (loggedIn != null) return loggedIn;
     var browser = new Browser(port);
     browser.get("/admin/login");
     var response =
@@ -444,6 +448,7 @@ class AdminOrderTest {
             "/admin/login",
             Map.of("username", ADMIN, "password", "test-only-password-2026"));
     assertThat(location(response)).endsWith("/admin");
+    loggedIn = browser;
     return browser;
   }
 
@@ -626,6 +631,59 @@ class AdminOrderTest {
     } finally {
       setting(db, "bkash_number", "");
     }
+  }
+
+  @Test
+  void whatsappOffersOnlyMessagesThatFitTheOrderState() throws Exception {
+    setting(db, "bkash_number", "01700000000");
+    try {
+      var browser = login();
+      String fresh = newOrder();
+      assertThat(browser.get("/admin/orders/" + fresh).body())
+          .as("no request for money before the design is sent")
+          .contains("Design message")
+          .doesNotContain("Advance message");
+      move(fresh, "DESIGN_SENT");
+      admin.approveDesign(fresh, ADMIN);
+      assertThat(browser.get("/admin/orders/" + fresh).body())
+          .contains("Advance message", "Open advance message", "Record the advance");
+      admin.changeStatus(fresh, "CANCELLED", "Customer changed their mind", null, null, ADMIN);
+      assertThat(browser.get("/admin/orders/" + fresh).body())
+          .contains("Open chat")
+          .doesNotContain("Advance message", "Design message", "Record verified refund");
+    } finally {
+      setting(db, "bkash_number", "");
+    }
+  }
+
+  @Test
+  void cancelledOrderOffersOnlyARefundOfMoneyStillHeld() throws Exception {
+    String code = orderAt("CONFIRMED");
+    admin.changeStatus(code, "CANCELLED", "Customer changed their mind", null, null, ADMIN);
+    assertThat(login().get("/admin/orders/" + code).body())
+        .contains("Money still held", "Record verified refund", "You can refund up to ৳230")
+        .doesNotContain("value=\"PAYMENT\"", "Remaining balance");
+  }
+
+  @Test
+  void refundOnDeliveredOrderIsNotDescribedAsAwaitingSettlement() throws Exception {
+    String code = orderAt("DELIVERED");
+    var browser = login();
+    assertThat(browser.get("/admin/orders/" + code).body()).contains("awaiting customer or courier");
+    admin.recordMoney(code, "REFUND", "CASH", "10", "", ADMIN);
+    assertThat(browser.get("/admin/orders/" + code).body())
+        .contains("A refund is recorded")
+        .doesNotContain("awaiting customer or courier");
+  }
+
+  @Test
+  void emptyListsShowNoTableAndStatusesAreReadable() throws Exception {
+    var browser = login();
+    assertThat(browser.get("/admin").body()).contains("No orders yet.").doesNotContain("<table");
+    assertThat(browser.get("/admin/orders").body()).contains("0 orders").doesNotContain("<table");
+    orderAt("DESIGN_SENT");
+    String list = browser.get("/admin/orders?status=DESIGN_SENT").body();
+    assertThat(list).contains("Design sent", "Clear search", "value=\"DESIGN_SENT\"");
   }
 
   @Test

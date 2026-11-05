@@ -20,6 +20,10 @@ public class DisplayFormat {
     return instant == null ? "" : BnDigits.date(instant);
   }
 
+  public String status(String status) {
+    return status == null ? "" : com.upoharlab.order.OrderStatus.valueOf(status).label();
+  }
+
   public String digits(Object value) {
     return value == null ? "" : BnDigits.toBangla(value.toString());
   }
