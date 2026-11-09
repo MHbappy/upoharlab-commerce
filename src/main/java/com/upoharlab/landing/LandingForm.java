@@ -20,6 +20,7 @@ public class LandingForm {
   public ProofRow socialProof = new ProofRow();
   public List<PackageRow> packages = new ArrayList<>();
   public String urgencyLine;
+  public List<String> moreUrgencyLines = new ArrayList<>();
   public List<OptionRow> options = new ArrayList<>();
   public List<UpsellRow> upsells = new ArrayList<>();
   public Integer advanceAmount;
@@ -35,12 +36,18 @@ public class LandingForm {
   public static class HeroRow {
     public String headline, subHeadline, heroImage;
     public Integer oldPrice, offerPrice;
+    public List<String> moreImages = new ArrayList<>();
   }
 
   public static class ProofRow {
     public List<String> customerImages = new ArrayList<>();
     public String reviewText, reviewerName, reviewerArea, proofLine;
+    public List<ReviewRow> moreReviews = new ArrayList<>();
     public Integer countNumber;
+  }
+
+  public static class ReviewRow {
+    public String text, name, area;
   }
 
   public static class PackageRow {
@@ -48,7 +55,7 @@ public class LandingForm {
     public Integer price, oldPrice;
   }
 
-  /** Index of the package marked popular; a single radio group across the three rows. */
+  /** Index of the package marked popular; a single radio group across the rows. */
   public Integer popularPackage;
 
   public static class OptionRow {
@@ -86,7 +93,8 @@ public class LandingForm {
   private static final Pattern IMAGE_FIELD =
       Pattern.compile(
           "hero\\.heroImage"
-              + "|socialProof\\.customerImages\\[[0-2]\\]"
+              + "|hero\\.moreImages\\[[0-9]{1,2}\\]"
+              + "|socialProof\\.customerImages\\[[0-9]{1,2}\\]"
               + "|options\\[[0-9]{1,2}\\]\\.values\\[[0-9]{1,2}\\]\\.image"
               + "|preview\\.designs\\[[0-9]\\]\\.baseImage");
 
@@ -115,6 +123,7 @@ public class LandingForm {
   public static LandingForm from(LandingConfig c) {
     LandingForm f = new LandingForm();
     if (c != null) f.fill(c);
+    else f.preview.fonts.add(LandingFonts.DEFAULT);
     f.addSpareRows();
     return f;
   }
@@ -134,9 +143,17 @@ public class LandingForm {
     hero.heroImage = c.hero().heroImage();
     hero.oldPrice = c.hero().oldPrice();
     hero.offerPrice = c.hero().offerPrice();
+    hero.moreImages.addAll(c.hero().moreImages());
     benefits.addAll(c.benefits());
     socialProof.customerImages.addAll(c.socialProof().customerImages());
     socialProof.reviewText = c.socialProof().reviewText();
+    for (var review : c.socialProof().moreReviews()) {
+      ReviewRow row = new ReviewRow();
+      row.text = review.text();
+      row.name = review.name();
+      row.area = review.area();
+      socialProof.moreReviews.add(row);
+    }
     socialProof.reviewerName = c.socialProof().reviewerName();
     socialProof.reviewerArea = c.socialProof().reviewerArea();
     socialProof.countNumber = c.socialProof().countNumber();
@@ -152,6 +169,7 @@ public class LandingForm {
       if (tier.isPopular()) popularPackage = i;
     }
     urgencyLine = c.urgencyLine();
+    moreUrgencyLines.addAll(c.moreUrgencyLines());
     for (var option : c.options()) {
       OptionRow row = new OptionRow();
       row.label = option.label();
@@ -197,8 +215,15 @@ public class LandingForm {
   /** Empty rows give the editor room to add entries, and work without JavaScript. */
   public final void addSpareRows() {
     while (benefits.size() < 4) benefits.add("");
+    if (benefits.size() < 20) benefits.add("");
     while (socialProof.customerImages.size() < 3) socialProof.customerImages.add("");
+    if (socialProof.customerImages.size() < 12) socialProof.customerImages.add("");
+    if (socialProof.moreReviews.size() < 9) socialProof.moreReviews.add(new ReviewRow());
+    if (hero.moreImages.size() < 7) hero.moreImages.add("");
+    if (moreUrgencyLines.size() < 4) moreUrgencyLines.add("");
+    while (preview.fonts.size() < LandingFonts.FILES.size()) preview.fonts.add("");
     while (packages.size() < 3) packages.add(new PackageRow());
+    if (packages.size() < 12) packages.add(new PackageRow());
     options.add(new OptionRow());
     for (OptionRow option : options)
       do option.values.add(new ValueRow());
@@ -217,6 +242,14 @@ public class LandingForm {
           new LandingConfig.PackageTier(
               clean(row.name), clean(row.description), row.price, row.oldPrice,
               Integer.valueOf(i).equals(popularPackage)));
+    }
+    // Removing the marked package must not block saving, so the first one takes over.
+    if (!tiers.isEmpty() && tiers.stream().noneMatch(LandingConfig.PackageTier::isPopular)) {
+      var first = tiers.get(0);
+      tiers.set(
+          0,
+          new LandingConfig.PackageTier(
+              first.name(), first.description(), first.price(), first.oldPrice(), true));
     }
     List<LandingConfig.Option> optionList = new ArrayList<>();
     for (OptionRow row : options) {
@@ -239,27 +272,43 @@ public class LandingForm {
             new LandingConfig.Design(
                 clean(d.name), clean(d.baseImage), d.textX, d.textY, d.maxWidth, d.fontSize,
                 d.minFontSize, color(d.color), color(d.shadow), d.imageWidth, d.imageHeight));
+    // Removed rows leave gaps; the first review left takes the main place.
+    List<LandingConfig.Review> reviews = new ArrayList<>();
+    addReview(reviews, socialProof.reviewText, socialProof.reviewerName, socialProof.reviewerArea);
+    for (ReviewRow row : socialProof.moreReviews)
+      if (row != null) addReview(reviews, row.text, row.name, row.area);
+    LandingConfig.Review firstReview =
+        reviews.isEmpty() ? new LandingConfig.Review("", "", "") : reviews.get(0);
+    List<String> urgency = new ArrayList<>();
+    if (!blank(urgencyLine)) urgency.add(urgencyLine.strip());
+    urgency.addAll(filled(moreUrgencyLines));
+    // The first image left in the list is the main one, whichever row it was typed in.
+    List<String> heroImages = new ArrayList<>();
+    if (!blank(hero.heroImage)) heroImages.add(hero.heroImage.strip());
+    heroImages.addAll(filled(hero.moreImages));
     return new LandingConfig(
         enabled,
         new LandingConfig.Hero(
-            clean(hero.headline), clean(hero.subHeadline), clean(hero.heroImage), hero.oldPrice,
-            hero.offerPrice),
+            clean(hero.headline), clean(hero.subHeadline),
+            heroImages.isEmpty() ? "" : heroImages.get(0), hero.oldPrice, hero.offerPrice,
+            heroImages.isEmpty() ? List.of() : heroImages.subList(1, heroImages.size())),
         filled(benefits),
         new LandingConfig.SocialProof(
-            filled(socialProof.customerImages), clean(socialProof.reviewText),
-            clean(socialProof.reviewerName), clean(socialProof.reviewerArea),
-            socialProof.countNumber, clean(socialProof.proofLine)),
+            filled(socialProof.customerImages), firstReview.text(), firstReview.name(),
+            firstReview.area(), socialProof.countNumber, clean(socialProof.proofLine),
+            reviews.isEmpty() ? List.of() : reviews.subList(1, reviews.size())),
         tiers,
-        clean(urgencyLine),
+        urgency.isEmpty() ? "" : urgency.get(0),
         optionList,
         extras,
         advanceAmount,
         new LandingConfig.Delivery(delivery.insideDhakaCharge, delivery.outsideDhakaCharge),
         new LandingConfig.Preview(
-            designs, filled(preview.fonts), clean(preview.defaultText), preview.maxChars),
+            designs, filled(preview.fonts).stream().distinct().toList(), clean(preview.defaultText), preview.maxChars),
         new LandingConfig.Sections(
             sections.hero, sections.preview, sections.benefits, sections.gallery, sections.details,
-            sections.socialProof, sections.packages, sections.order));
+            sections.socialProof, sections.packages, sections.order),
+        urgency.isEmpty() ? List.of() : urgency.subList(1, urgency.size()));
   }
 
   private static OptionType type(String raw) {
@@ -272,6 +321,12 @@ public class LandingForm {
 
   private static List<String> filled(List<String> values) {
     return values.stream().filter(v -> !blank(v)).map(String::strip).toList();
+  }
+
+  private static void addReview(
+      List<LandingConfig.Review> reviews, String text, String name, String area) {
+    if (!blank(text) || !blank(name) || !blank(area))
+      reviews.add(new LandingConfig.Review(clean(text), clean(name), clean(area)));
   }
 
   private static String clean(String value) {

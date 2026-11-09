@@ -143,3 +143,8 @@ h1{margin-top:0;font-size:38px}
 @media(min-width:760px){.lp-info-two{grid-template-columns:minmax(0,11fr) minmax(0,9fr);gap:36px;align-items:start}.lp-gallery-box{position:sticky;top:16px}.lp-info-grid:not(.lp-info-two) .lp-specs{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .lp-plain-title{padding-block:20px 8px}
 .lp-plain-title h1{margin:0}
+@media(min-width:760px){.lp-cards{display:flex;flex-wrap:wrap;justify-content:center}.lp-card{flex:1 1 240px;max-width:340px}}
+.lp-hero-box{min-width:0}
+.lp-hero-thumbs{padding-inline:12px}
+@media(min-width:760px){.lp-hero-thumbs{padding-inline:0}.lp-hero-strip{border-radius:14px}}
+@media(min-width:760px){.lp-reviews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}.lp-reviews blockquote{margin:0}}

@@ -42,6 +42,14 @@ public final class LandingValidator {
   }
 
   private static String message(String path, String detail) {
+    if ("benefits".equals(path)) return "Landing page: you can add up to 20 benefits.";
+    if ("socialProof.customerImages".equals(path))
+      return "Landing page: you can add up to 12 customer photos.";
+    if ("hero.moreImages".equals(path)) return "Landing page: you can add up to 8 hero images.";
+    if ("socialProof.moreReviews".equals(path))
+      return "Landing page: you can add up to 10 reviews.";
+    if ("moreUrgencyLines".equals(path)) return "Landing page: you can add up to 5 urgency lines.";
+    if ("packages".equals(path)) return "Landing page: you can add up to 12 packages.";
     var colour = DESIGN_COLOUR.matcher(path);
     if (!colour.matches()) return "Landing page: check " + path + " (" + detail + ").";
     String name = "color".equals(colour.group(2)) ? "text colour" : "shadow colour";
@@ -57,9 +65,7 @@ public final class LandingValidator {
     List<String> p = new ArrayList<>();
     var show = c.sections();
     if (show.hero()) hero(c, p);
-    if (show.benefits()
-        && (c.benefits().size() != 4 || c.benefits().stream().anyMatch(LandingValidator::blank)))
-      p.add("Landing page: enter exactly 4 benefits.");
+    if (show.benefits() && c.benefits().isEmpty()) p.add("Landing page: add at least one benefit.");
     if (show.packages() || show.order()) packages(c, p);
     else if (c.packages().isEmpty() && c.hero().offerPrice() == null)
       p.add("Landing page: add a package price or an offer price; the shop list shows it.");
@@ -90,8 +96,8 @@ public final class LandingValidator {
   }
 
   private static void packages(LandingConfig c, List<String> p) {
-    if (c.packages().size() != 3) {
-      p.add("Landing page: enter exactly 3 packages.");
+    if (c.packages().isEmpty()) {
+      p.add("Landing page: add at least one package.");
       return;
     }
     long popular = c.packages().stream().filter(PackageTier::isPopular).count();
@@ -157,8 +163,11 @@ public final class LandingValidator {
   /** A review is all or nothing, and a count needs words to go with it. */
   private static void proof(LandingConfig c, List<String> p) {
     var proof = c.socialProof();
-    if (!blank(proof.reviewText()) && blank(proof.reviewerName()))
-      p.add("Landing page: a review needs the reviewer's name.");
+    for (var review : proof.allReviews()) {
+      if (!blank(review.text()) && blank(review.name()))
+        p.add("Landing page: a review needs the reviewer's name.");
+      if (blank(review.text())) p.add("Landing page: a review needs its text.");
+    }
     if ((proof.countNumber() == null) != blank(proof.proofLine()))
       p.add("Landing page: the customer count and its proof line go together.");
   }
@@ -166,7 +175,7 @@ public final class LandingValidator {
   /** Every uploaded image the configuration points at. */
   public static List<String> images(LandingConfig c) {
     List<String> all = new ArrayList<>();
-    all.add(c.hero().heroImage());
+    all.addAll(c.hero().allImages());
     all.addAll(c.socialProof().customerImages());
     c.options().forEach(o -> o.values().forEach(v -> all.add(v.image())));
     c.preview().designs().forEach(d -> all.add(d.baseImage()));

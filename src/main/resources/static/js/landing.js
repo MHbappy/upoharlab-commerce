@@ -287,19 +287,20 @@
     });
   }
 
-  var gallery = $("lp-gallery");
-  var galleryThumbs = document.querySelectorAll(".lp-gallery-thumb");
-  if (gallery && galleryThumbs.length) {
-    var markPhoto = function () {
-      var current = Math.round(gallery.scrollLeft / gallery.clientWidth);
-      galleryThumbs.forEach(function (thumb, i) { thumb.setAttribute("aria-current", i === current ? "true" : "false"); });
+  function photoStrip(strip, thumbs) {
+    if (!strip || !thumbs.length) return;
+    var mark = function () {
+      var current = Math.round(strip.scrollLeft / strip.clientWidth);
+      thumbs.forEach(function (thumb, i) { thumb.setAttribute("aria-current", i === current ? "true" : "false"); });
     };
-    galleryThumbs.forEach(function (thumb, i) {
-      thumb.addEventListener("click", function () { gallery.scrollTo({ left: i * gallery.clientWidth, behavior: "smooth" }); });
+    thumbs.forEach(function (thumb, i) {
+      thumb.addEventListener("click", function () { strip.scrollTo({ left: i * strip.clientWidth, behavior: "smooth" }); });
     });
-    gallery.addEventListener("scroll", markPhoto, { passive: true });
-    markPhoto();
+    strip.addEventListener("scroll", mark, { passive: true });
+    mark();
   }
+  photoStrip($("lp-gallery"), document.querySelectorAll(".lp-gallery-box .lp-gallery-thumb"));
+  photoStrip($("lp-hero-strip"), document.querySelectorAll(".lp-hero-thumb"));
 
   var problem = $("order-errors") || $("order-message");
   if (problem) window.addEventListener("load", function () { setTimeout(function () { problem.focus(); }, 0); });

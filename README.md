@@ -145,7 +145,7 @@ from your ignored `.env` file. They are not printed in logs or committed.
 Keep that file private. After the first bootstrap, editing its password does not reset
 the database account. A missing first-boot credential causes a clear startup failure.
 
-- **Products:** enter the details, select up to four JPEG/PNG photos, and click Add product to publish in one step. Product links are generated automatically unless customized. Choose Save privately only when you want to finish later. Existing products can save detail changes and new photos together.
+- **Products:** enter the details, add up to 12 JPEG/PNG photos, and click Add product to publish in one step. Product links are generated automatically unless customized. Choose Save privately only when you want to finish later. Existing products can save detail changes and new photos together.
 - **Photos:** up to 5 MB and 20 megapixels. Phone rotation is applied, then photos are stored as
   resized JPEGs with random filenames, full and thumbnail versions. The original filename and metadata are discarded.
 - **Availability:** Draft is private, Active appears in the home grid, Paused keeps the

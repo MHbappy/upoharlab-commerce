@@ -139,9 +139,13 @@
 <fieldset class="edit-section product-photo-picker" id="sec-photos">
 <legend>Photos</legend>
 <th:block th:replace="~{admin/landing-editor :: sectionSwitch('gallery', ${landingForm.sections.gallery}, 'The gallery is hidden from the order page. Photos are still used in the shop list.')}"></th:block>
-<p class="field-help">Choose up to 4 JPEG or PNG photos, each up to 5 MB and 20 megapixels. The first photo is shown first in the gallery under Product details on the customer page.</p>
-<label for="photos" th:text="${productId == null ? 'Choose photos' : 'Add more photos (optional)'}"></label>
-<input id="photos" name="photos" type="file" accept="image/jpeg,image/png" multiple aria-describedby="photo-help">
+<p class="field-help">JPEG or PNG, each up to 5 MB and 20 megapixels. A product can have up to 12 photos. The first is shown first in the gallery under Product details on the customer page.</p>
+<label for="photos" th:if="${photoRoom > 0}" th:text="${productId == null ? 'Add photos' : 'Add more photos (optional)'}"></label>
+<div data-repeat="photos" th:if="${photoRoom > 0}" th:attr="data-max=${photoRoom}" th:with="startRows=${photoRoom < 4 ? photoRoom : 4}">
+<div class="benefit-row photo-row-new" data-row th:each="n : ${#numbers.sequence(1, startRows)}"><img class="image-slot-thumb" data-slot-thumb alt="" width="56" height="56" hidden><input th:id="${n == 1 ? 'photos' : null}" name="photos" type="file" accept="image/jpeg,image/png" aria-label="Product photo" data-photo-file aria-describedby="photo-help"><button type="button" class="small-button" data-remove-row hidden>Remove</button></div>
+<button type="button" class="small-button" data-add-row hidden>+ Add photo</button>
+</div>
+<p class="field-help" th:unless="${photoRoom > 0}">This product has the maximum 12 photos. Remove one below to add another.</p>
 <p id="photo-help" class="field-help">At least one photo is needed to publish. The product name is used as its photo description.</p>
 </fieldset>
 <details class="product-extra" th:open="${#fields.hasErrors('sortOrder')}">
@@ -166,6 +170,7 @@
 <section th:if="${productId != null}" class="edit-section photos-editor" aria-labelledby="photos-title">
 <h2 id="photos-title">Saved photos</h2>
 <p>The first photo is the main one. Save your changes before reordering or removing existing photos.</p>
+<div class="saved-photo-grid">
 <div class="photo-row" th:each="photo, row : ${photos}">
 <img th:src="@{/media/{name}(name=${photo.filename})}" th:alt="${photo.alt}" width="120">
 <div>
@@ -179,6 +184,7 @@
 <form th:action="@{/admin/products/{id}/photos/{photo}/remove(id=${productId},photo=${photo.id})}" method="post">
 <button>Remove photo</button>
 </form>
+</div>
 </div>
 </div>
 </div>

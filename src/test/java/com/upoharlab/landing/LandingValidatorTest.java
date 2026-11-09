@@ -84,7 +84,7 @@ class LandingValidatorTest {
   @Test
   void hiddenPackageCardsStillNeedPackagesWhileOrderingIsOn() {
     LandingConfig c = edit(n -> { hide(n, "packages"); n.putArray("packages"); });
-    assertThat(LandingValidator.publishable(c)).contains("Landing page: enter exactly 3 packages.");
+    assertThat(LandingValidator.publishable(c)).contains("Landing page: add at least one package.");
   }
 
   @Test
@@ -135,9 +135,142 @@ class LandingValidatorTest {
   }
 
   @Test
-  void requiresExactlyFourBenefits() {
-    LandingConfig c = edit(n -> n.putArray("benefits").add("এক"));
-    assertThat(LandingValidator.publishable(c)).contains("Landing page: enter exactly 4 benefits.");
+  void packagesCanBeAnyNumberUpToTwelve() {
+    var one =
+        edit(
+            n -> {
+              var list = n.putArray("packages");
+              list.addObject().put("name", "এক").put("price", 500).put("isPopular", true);
+            });
+    assertThat(LandingValidator.publishable(one)).isEmpty();
+    var thirteen =
+        edit(
+            n -> {
+              var list = n.putArray("packages");
+              for (int i = 0; i < 13; i++)
+                list.addObject().put("name", "ক").put("price", 500).put("isPopular", i == 0);
+            });
+    assertThat(LandingValidator.basic(thirteen, Set.of(IMAGE)))
+        .contains("Landing page: you can add up to 12 packages.");
+  }
+
+  @Test
+  void firstPackageIsMarkedWhenTheMarkedOneIsGone() {
+    LandingForm form = LandingForm.from(complete());
+    form.popularPackage = 2;
+    form.packages.get(2).name = "";
+    form.packages.get(2).price = null;
+    assertThat(form.toConfig().packages().get(0).isPopular()).isTrue();
+  }
+
+  @Test
+  void customerPhotosGoUpToTwelve() {
+    var twelve = edit(n -> { var list = n.withObject("socialProof").putArray("customerImages"); for (int i = 0; i < 12; i++) list.add(IMAGE); });
+    assertThat(LandingValidator.basic(twelve, Set.of(IMAGE))).isEmpty();
+    var thirteen = edit(n -> { var list = n.withObject("socialProof").putArray("customerImages"); for (int i = 0; i < 13; i++) list.add(IMAGE); });
+    assertThat(LandingValidator.basic(thirteen, Set.of(IMAGE)))
+        .contains("Landing page: you can add up to 12 customer photos.");
+    assertThat(LandingForm.fieldForUpload("landingUpload/socialProof/customerImages(11)"))
+        .isEqualTo("socialProof.customerImages[11]");
+  }
+
+  @Test
+  void fontRowsKeepOrderAndDropBlanksAndRepeats() {
+    LandingForm form = new LandingForm();
+    form.preview.fonts = new java.util.ArrayList<>(List.of("Galada", "", "Hind Siliguri", "Galada"));
+    assertThat(form.toConfig().preview().fonts()).containsExactly("Galada", "Hind Siliguri");
+  }
+
+  @Test
+  void newProductStartsWithTheDefaultFont() {
+    assertThat(LandingForm.from(null).toConfig().preview().fonts()).containsExactly(LandingFonts.DEFAULT);
+  }
+
+  @Test
+  void firstHeroImageLeftBecomesTheMainOne() {
+    LandingForm form = new LandingForm();
+    form.hero.heroImage = "";
+    form.hero.moreImages = new java.util.ArrayList<>(List.of("", IMAGE, "22222222-2222-2222-2222-222222222222.jpg"));
+    var hero = form.toConfig().hero();
+    assertThat(hero.heroImage()).isEqualTo(IMAGE);
+    assertThat(hero.moreImages()).containsExactly("22222222-2222-2222-2222-222222222222.jpg");
+  }
+
+  @Test
+  void heroImagesGoUpToEightAndMustBelongToTheProduct() {
+    var eight = edit(n -> { var list = n.withObject("hero").putArray("moreImages"); for (int i = 0; i < 7; i++) list.add(IMAGE); });
+    assertThat(LandingValidator.basic(eight, Set.of(IMAGE))).isEmpty();
+    assertThat(LandingValidator.basic(eight, Set.of())).isNotEmpty();
+    var nine = edit(n -> { var list = n.withObject("hero").putArray("moreImages"); for (int i = 0; i < 8; i++) list.add(IMAGE); });
+    assertThat(LandingValidator.basic(nine, Set.of(IMAGE))).contains("Landing page: you can add up to 8 hero images.");
+    assertThat(LandingForm.fieldForUpload("landingUpload/hero/moreImages(6)")).isEqualTo("hero.moreImages[6]");
+  }
+
+  @Test
+  void firstReviewLeftTakesTheMainPlaceAndBlankRowsDrop() {
+    LandingForm form = new LandingForm();
+    LandingForm.ReviewRow blank = new LandingForm.ReviewRow();
+    LandingForm.ReviewRow kept = new LandingForm.ReviewRow();
+    kept.text = "ভালো";
+    kept.name = "করিম";
+    form.socialProof.moreReviews = new java.util.ArrayList<>(List.of(blank, kept));
+    var proof = form.toConfig().socialProof();
+    assertThat(proof.reviewText()).isEqualTo("ভালো");
+    assertThat(proof.moreReviews()).isEmpty();
+    assertThat(proof.allReviews()).hasSize(1);
+  }
+
+  @Test
+  void everyReviewNeedsItsTextAndName() {
+    LandingConfig noName =
+        edit(n -> n.withObject("socialProof").putArray("moreReviews").addObject().put("text", "ভালো"));
+    assertThat(LandingValidator.publishable(noName)).contains("Landing page: a review needs the reviewer's name.");
+    LandingConfig noText =
+        edit(n -> n.withObject("socialProof").putArray("moreReviews").addObject().put("name", "করিম"));
+    assertThat(LandingValidator.publishable(noText)).contains("Landing page: a review needs its text.");
+  }
+
+  @Test
+  void reviewsGoUpToTen() {
+    var eleven = edit(n -> { var list = n.withObject("socialProof").putArray("moreReviews"); for (int i = 0; i < 10; i++) list.addObject().put("text", "ক").put("name", "খ"); });
+    assertThat(LandingValidator.basic(eleven, Set.of(IMAGE))).contains("Landing page: you can add up to 10 reviews.");
+  }
+
+  @Test
+  void firstUrgencyLineLeftTakesTheMainPlace() {
+    LandingForm form = new LandingForm();
+    form.urgencyLine = " ";
+    form.moreUrgencyLines = new java.util.ArrayList<>(List.of("", "এক", "দুই"));
+    LandingConfig config = form.toConfig();
+    assertThat(config.urgencyLine()).isEqualTo("এক");
+    assertThat(config.moreUrgencyLines()).containsExactly("দুই");
+    assertThat(config.allUrgencyLines()).containsExactly("এক", "দুই");
+  }
+
+  @Test
+  void urgencyLinesGoUpToFive() {
+    var six = edit(n -> { var list = n.putArray("moreUrgencyLines"); for (int i = 0; i < 5; i++) list.add("ক"); });
+    assertThat(LandingValidator.basic(six, Set.of(IMAGE))).contains("Landing page: you can add up to 5 urgency lines.");
+  }
+
+  @Test
+  void benefitsCanBeAnyNumberUpToTwenty() {
+    assertThat(LandingValidator.publishable(edit(n -> n.putArray("benefits").add("এক")))).isEmpty();
+    var twenty = edit(n -> { var list = n.putArray("benefits"); for (int i = 0; i < 20; i++) list.add("লাইন"); });
+    assertThat(LandingValidator.publishable(twenty)).isEmpty();
+    assertThat(LandingValidator.basic(twenty, Set.of(IMAGE))).isEmpty();
+  }
+
+  @Test
+  void aShownBenefitsSectionNeedsAtLeastOne() {
+    assertThat(LandingValidator.publishable(edit(n -> n.putArray("benefits"))))
+        .contains("Landing page: add at least one benefit.");
+  }
+
+  @Test
+  void tooManyBenefitsAreExplainedInPlainWords() {
+    var c = edit(n -> { var list = n.putArray("benefits"); for (int i = 0; i < 21; i++) list.add("লাইন"); });
+    assertThat(LandingValidator.basic(c, Set.of(IMAGE))).contains("Landing page: you can add up to 20 benefits.");
   }
 
   @Test
@@ -179,7 +312,7 @@ class LandingValidatorTest {
   void formDropsBlankRowsAndRoundTrips() {
     LandingForm form = LandingForm.from(complete());
     assertThat(form.toConfig()).isEqualTo(complete());
-    assertThat(form.packages.stream().map(p -> p.name)).hasSize(3);
+    assertThat(form.packages.stream().map(p -> p.name)).hasSize(4).endsWith((String) null);
     assertThat(List.of(new PackageTier("ক", "", 1, null, false))).hasSize(1);
   }
 }

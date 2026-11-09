@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class ProductEditor {
   private final ProductStore products;
+  public static final int MAX_PHOTOS = 12;
   private static final int MAX_LANDING_FILES = 16;
   private static final int DEFAULT_WIDTH = 1000, DEFAULT_HEIGHT = 500;
   private final ImageStorage images;
@@ -59,8 +60,10 @@ public class ProductEditor {
       throws IOException {
     var files = uploads == null ? List.<MultipartFile>of()
         : uploads.stream().filter(file -> !file.isEmpty()).toList();
-    if (files.size() > 4) {
-      errors.reject("photos", "Choose up to 4 photos at a time.");
+    int savedPhotos = id == null ? 0 : products.get(id).photos().size();
+    if (files.size() + savedPhotos > MAX_PHOTOS) {
+      errors.reject(
+          "photos", "A product can have up to " + MAX_PHOTOS + " photos. Remove some to add more.");
       return id;
     }
     if (form.getSlug() == null || form.getSlug().isBlank()) {
@@ -178,6 +181,7 @@ public class ProductEditor {
         c.enabled(), c.hero(), c.benefits(), c.socialProof(), c.packages(), c.urgencyLine(),
         c.options(), c.upsells(), c.advanceAmount(), c.delivery(),
         new LandingConfig.Preview(designs, p.fonts(), p.defaultText(), p.maxChars()),
-        c.sections());
+        c.sections(),
+        c.moreUrgencyLines());
   }
 }

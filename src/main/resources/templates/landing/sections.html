@@ -4,7 +4,15 @@
 
 <section th:fragment="hook" class="lp-hook" th:if="${config.sections().hero()}" th:with="hero=${config.hero()}">
 <div class="lp-wrap lp-hook-grid">
-<img class="lp-hero" th:if="${!#strings.isEmpty(hero.heroImage())}" th:src="@{/media/{n}(n=${hero.heroImage()})}" th:alt="${hero.headline()}" fetchpriority="high" decoding="async" width="1200" height="900">
+<img class="lp-hero" th:if="${hero.allImages().size() == 1}" th:src="@{/media/{n}(n=${hero.heroImage()})}" th:alt="${hero.headline()}" fetchpriority="high" decoding="async" width="1200" height="900">
+<div class="lp-hero-box" th:if="${hero.allImages().size() > 1}">
+<div class="lp-gallery lp-hero-strip" id="lp-hero-strip" role="group" aria-label="পণ্যের ছবি" tabindex="0">
+<img class="lp-hero" th:each="image, i : ${hero.allImages()}" th:src="@{/media/{n}(n=${image})}" th:alt="${hero.headline()}" th:attr="fetchpriority=${i.first ? 'high' : null},loading=${i.first ? null : 'lazy'}" decoding="async" width="1200" height="900">
+</div>
+<div class="lp-gallery-thumbs lp-hero-thumbs" role="group" aria-label="ছবি বাছুন" data-js-only hidden>
+<button type="button" class="lp-gallery-thumb lp-hero-thumb" th:each="image, i : ${hero.allImages()}" th:with="photoLabel=${'ছবি ' + @bn.digits(i.count)}" th:attr="aria-label=${photoLabel}"><img th:src="@{/media/{n}(n=${'thumb-' + image})}" alt="" loading="lazy" width="72" height="54"></button>
+</div>
+</div>
 <div class="lp-hook-copy">
 <h1 th:text="${hero.headline()}"></h1>
 <p class="lp-sub" th:if="${!#strings.isEmpty(hero.subHeadline())}" th:text="${hero.subHeadline()}"></p>
@@ -110,15 +118,17 @@
 </section>
 </th:block>
 
-<section th:fragment="proof" class="lp-section lp-proof" th:with="p=${config.socialProof()}" th:if="${config.sections().socialProof() and (!config.socialProof().customerImages().isEmpty() or !#strings.isEmpty(config.socialProof().reviewText()) or config.socialProof().countNumber() != null)}" aria-label="ক্রেতাদের কথা">
+<section th:fragment="proof" class="lp-section lp-proof" th:with="p=${config.socialProof()}" th:if="${config.sections().socialProof() and (!config.socialProof().customerImages().isEmpty() or !config.socialProof().allReviews().isEmpty() or config.socialProof().countNumber() != null)}" aria-label="ক্রেতাদের কথা">
 <div class="lp-wrap">
 <div class="lp-photos" th:if="${!p.customerImages().isEmpty()}">
 <img th:each="i : ${p.customerImages()}" th:src="@{/media/{n}(n=${'thumb-' + i})}" alt="ক্রেতার পাঠানো ছবি" loading="lazy" decoding="async" width="300" height="300">
 </div>
-<blockquote th:if="${!#strings.isEmpty(p.reviewText())}">
-<p th:text="${p.reviewText()}"></p>
-<footer th:text="${p.reviewerName() + (#strings.isEmpty(p.reviewerArea()) ? '' : ', ' + p.reviewerArea())}"></footer>
+<div class="lp-reviews" th:if="${!p.allReviews().isEmpty()}">
+<blockquote th:each="r : ${p.allReviews()}">
+<p th:text="${r.text()}"></p>
+<footer th:text="${r.name() + (#strings.isEmpty(r.area()) ? '' : ', ' + r.area())}"></footer>
 </blockquote>
+</div>
 <p class="lp-count-line" th:if="${p.countNumber() != null}" th:text="${@bn.digits(p.countNumber()) + '+ জন ' + p.proofLine()}"></p>
 </div>
 </section>
@@ -128,14 +138,14 @@
 <h2 id="pricing-title">আপনার প্যাকেজ বেছে নিন</h2>
 <div class="lp-cards">
 <article class="lp-card" th:each="t, i : ${config.packages()}" th:classappend="${t.isPopular() ? 'lp-card-popular' : ''}" th:attr="data-card=${i.index}">
-<p class="lp-badge" th:if="${t.isPopular()}">সবচেয়ে জনপ্রিয়</p>
+<p class="lp-badge" th:if="${t.isPopular() and config.packages().size() > 1}">সবচেয়ে জনপ্রিয়</p>
 <h3 th:text="${t.name()}"></h3>
 <p class="lp-card-desc" th:text="${t.description()}"></p>
 <p class="lp-price" th:if="${t.price() != null}"><strong th:text="${@bn.money(t.price())}"></strong> <s th:if="${t.oldPrice() != null}" th:text="${@bn.money(t.oldPrice())}"></s></p>
 <a class="lp-btn" href="#order" th:if="${showOrder}" th:attr="data-pick-package=${i.index}">এটিই নেব</a>
 </article>
 </div>
-<p class="lp-urgency" th:if="${!#strings.isEmpty(config.urgencyLine())}" th:text="${config.urgencyLine()}"></p>
+<p class="lp-urgency" th:each="line : ${config.allUrgencyLines()}" th:text="${line}"></p>
 </div>
 </section>
 

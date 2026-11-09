@@ -50,6 +50,7 @@ public class AdminController {
     List<ProductStore.Photo> gallery = id == null ? List.of() : products.get(id).photos();
     List<ProductStore.Photo> all = new ArrayList<>(landing);
     all.addAll(gallery);
+    m.addAttribute("photoRoom", Math.max(0, ProductEditor.MAX_PHOTOS - gallery.size()));
     m.addAttribute("landingPhotos", landing);
     m.addAttribute("imageChoices", all);
   }

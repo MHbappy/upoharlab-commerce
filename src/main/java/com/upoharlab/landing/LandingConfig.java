@@ -11,16 +11,17 @@ import java.util.List;
 public record LandingConfig(
     boolean enabled,
     @Valid Hero hero,
-    @Size(max = 4) List<@Size(max = 200) String> benefits,
+    @Size(max = 20) List<@Size(max = 200) String> benefits,
     @Valid SocialProof socialProof,
-    @Size(max = 3) List<@Valid PackageTier> packages,
+    @Size(max = 12) List<@Valid PackageTier> packages,
     @Size(max = 300) String urgencyLine,
     @Size(max = 6) List<@Valid Option> options,
     @Size(max = 8) List<@Valid Upsell> upsells,
     @Min(0) @Max(100000) Integer advanceAmount,
     @Valid Delivery delivery,
     @Valid Preview preview,
-    Sections sections) {
+    Sections sections,
+    @Size(max = 4) List<@Size(max = 300) String> moreUrgencyLines) {
 
   private static final String IMAGE = "(?:[0-9a-f-]{36}\\.jpg)?";
   private static final String COLOR = "(?:#[0-9a-fA-F]{6})?";
@@ -35,6 +36,7 @@ public record LandingConfig(
     packages = list(packages);
     options = list(options);
     upsells = list(upsells);
+    moreUrgencyLines = list(moreUrgencyLines);
     delivery = delivery == null ? new Delivery(null, null) : delivery;
     preview = preview == null ? new Preview(null, null, null, null) : preview;
     sections = sections == null ? new Sections(null, null, null, null, null, null, null, null) : sections;
@@ -55,7 +57,15 @@ public record LandingConfig(
     int maxChars = preview.maxChars() == null ? DEFAULT_MAX_CHARS : preview.maxChars();
     return new LandingConfig(
         enabled, hero, benefits, socialProof, packages, urgencyLine, options, upsells, advanceAmount,
-        delivery, new Preview(designs, fonts, preview.defaultText(), maxChars), sections);
+        delivery, new Preview(designs, fonts, preview.defaultText(), maxChars), sections, moreUrgencyLines);
+  }
+
+  /** The first urgency line, then the rest. */
+  public List<String> allUrgencyLines() {
+    List<String> all = new java.util.ArrayList<>();
+    if (urgencyLine != null && !urgencyLine.isBlank()) all.add(urgencyLine);
+    all.addAll(moreUrgencyLines);
+    return all;
   }
 
   private static boolean finished(Design d) {
@@ -77,19 +87,65 @@ public record LandingConfig(
       @Size(max = 300) String subHeadline,
       @Pattern(regexp = IMAGE) String heroImage,
       @Min(0) @Max(1000000) Integer oldPrice,
-      @Min(0) @Max(1000000) Integer offerPrice) {}
+      @Min(0) @Max(1000000) Integer offerPrice,
+      @Size(max = 7) List<@Pattern(regexp = IMAGE) String> moreImages) {
+    public Hero {
+      moreImages = list(moreImages);
+    }
+
+    public Hero(
+        String headline, String subHeadline, String heroImage, Integer oldPrice, Integer offerPrice) {
+      this(headline, subHeadline, heroImage, oldPrice, offerPrice, List.of());
+    }
+
+    /** The main image, then the rest of the slideshow. */
+    public List<String> allImages() {
+      List<String> all = new java.util.ArrayList<>();
+      if (heroImage != null && !heroImage.isBlank()) all.add(heroImage);
+      all.addAll(moreImages);
+      return all;
+    }
+  }
 
   public record SocialProof(
-      @Size(max = 3) List<@Pattern(regexp = IMAGE) String> customerImages,
+      @Size(max = 12) List<@Pattern(regexp = IMAGE) String> customerImages,
       @Size(max = 600) String reviewText,
       @Size(max = 100) String reviewerName,
       @Size(max = 100) String reviewerArea,
       @Min(0) @Max(100000000) Integer countNumber,
-      @Size(max = 200) String proofLine) {
+      @Size(max = 200) String proofLine,
+      @Size(max = 9) List<@Valid Review> moreReviews) {
     public SocialProof {
       customerImages = list(customerImages);
+      moreReviews = list(moreReviews);
+    }
+
+    public SocialProof(
+        List<String> customerImages,
+        String reviewText,
+        String reviewerName,
+        String reviewerArea,
+        Integer countNumber,
+        String proofLine) {
+      this(customerImages, reviewText, reviewerName, reviewerArea, countNumber, proofLine, List.of());
+    }
+
+    /** The first review, then the rest. */
+    public List<Review> allReviews() {
+      List<Review> all = new java.util.ArrayList<>();
+      if (!blankText(reviewText) || !blankText(reviewerName) || !blankText(reviewerArea))
+        all.add(new Review(reviewText, reviewerName, reviewerArea));
+      all.addAll(moreReviews);
+      return all;
+    }
+
+    private static boolean blankText(String value) {
+      return value == null || value.isBlank();
     }
   }
+
+  public record Review(
+      @Size(max = 600) String text, @Size(max = 100) String name, @Size(max = 100) String area) {}
 
   public record PackageTier(
       @Size(max = 100) String name,

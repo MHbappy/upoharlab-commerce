@@ -111,6 +111,22 @@ class LandingOrderFlowTest {
   }
 
   @Test
+  void aFourthPackageIsChargedAtItsOwnPrice() throws Exception {
+    db.update(
+        "UPDATE product SET landing_config=jsonb_insert(landing_config,'{packages,-1}',"
+            + "'{\"name\":\"ঘ\",\"description\":\"\",\"price\":1500,\"isPopular\":false}'::jsonb,true) WHERE id=?",
+        productId);
+    int total = 1500 + 200 + 60 + 110;
+    Map<String, String> fields = valid(Integer.toString(total));
+    fields.put("packageIndex", "3");
+
+    var response = post(new Browser(port), fields, "submit");
+
+    assertThat(response.statusCode()).isEqualTo(302);
+    assertThat(saved().get("total")).isEqualTo(total);
+  }
+
+  @Test
   void hiddenSectionsLeaveThePage() throws Exception {
     hide("hero", "benefits", "packages", "details");
     String page = new Browser(port).get(PAGE).body();

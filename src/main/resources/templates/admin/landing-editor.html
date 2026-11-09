@@ -16,7 +16,12 @@
 <div class="field"><label>Offer price (৳)</label><input type="number" min="0" name="hero.offerPrice" th:value="${landingForm.hero.offerPrice}"></div>
 <div class="field"><label>Old price, crossed out (৳)</label><input type="number" min="0" name="hero.oldPrice" th:value="${landingForm.hero.oldPrice}"></div>
 </div>
-<div class="field"><label>Hero image</label><th:block th:replace="~{admin/landing-editor :: picker('hero.heroImage', ${landingForm.hero.heroImage})}"></th:block></div>
+<div class="field"><p class="field-label">Hero images</p><p class="field-help">Add up to 8. The first is shown first; 2 or more become a swipeable slideshow.</p></div>
+<div class="grid-3" data-repeat="hero.moreImages" data-max="8">
+<div class="field" data-row><label>Hero image</label><th:block th:replace="~{admin/landing-editor :: picker('hero.heroImage', ${landingForm.hero.heroImage})}"></th:block><button type="button" class="small-button row-remove" data-remove-row hidden>Remove image</button></div>
+<div class="field" data-row th:each="m, i : ${landingForm.hero.moreImages}"><label>Hero image</label><th:block th:replace="~{admin/landing-editor :: picker(${'hero.moreImages[' + i.index + ']'}, ${m})}"></th:block><button type="button" class="small-button row-remove" data-remove-row hidden>Remove image</button></div>
+<button type="button" class="small-button package-add" data-add-row hidden>+ Add hero image</button>
+</div>
 </div>
 </fieldset>
 
@@ -24,9 +29,10 @@
 <legend>Benefits</legend>
 <th:block th:replace="~{admin/landing-editor :: sectionSwitch('benefits', ${landingForm.sections.benefits}, 'Hidden from customers. Your entries are kept.')}"></th:block>
 <div data-section-body>
-<p class="field-help">Exactly 4 short lines.</p>
-<div class="grid-2">
-<div class="field" th:each="b, i : ${landingForm.benefits}"><input type="text" maxlength="200" th:name="${'benefits[' + i.index + ']'}" th:value="${b}" th:attr="aria-label=${'Benefit ' + i.count},placeholder=${'Benefit ' + i.count}"></div>
+<p class="field-help">Add as many as you need, up to 20. Short lines read best.</p>
+<div data-repeat="benefits" data-max="20">
+<div class="field benefit-row" data-row th:each="b, i : ${landingForm.benefits}"><input type="text" maxlength="200" placeholder="One short benefit" aria-label="Benefit" th:name="${'benefits[' + i.index + ']'}" th:value="${b}"><button type="button" class="small-button" data-remove-row hidden>Remove</button></div>
+<button type="button" class="small-button" data-add-row hidden>+ Add benefit</button>
 </div>
 </div>
 </fieldset>
@@ -36,13 +42,32 @@
 <th:block th:replace="~{admin/landing-editor :: sectionSwitch('socialProof', ${landingForm.sections.socialProof}, 'Hidden from customers. Your entries are kept.')}"></th:block>
 <div data-section-body>
 <p class="field-help">Use only real photos, reviews and counts. Anything left empty is hidden from the page.</p>
-<div class="grid-3">
-<div class="field" th:each="c, i : ${landingForm.socialProof.customerImages}"><label th:text="${'Customer photo ' + i.count}"></label><th:block th:replace="~{admin/landing-editor :: picker(${'socialProof.customerImages[' + i.index + ']'}, ${c})}"></th:block></div>
+<div class="grid-3" data-repeat="socialProof.customerImages" data-max="12">
+<div class="field" data-row th:each="c, i : ${landingForm.socialProof.customerImages}"><label>Customer photo</label><th:block th:replace="~{admin/landing-editor :: picker(${'socialProof.customerImages[' + i.index + ']'}, ${c})}"></th:block><button type="button" class="small-button row-remove" data-remove-row hidden>Remove photo</button></div>
+<button type="button" class="small-button package-add" data-add-row hidden>+ Add customer photo</button>
 </div>
+<h3 class="sub-title">Customer reviews</h3>
+<p class="field-help">Up to 10, real reviews only.</p>
+<div data-repeat="socialProof.moreReviews" data-max="10">
+<div class="option-card" data-row>
 <div class="field"><label>Review text</label><textarea name="socialProof.reviewText" rows="2" maxlength="600" th:text="${landingForm.socialProof.reviewText}"></textarea></div>
 <div class="grid-2">
 <div class="field"><label>Reviewer name</label><input type="text" name="socialProof.reviewerName" maxlength="100" th:value="${landingForm.socialProof.reviewerName}"></div>
 <div class="field"><label>Reviewer area</label><input type="text" name="socialProof.reviewerArea" maxlength="100" th:value="${landingForm.socialProof.reviewerArea}"></div>
+</div>
+<button type="button" class="small-button row-remove" data-remove-row hidden>Remove review</button>
+</div>
+<div class="option-card" data-row th:each="r, i : ${landingForm.socialProof.moreReviews}" th:with="n=${'socialProof.moreReviews[' + i.index + ']'}">
+<div class="field"><label>Review text</label><textarea rows="2" maxlength="600" th:name="${n + '.text'}" th:text="${r.text}"></textarea></div>
+<div class="grid-2">
+<div class="field"><label>Reviewer name</label><input type="text" maxlength="100" th:name="${n + '.name'}" th:value="${r.name}"></div>
+<div class="field"><label>Reviewer area</label><input type="text" maxlength="100" th:name="${n + '.area'}" th:value="${r.area}"></div>
+</div>
+<button type="button" class="small-button row-remove" data-remove-row hidden>Remove review</button>
+</div>
+<button type="button" class="small-button" data-add-row hidden>+ Add review</button>
+</div>
+<div class="grid-2">
 <div class="field"><label>Customer count</label><input type="number" min="0" name="socialProof.countNumber" th:value="${landingForm.socialProof.countNumber}"></div>
 <div class="field"><label>Proof line (after "N+ জন")</label><input type="text" name="socialProof.proofLine" maxlength="200" th:value="${landingForm.socialProof.proofLine}"></div>
 </div>
@@ -52,9 +77,9 @@
 <fieldset class="edit-section" id="lp-packages">
 <legend>Packages</legend>
 <th:block th:replace="~{admin/landing-editor :: sectionSwitch('packages', ${landingForm.sections.packages}, 'The package cards are hidden, but customers still choose a package in the order form, so keep prices filled in.')}"></th:block>
-<p class="field-help">Exactly 3. Mark the one most people should choose.</p>
-<div class="grid-3">
-<div class="package-card" th:each="p, i : ${landingForm.packages}">
+<p class="field-help">Add as many as you need, up to 12. Mark the one most people should choose; it shows first selected.</p>
+<div class="grid-3" data-repeat="packages" data-max="12">
+<div class="package-card" data-row th:each="p, i : ${landingForm.packages}">
 <div class="field"><label>Name</label><input type="text" maxlength="100" th:name="${'packages[' + i.index + '].name'}" th:value="${p.name}"></div>
 <div class="field"><label>Description</label><input type="text" maxlength="300" th:name="${'packages[' + i.index + '].description'}" th:value="${p.description}"></div>
 <div class="grid-2 tight">
@@ -62,9 +87,17 @@
 <div class="field"><label>Old price</label><input type="number" min="0" th:name="${'packages[' + i.index + '].oldPrice'}" th:value="${p.oldPrice}"></div>
 </div>
 <label class="inline-choice"><input type="radio" name="popularPackage" th:value="${i.index}" th:checked="${landingForm.popularPackage == i.index}"> <span>Most popular</span></label>
+<button type="button" class="small-button package-remove" data-remove-row hidden>Remove</button>
 </div>
+<button type="button" class="small-button package-add" data-add-row hidden>+ Add package</button>
 </div>
-<div class="field"><label>Urgency line (optional, must be true)</label><input type="text" name="urgencyLine" maxlength="300" th:value="${landingForm.urgencyLine}"></div>
+<h3 class="sub-title">Urgency lines</h3>
+<p class="field-help">Optional, up to 5. Each must be true, such as a real stock or date limit.</p>
+<div data-repeat="moreUrgencyLines" data-max="5">
+<div class="field benefit-row" data-row><input type="text" name="urgencyLine" maxlength="300" aria-label="Urgency line" placeholder="One true urgency line" th:value="${landingForm.urgencyLine}"><button type="button" class="small-button" data-remove-row hidden>Remove</button></div>
+<div class="field benefit-row" data-row th:each="u, i : ${landingForm.moreUrgencyLines}"><input type="text" maxlength="300" aria-label="Urgency line" placeholder="One true urgency line" th:name="${'moreUrgencyLines[' + i.index + ']'}" th:value="${u}"><button type="button" class="small-button" data-remove-row hidden>Remove</button></div>
+<button type="button" class="small-button" data-add-row hidden>+ Add urgency line</button>
+</div>
 </fieldset>
 
 <fieldset class="edit-section" id="lp-order">
@@ -74,8 +107,8 @@
 
 <fieldset class="edit-section" id="lp-options" data-follows="order">
 <legend>Options and extras</legend>
-<p class="field-help">Optional. Clear a row's text to remove it when you save.</p>
-<div data-repeat="options">
+<p class="field-help">Optional. Add up to 6 options, each with up to 12 choices, and up to 8 extras.</p>
+<div data-repeat="options" data-max="6">
 <div class="option-card" data-row th:each="o, i : ${landingForm.options}">
 <div class="grid-2">
 <div class="field"><label>Option name, e.g. মাপ</label><input type="text" maxlength="100" th:name="${'options[' + i.index + '].label'}" th:value="${o.label}"></div>
@@ -90,17 +123,20 @@
 <div class="field"><label>Choice</label><input type="text" maxlength="100" th:name="${'options[' + i.index + '].values[' + j.index + '].name'}" th:value="${v.name}"></div>
 <div class="field"><label>Adds (৳)</label><input type="number" min="0" th:name="${'options[' + i.index + '].values[' + j.index + '].priceDelta'}" th:value="${v.priceDelta}"></div>
 <div class="field"><label>Image (optional)</label><th:block th:replace="~{admin/landing-editor :: picker(${'options[' + i.index + '].values[' + j.index + '].image'}, ${v.image})}"></th:block></div>
+<button type="button" class="small-button value-remove" data-remove-value hidden aria-label="Remove choice">Remove</button>
 </div>
 <button type="button" class="small-button" data-more-values hidden>+ Add choice</button>
 </div>
+<button type="button" class="small-button row-remove" data-remove-row hidden>Remove option</button>
 </div>
 <button type="button" class="small-button" data-add-row hidden>+ Add option</button>
 </div>
 <h3 class="sub-title">Extras</h3>
-<div data-repeat="upsells">
-<div class="grid-2" data-row th:each="u, i : ${landingForm.upsells}">
+<div data-repeat="upsells" data-max="8">
+<div class="extra-row" data-row th:each="u, i : ${landingForm.upsells}">
 <div class="field"><label>Extra, e.g. গিফট র‍্যাপ</label><input type="text" maxlength="150" th:name="${'upsells[' + i.index + '].label'}" th:value="${u.label}"></div>
 <div class="field"><label>Price (৳)</label><input type="number" min="1" th:name="${'upsells[' + i.index + '].price'}" th:value="${u.price}"></div>
+<button type="button" class="small-button value-remove" data-remove-row hidden aria-label="Remove extra">Remove</button>
 </div>
 <button type="button" class="small-button" data-add-row hidden>+ Add extra</button>
 </div>
@@ -124,12 +160,14 @@
 <div class="field"><label>Maximum characters</label><input type="number" min="1" max="100" name="preview.maxChars" th:value="${landingForm.preview.maxChars}"></div>
 </div>
 <div class="field"><p class="field-label">Fonts customers can choose</p>
-<div class="choice-row">
-<label class="inline-choice" th:each="f : ${fontChoices}"><input type="checkbox" name="preview.fonts" th:value="${f}" th:checked="${landingForm.preview.fonts.contains(f)}"> <span th:text="${f}"></span></label>
+<p class="field-help">The first font is selected for customers at the start.</p>
+<div data-repeat="preview.fonts" th:attr="data-max=${fontChoices.size()}">
+<div class="field benefit-row" data-row th:each="f, i : ${landingForm.preview.fonts}"><select aria-label="Font" data-font-pick th:name="${'preview.fonts[' + i.index + ']'}"><option value="">Choose a font</option><option th:each="choice : ${fontChoices}" th:value="${choice}" th:text="${choice}" th:selected="${choice == f}"></option></select><button type="button" class="small-button" data-remove-row hidden>Remove</button></div>
+<button type="button" class="small-button" data-add-row hidden>+ Add font</button>
 </div>
-<input type="hidden" name="_preview.fonts" value="on">
 </div>
-<div data-repeat="preview.designs">
+<p class="field-help">Add up to 8 designs. Customers pick one when there are 2 or more.</p>
+<div data-repeat="preview.designs" data-max="8">
 <div class="option-card" data-row data-design-row th:each="d, i : ${landingForm.preview.designs}" th:with="n=${'preview.designs[' + i.index + ']'}">
 <div class="grid-2">
 <div class="field"><label>Design name</label><input type="text" maxlength="100" th:name="${n + '.name'}" th:value="${d.name}"></div>
@@ -146,6 +184,7 @@
 <div class="field"><label>Text colour</label><input type="text" maxlength="7" placeholder="#2B211C" th:name="${n + '.color'}" th:value="${d.color}" data-color></div>
 <div class="field"><label>Shadow colour</label><input type="text" maxlength="7" placeholder="optional" th:name="${n + '.shadow'}" th:value="${d.shadow}" data-shadow></div>
 </div>
+<button type="button" class="small-button row-remove" data-remove-row hidden>Remove design</button>
 </div>
 <button type="button" class="small-button" data-add-row hidden>+ Add design</button>
 </div>

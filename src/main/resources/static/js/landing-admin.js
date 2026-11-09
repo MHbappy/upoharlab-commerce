@@ -12,9 +12,22 @@
   }
   function isBlank(row) {
     return !Array.prototype.some.call(
-      row.querySelectorAll('input[type=text],input[type=number]'),
+      row.querySelectorAll('input[type=text],input[type=number],textarea'),
       function (el) { return el.value.trim() !== ""; }
-    ) && !Array.prototype.some.call(row.querySelectorAll("[data-image-picker]"), function (el) { return el.value; });
+    ) && !Array.prototype.some.call(row.querySelectorAll("[data-image-picker],[data-font-pick]"), function (el) { return el.value; });
+  }
+  function clearRow(row) {
+    row.querySelectorAll("input[type=text],input[type=number],input[type=file],textarea").forEach(function (el) { el.value = ""; });
+    row.querySelectorAll("input[type=radio]").forEach(function (el) { el.checked = false; });
+    row.querySelectorAll("select").forEach(function (el) { el.selectedIndex = 0; });
+    row.querySelectorAll("[data-slot-thumb]").forEach(function (el) { el.hidden = true; el.removeAttribute("src"); });
+    row.querySelectorAll("[data-swatch]").forEach(function (el) { el.value = "#2b211c"; });
+    // Lets a design row put away its image and text box.
+    row.querySelectorAll("[data-stage]").forEach(function (stage) {
+      stage.hidden = true;
+      var help = stage.parentNode.querySelector("[data-stage-help]");
+      if (help) help.hidden = true;
+    });
   }
   // Empty spare rows stay in the page for saving but out of sight until asked for.
   function collapseBlankRows(box) {
@@ -30,8 +43,35 @@
       row.hidden = false;
       if (isBlank(row)) { row.hidden = !firstBlank; firstBlank = false; }
     });
-    function refresh() { more.hidden = !box.querySelector("[data-value-row][hidden]"); }
-    more.onclick = function () { var next = box.querySelector("[data-value-row][hidden]"); if (next) next.hidden = false; refresh(); };
+    var MAX_VALUES = 12;
+    function visible() { return box.querySelectorAll("[data-value-row]:not([hidden])").length; }
+    function refresh() {
+      more.hidden = visible() >= MAX_VALUES;
+      box.querySelectorAll("[data-remove-value]").forEach(function (button) { button.hidden = false; });
+    }
+    more.onclick = function () {
+      var next = box.querySelector("[data-value-row][hidden]");
+      if (next) next.hidden = false;
+      else {
+        var all = box.querySelectorAll("[data-value-row]");
+        next = all[all.length - 1].cloneNode(true);
+        next.querySelectorAll("[name]").forEach(function (el) {
+          el.name = el.name.replace(/\.values\[\d+\]/, ".values[" + all.length + "]")
+            .replace(/\/values\(\d+\)/, "/values(" + all.length + ")");
+        });
+        clearRow(next);
+        box.insertBefore(next, more);
+      }
+      next.querySelector("input[type=text]").focus();
+      refresh();
+    };
+    box.onclick = function (event) {
+      if (!event.target.matches("[data-remove-value]")) return;
+      var row = event.target.closest("[data-value-row]");
+      clearRow(row);
+      if (visible() > 1) row.hidden = true;
+      refresh();
+    };
     refresh();
   }
   document.querySelectorAll("[data-values]").forEach(collapseValues);
@@ -40,18 +80,52 @@
     if (!add) return;
     add.hidden = false;
     collapseBlankRows(box);
+    box.querySelectorAll("[data-remove-row]").forEach(function (button) { button.hidden = false; });
+    // Stops at the limit the server checks; a removed row frees a place again.
+    function refreshAdd() {
+      var max = +box.dataset.max;
+      if (max) add.hidden = box.querySelectorAll(":scope > [data-row]:not([hidden])").length >= max;
+    }
+    function reveal(row) {
+      refreshAdd();
+      var input = row.querySelector("textarea,input[type=text],[data-font-pick]");
+      if (box.dataset.max && input) input.focus();
+      if (box.scrollWidth > box.clientWidth) row.scrollIntoView({ inline: "start", block: "nearest" });
+    }
+    box.addEventListener("click", function (event) {
+      if (!event.target.matches("[data-remove-row]")) return;
+      var row = event.target.closest("[data-row]");
+      clearRow(row);
+      row.querySelectorAll("[data-values]").forEach(collapseValues);
+      // One empty row always stays, so there is somewhere to type.
+      if (box.querySelectorAll(":scope > [data-row]:not([hidden])").length > 1) row.hidden = true;
+      keepOneMarked();
+      refreshAdd();
+    });
+    // Packages always have one marked, so the choice is visible before saving.
+    function keepOneMarked() {
+      var radios = box.querySelectorAll(":scope > [data-row]:not([hidden]) input[type=radio]");
+      if (radios.length && !Array.prototype.some.call(radios, function (r) { return r.checked; })) radios[0].checked = true;
+    }
+    keepOneMarked();
+    refreshAdd();
     add.addEventListener("click", function () {
       var hidden = box.querySelector(":scope > [data-row][hidden]");
-      if (hidden) { hidden.hidden = false; return; }
+      if (hidden) { hidden.hidden = false; reveal(hidden); return; }
       var rows = box.querySelectorAll(":scope > [data-row]");
       var copy = rows[rows.length - 1].cloneNode(true);
       renumber(copy, box.dataset.repeat, rows.length);
-      copy.querySelectorAll("input").forEach(function (el) { el.value = ""; });
+      copy.querySelectorAll("input,textarea").forEach(function (el) {
+        if (el.type === "radio") { el.value = rows.length; el.checked = false; }
+        else if (el.type === "color") el.value = "#2b211c";
+        else el.value = "";
+      });
       copy.querySelectorAll("select").forEach(function (el) { el.selectedIndex = 0; });
       copy.querySelectorAll("[data-slot-thumb]").forEach(function (el) { el.hidden = true; el.removeAttribute("src"); });
       box.insertBefore(copy, add);
       copy.querySelectorAll("[data-values]").forEach(collapseValues);
       if (copy.matches("[data-design-row]")) setUp(copy);
+      reveal(copy);
     });
   });
 
@@ -71,6 +145,28 @@
     } else if (event.target.matches("[data-image-picker]") && event.target.value) {
       slot.querySelector("[data-image-file]").value = "";
     }
+  });
+
+  // A font already in another row cannot be picked twice.
+  function syncFonts() {
+    var picks = Array.prototype.slice.call(document.querySelectorAll("[data-font-pick]"));
+    picks.forEach(function (pick) {
+      Array.prototype.forEach.call(pick.options, function (option) {
+        option.disabled = !!option.value && picks.some(function (other) { return other !== pick && other.value === option.value; });
+      });
+    });
+  }
+  document.addEventListener("change", function (event) { if (event.target.matches("[data-font-pick]")) syncFonts(); });
+  document.addEventListener("click", function (event) { if (event.target.matches('[data-repeat="preview.fonts"] [data-remove-row]')) syncFonts(); });
+  syncFonts();
+
+  // A small picture of each product photo as soon as it is chosen.
+  document.addEventListener("change", function (event) {
+    if (!event.target.matches("[data-photo-file]")) return;
+    var thumb = event.target.parentNode.querySelector("[data-slot-thumb]");
+    var picked = event.target.files[0];
+    thumb.hidden = !picked;
+    if (picked) thumb.src = URL.createObjectURL(picked); else thumb.removeAttribute("src");
   });
 
   var STORED_MAX = 1200; // the server resizes every image to fit this, and positions refer to that size
@@ -227,12 +323,12 @@
   var JUMPS = [
     [/Sample text/, '[name="preview.defaultText"]'],
     [/Maximum characters/, '[name="preview.maxChars"]'],
-    [/preview font/, "#lp-preview"],
+    [/preview font/, '[name="preview.fonts[0]"]'],
     [/shop list/, "#lp-packages"],
     [/hero image/, '[name="landingUpload/hero/heroImage"]'],
     [/headline/, '[name="hero.headline"]'],
     [/offer price/, '[name="hero.offerPrice"]'],
-    [/benefits/, "#lp-benefits"],
+    [/benefit/, "#lp-benefits"],
     [/package/, "#lp-packages"],
     [/option|extra/, "#lp-options"],
     [/advance/, '[name="advanceAmount"]'],
@@ -243,11 +339,15 @@
   function jumpTarget(text) {
     var design = /preview design (\d+)/.exec(text);
     if (design) {
-      var row = +design[1] - 1;
-      var selector = /Base image/.test(text) ? '[name="landingUpload/preview/designs(' + row + ')/baseImage"]'
-        : /colour/.test(text) ? '[name="preview.designs[' + row + (/shadow/.test(text) ? '].shadow"]' : '].color"]')
-        : '[name="preview.designs[' + row + '].name"]';
-      return document.querySelector(selector);
+      // Removed rows are not saved, so the message counts only the designs still in use.
+      var rows = Array.prototype.filter.call(
+        document.querySelectorAll('[data-repeat="preview.designs"] > [data-row]'),
+        function (row) { return !row.hidden && !isBlank(row); });
+      var row = rows[+design[1] - 1];
+      if (!row) return document.getElementById("lp-preview");
+      return row.querySelector(/Base image/.test(text) ? "[data-image-file]"
+        : /colour/.test(text) ? (/shadow/.test(text) ? "[data-shadow]" : "[data-color]")
+        : "input[type=text]");
     }
     for (var i = 0; i < JUMPS.length; i++) if (JUMPS[i][0].test(text)) return document.querySelector(JUMPS[i][1]);
     return null;
