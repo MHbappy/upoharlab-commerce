@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org">
+<head th:with="pageTitle=${#strings.isEmpty(config.hero().headline()) ? product.details.title : config.hero().headline()}">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title th:text="${pageTitle + ' — উপহার ল্যাব'}">উপহার ল্যাব</title>
+<meta name="description" th:if="${!#strings.isEmpty(config.hero().subHeadline())}" th:content="${config.hero().subHeadline()}">
+<meta name="robots" content="noindex" th:if="${preview}">
+<th:block th:unless="${preview}" th:with="canonical=${@seo.url('/order/' + product.details.slug)}">
+<link rel="canonical" th:if="${canonical != null}" th:href="${canonical}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="উপহার ল্যাব">
+<meta property="og:title" th:content="${pageTitle}">
+<meta property="og:description" th:if="${!#strings.isEmpty(config.hero().subHeadline())}" th:content="${config.hero().subHeadline()}">
+<meta property="og:url" th:if="${canonical != null}" th:content="${canonical}">
+<meta property="og:image" th:if="${!#strings.isEmpty(config.hero().heroImage()) and @seo.url('/media/' + config.hero().heroImage()) != null}" th:content="${@seo.url('/media/' + config.hero().heroImage())}">
+</th:block>
+<link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+<link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/NotoSansBengali.woff2}">
+<link rel="stylesheet" th:href="@{/css/landing.css}">
+</head>
+<body class="lp">
+<p class="lp-admin-note" th:if="${preview}">শুধু অ্যাডমিনের জন্য প্রিভিউ · Preview only, orders are off</p>
+<header class="lp-top"><div class="lp-wrap"><a class="lp-brand" th:href="@{/}">উপহার ল্যাব</a></div></header>
+<main>
+<div class="lp-wrap lp-plain-title" th:unless="${config.sections().hero()}"><h1 th:text="${product.details.title}"></h1></div>
+<th:block th:replace="~{landing/sections :: hook}"></th:block>
+<th:block th:replace="~{landing/sections :: preview}"></th:block>
+<th:block th:replace="~{landing/sections :: benefits}"></th:block>
+<th:block th:replace="~{landing/sections :: productInfo}"></th:block>
+<th:block th:replace="~{landing/sections :: proof}"></th:block>
+<th:block th:replace="~{landing/sections :: pricing}"></th:block>
+<th:block th:replace="~{landing/form :: order}"></th:block>
+</main>
+<th:block th:replace="~{landing/sections :: pageEnd}"></th:block>
+<script type="application/json" id="landing-config" th:utext="${configJson}"></script>
+<script th:if="${@pixel.enabled() and !preview}" th:src="@{/js/pixel.js}" defer th:with="pixelId=${@pixel.id()}" th:attr="data-pixel=${pixelId},data-product=${product.details.title},data-value=${config.hero().offerPrice()}"></script>
+<script th:src="@{/js/landing.js}" defer></script>
+</body>
+</html>

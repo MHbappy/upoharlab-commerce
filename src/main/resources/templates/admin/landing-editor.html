@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="editor" class="landing-editor">
+<input type="hidden" name="submitted" value="true">
+<input type="hidden" name="enabled" value="true">
+
+<fieldset class="edit-section" id="lp-hook">
+<legend>Landing page: top of page</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('hero', ${landingForm.sections.hero}, 'Hidden: the page starts with the product name. Your entries are kept.')}"></th:block>
+<div data-section-body>
+<p class="field-help" th:if="${productId != null}"><a th:href="@{/admin/products/{id}/landing-preview(id=${productId})}" target="_blank" rel="noopener">Preview page</a> shows the last saved version.</p>
+<div class="field"><label>Headline</label><input type="text" name="hero.headline" maxlength="200" th:value="${landingForm.hero.headline}"></div>
+<div class="field"><label>Sub-headline</label><input type="text" name="hero.subHeadline" maxlength="300" th:value="${landingForm.hero.subHeadline}"></div>
+<div class="grid-2">
+<div class="field"><label>Offer price (৳)</label><input type="number" min="0" name="hero.offerPrice" th:value="${landingForm.hero.offerPrice}"></div>
+<div class="field"><label>Old price, crossed out (৳)</label><input type="number" min="0" name="hero.oldPrice" th:value="${landingForm.hero.oldPrice}"></div>
+</div>
+<div class="field"><label>Hero image</label><th:block th:replace="~{admin/landing-editor :: picker('hero.heroImage', ${landingForm.hero.heroImage})}"></th:block></div>
+</div>
+</fieldset>
+
+<fieldset class="edit-section" id="lp-benefits">
+<legend>Benefits</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('benefits', ${landingForm.sections.benefits}, 'Hidden from customers. Your entries are kept.')}"></th:block>
+<div data-section-body>
+<p class="field-help">Exactly 4 short lines.</p>
+<div class="grid-2">
+<div class="field" th:each="b, i : ${landingForm.benefits}"><input type="text" maxlength="200" th:name="${'benefits[' + i.index + ']'}" th:value="${b}" th:attr="aria-label=${'Benefit ' + i.count},placeholder=${'Benefit ' + i.count}"></div>
+</div>
+</div>
+</fieldset>
+
+<fieldset class="edit-section" id="lp-proof">
+<legend>Social proof</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('socialProof', ${landingForm.sections.socialProof}, 'Hidden from customers. Your entries are kept.')}"></th:block>
+<div data-section-body>
+<p class="field-help">Use only real photos, reviews and counts. Anything left empty is hidden from the page.</p>
+<div class="grid-3">
+<div class="field" th:each="c, i : ${landingForm.socialProof.customerImages}"><label th:text="${'Customer photo ' + i.count}"></label><th:block th:replace="~{admin/landing-editor :: picker(${'socialProof.customerImages[' + i.index + ']'}, ${c})}"></th:block></div>
+</div>
+<div class="field"><label>Review text</label><textarea name="socialProof.reviewText" rows="2" maxlength="600" th:text="${landingForm.socialProof.reviewText}"></textarea></div>
+<div class="grid-2">
+<div class="field"><label>Reviewer name</label><input type="text" name="socialProof.reviewerName" maxlength="100" th:value="${landingForm.socialProof.reviewerName}"></div>
+<div class="field"><label>Reviewer area</label><input type="text" name="socialProof.reviewerArea" maxlength="100" th:value="${landingForm.socialProof.reviewerArea}"></div>
+<div class="field"><label>Customer count</label><input type="number" min="0" name="socialProof.countNumber" th:value="${landingForm.socialProof.countNumber}"></div>
+<div class="field"><label>Proof line (after "N+ জন")</label><input type="text" name="socialProof.proofLine" maxlength="200" th:value="${landingForm.socialProof.proofLine}"></div>
+</div>
+</div>
+</fieldset>
+
+<fieldset class="edit-section" id="lp-packages">
+<legend>Packages</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('packages', ${landingForm.sections.packages}, 'The package cards are hidden, but customers still choose a package in the order form, so keep prices filled in.')}"></th:block>
+<p class="field-help">Exactly 3. Mark the one most people should choose.</p>
+<div class="grid-3">
+<div class="package-card" th:each="p, i : ${landingForm.packages}">
+<div class="field"><label>Name</label><input type="text" maxlength="100" th:name="${'packages[' + i.index + '].name'}" th:value="${p.name}"></div>
+<div class="field"><label>Description</label><input type="text" maxlength="300" th:name="${'packages[' + i.index + '].description'}" th:value="${p.description}"></div>
+<div class="grid-2 tight">
+<div class="field"><label>Price (৳)</label><input type="number" min="1" th:name="${'packages[' + i.index + '].price'}" th:value="${p.price}"></div>
+<div class="field"><label>Old price</label><input type="number" min="0" th:name="${'packages[' + i.index + '].oldPrice'}" th:value="${p.oldPrice}"></div>
+</div>
+<label class="inline-choice"><input type="radio" name="popularPackage" th:value="${i.index}" th:checked="${landingForm.popularPackage == i.index}"> <span>Most popular</span></label>
+</div>
+</div>
+<div class="field"><label>Urgency line (optional, must be true)</label><input type="text" name="urgencyLine" maxlength="300" th:value="${landingForm.urgencyLine}"></div>
+</fieldset>
+
+<fieldset class="edit-section" id="lp-order">
+<legend>Order form</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('order', ${landingForm.sections.order}, 'Hidden: customers can view this product but cannot order it from this page. Options, advance and delivery are not needed while it is hidden.')}"></th:block>
+</fieldset>
+
+<fieldset class="edit-section" id="lp-options" data-follows="order">
+<legend>Options and extras</legend>
+<p class="field-help">Optional. Clear a row's text to remove it when you save.</p>
+<div data-repeat="options">
+<div class="option-card" data-row th:each="o, i : ${landingForm.options}">
+<div class="grid-2">
+<div class="field"><label>Option name, e.g. মাপ</label><input type="text" maxlength="100" th:name="${'options[' + i.index + '].label'}" th:value="${o.label}"></div>
+<div class="field"><label>Type</label><select th:name="${'options[' + i.index + '].type'}">
+<option value="SIZE" th:selected="${o.type == 'SIZE'}">Size</option>
+<option value="SHAPE" th:selected="${o.type == 'SHAPE'}">Shape</option>
+<option value="COLOR" th:selected="${o.type == 'COLOR'}">Colour</option>
+</select></div>
+</div>
+<div data-values>
+<div class="option-value" data-value-row th:each="v, j : ${o.values}">
+<div class="field"><label>Choice</label><input type="text" maxlength="100" th:name="${'options[' + i.index + '].values[' + j.index + '].name'}" th:value="${v.name}"></div>
+<div class="field"><label>Adds (৳)</label><input type="number" min="0" th:name="${'options[' + i.index + '].values[' + j.index + '].priceDelta'}" th:value="${v.priceDelta}"></div>
+<div class="field"><label>Image (optional)</label><th:block th:replace="~{admin/landing-editor :: picker(${'options[' + i.index + '].values[' + j.index + '].image'}, ${v.image})}"></th:block></div>
+</div>
+<button type="button" class="small-button" data-more-values hidden>+ Add choice</button>
+</div>
+</div>
+<button type="button" class="small-button" data-add-row hidden>+ Add option</button>
+</div>
+<h3 class="sub-title">Extras</h3>
+<div data-repeat="upsells">
+<div class="grid-2" data-row th:each="u, i : ${landingForm.upsells}">
+<div class="field"><label>Extra, e.g. গিফট র‍্যাপ</label><input type="text" maxlength="150" th:name="${'upsells[' + i.index + '].label'}" th:value="${u.label}"></div>
+<div class="field"><label>Price (৳)</label><input type="number" min="1" th:name="${'upsells[' + i.index + '].price'}" th:value="${u.price}"></div>
+</div>
+<button type="button" class="small-button" data-add-row hidden>+ Add extra</button>
+</div>
+</fieldset>
+
+<fieldset class="edit-section" id="lp-money" data-follows="order">
+<legend>Advance and delivery</legend>
+<div class="grid-3">
+<div class="field"><label>Advance (৳)</label><input type="number" min="0" name="advanceAmount" th:value="${landingForm.advanceAmount}"></div>
+<div class="field"><label>Delivery inside Dhaka (৳)</label><input type="number" min="0" name="delivery.insideDhakaCharge" th:value="${landingForm.delivery.insideDhakaCharge}"></div>
+<div class="field"><label>Delivery outside Dhaka (৳)</label><input type="number" min="0" name="delivery.outsideDhakaCharge" th:value="${landingForm.delivery.outsideDhakaCharge}"></div>
+</div>
+</fieldset>
+
+<fieldset class="edit-section" id="lp-preview">
+<legend>Live name preview</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('preview', ${landingForm.sections.preview}, 'Hidden: customers still type their text in the order form, without the live preview. Your setup is kept.')}"></th:block>
+<div data-section-body>
+<div class="grid-2">
+<div class="field"><label>Sample text</label><input type="text" name="preview.defaultText" maxlength="100" th:value="${landingForm.preview.defaultText}"></div>
+<div class="field"><label>Maximum characters</label><input type="number" min="1" max="100" name="preview.maxChars" th:value="${landingForm.preview.maxChars}"></div>
+</div>
+<div class="field"><p class="field-label">Fonts customers can choose</p>
+<div class="choice-row">
+<label class="inline-choice" th:each="f : ${fontChoices}"><input type="checkbox" name="preview.fonts" th:value="${f}" th:checked="${landingForm.preview.fonts.contains(f)}"> <span th:text="${f}"></span></label>
+</div>
+<input type="hidden" name="_preview.fonts" value="on">
+</div>
+<div data-repeat="preview.designs">
+<div class="option-card" data-row data-design-row th:each="d, i : ${landingForm.preview.designs}" th:with="n=${'preview.designs[' + i.index + ']'}">
+<div class="grid-2">
+<div class="field"><label>Design name</label><input type="text" maxlength="100" th:name="${n + '.name'}" th:value="${d.name}"></div>
+<div class="field"><label>Base image</label><th:block th:replace="~{admin/landing-editor :: picker(${n + '.baseImage'}, ${d.baseImage})}"></th:block></div>
+</div>
+<div class="design-stage" data-stage hidden><img alt="" data-stage-image><div class="design-box" data-box><span class="design-handle" data-handle></span></div></div>
+<p class="field-help" data-stage-help hidden>Drag the box to place the text. Drag its right edge to set the width.</p>
+<div class="grid-4">
+<div class="field"><label>Text X</label><input type="number" min="0" th:name="${n + '.textX'}" th:value="${d.textX}" data-x></div>
+<div class="field"><label>Text Y</label><input type="number" min="0" th:name="${n + '.textY'}" th:value="${d.textY}" data-y></div>
+<div class="field"><label>Max width</label><input type="number" min="1" th:name="${n + '.maxWidth'}" th:value="${d.maxWidth}" data-width></div>
+<div class="field"><label>Font size</label><input type="number" min="1" th:name="${n + '.fontSize'}" th:value="${d.fontSize}" data-size></div>
+<div class="field"><label>Smallest size</label><input type="number" min="1" th:name="${n + '.minFontSize'}" th:value="${d.minFontSize}" data-min></div>
+<div class="field"><label>Text colour</label><input type="text" maxlength="7" placeholder="#2B211C" th:name="${n + '.color'}" th:value="${d.color}" data-color></div>
+<div class="field"><label>Shadow colour</label><input type="text" maxlength="7" placeholder="optional" th:name="${n + '.shadow'}" th:value="${d.shadow}" data-shadow></div>
+</div>
+</div>
+<button type="button" class="small-button" data-add-row hidden>+ Add design</button>
+</div>
+</div>
+</fieldset>
+</div>
+
+<div th:fragment="sectionSwitch(key, on, offNote)" class="section-switch-row">
+<label class="section-switch"><input type="checkbox" role="switch" value="true" data-section-toggle th:name="${'sections.' + key}" th:checked="${on}" th:attr="data-key=${key}"><span class="switch-track" aria-hidden="true"></span><span class="switch-label" data-switch-label>Show on customer page</span></label>
+<input type="hidden" th:name="${'_sections.' + key}" value="on">
+<p class="section-off-note" th:text="${offNote}"></p>
+</div>
+
+<div th:fragment="picker(fieldName, selected)" class="image-slot" data-image-slot>
+<img class="image-slot-thumb" data-slot-thumb alt="" width="56" height="56" th:hidden="${#strings.isEmpty(selected)}" th:src="${#strings.isEmpty(selected) ? null : '/media/thumb-' + selected}">
+<div class="image-slot-controls">
+<select th:name="${fieldName}" data-image-picker th:attr="aria-label=${'Saved image for ' + fieldName}">
+<option value="">No saved image</option>
+<option th:each="img : ${imageChoices}" th:value="${img.filename}" th:text="${img.alt}" th:selected="${img.filename == selected}"></option>
+</select>
+<input type="file" accept="image/jpeg,image/png" data-image-file th:name="${landingForm.uploadName(fieldName)}" th:attr="aria-label=${'Upload image for ' + fieldName}">
+</div>
+</div>
+
+<section th:fragment="images" th:if="${productId != null and !landingPhotos.isEmpty()}" class="edit-section photos-editor" aria-labelledby="landing-images-title">
+<h2 id="landing-images-title">Saved landing images</h2>
+<p class="field-help">These never appear in the product gallery. An image in use can't be removed until you choose another.</p>
+<div class="saved-images">
+<div class="saved-image" th:each="photo : ${landingPhotos}">
+<img th:src="@{/media/{name}(name=${'thumb-' + photo.filename})}" th:alt="${photo.alt}" width="120" height="90">
+<p th:text="${photo.alt}"></p>
+<form th:action="@{/admin/products/{id}/photos/{photo}/remove(id=${productId},photo=${photo.id})}" method="post"><button class="small-button">Remove</button></form>
+</div>
+</div>
+</section>
+</body>
+</html>
