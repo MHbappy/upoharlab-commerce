@@ -21,16 +21,28 @@
 </h1>
 <p th:text="${productId == null ? 'Add the details and photos below, then submit once. Your product will appear in the shop.' : 'Update details, add photos and save your changes together.'}">
 </p>
-<p th:if="${productId != null}"><a th:href="@{/admin/products/{id}/preview(id=${productId})}">Preview product</a></p>
-<div class="product-form" th:object="${productForm}">
-<div th:if="${#fields.hasAnyErrors()}" class="error" role="alert">
+<div class="product-form editor-layout" th:object="${productForm}">
+<nav class="editor-nav" aria-label="Jump to section">
+<a href="#sec-info">Product details</a>
+<a href="#sec-photos">Photos</a>
+<a href="#lp-hook">Top of page</a>
+<a href="#lp-benefits">Benefits</a>
+<a href="#lp-proof">Social proof</a>
+<a href="#lp-packages">Packages</a>
+<a href="#lp-order">Order form</a>
+<a href="#lp-options">Options and extras</a>
+<a href="#lp-money">Advance and delivery</a>
+<a href="#lp-preview">Live name preview</a>
+</nav>
+<div th:if="${#fields.hasAnyErrors()}" class="error" role="alert" tabindex="-1" data-form-errors>
 <p>Please correct the fields marked below. Your text has been kept.</p>
 <ul th:if="${#fields.hasGlobalErrors()}"><li th:each="e : ${#fields.globalErrors()}" th:text="${e}"></li></ul>
-<p th:if="${reselectPhotos}">Please select your photos again before submitting.</p>
+<p th:if="${reselectPhotos}" data-reselect>Please select your photos again before submitting.</p>
 </div>
 <form id="product-form" th:action="${productId == null ? '/admin/products/new' : '/admin/products/' + productId}" method="post" enctype="multipart/form-data">
-<fieldset class="edit-section">
-<legend>1. Product information</legend>
+<fieldset class="edit-section" id="sec-info">
+<legend>Product details</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('details', ${landingForm.sections.details}, 'The details block is hidden from the order page, so its text is optional. Name, link and making days are still needed.')}"></th:block>
 <div class="field">
 <label for="title">Product name (Bangla)</label>
 <input id="title" th:field="*{title}" type="text" maxlength="200">
@@ -38,26 +50,34 @@
 </p>
 </div>
 <div class="field">
+<label for="slug">Custom product link (optional)</label>
+<input id="slug" th:field="*{slug}" type="text" maxlength="150" aria-describedby="slug-help">
+<p id="slug-help" class="field-help">Leave blank to create the link automatically. Or use lowercase English letters, numbers and hyphens. Changing it on a published product breaks links already shared.</p>
+<p class="error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">
+</p>
+</div>
+<div class="field">
 <label for="shortDescription">Short description</label>
 <textarea id="shortDescription" th:field="*{shortDescription}" rows="3">
 </textarea>
+<p class="field-help">Shown first in Product details, in bold. One or two sentences. Example: আপনার নাম খোদাই করা কাঠের নেমপ্লেট।</p>
 <p class="error" th:if="${#fields.hasErrors('shortDescription')}" th:errors="*{shortDescription}">
-</p>
-</div>
-</fieldset>
-<fieldset class="edit-section">
-<legend>2. Price and making details</legend>
-<div class="field">
-<label for="price">Price (whole taka)</label>
-<input id="price" th:field="*{price}" type="number" min="1" max="1000000" step="1">
-<p class="error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">
 </p>
 </div>
 <div class="field">
 <label for="includes">What is included</label>
 <textarea id="includes" th:field="*{includes}" rows="2">
 </textarea>
+<p class="field-help">Shown as "কী পাবেন". Example: ১টি নেমপ্লেট, ২টি স্ক্রু।</p>
 <p class="error" th:if="${#fields.hasErrors('includes')}" th:errors="*{includes}">
+</p>
+</div>
+<div class="field">
+<label for="description">Long description (optional)</label>
+<textarea id="description" th:field="*{description}" rows="3">
+</textarea>
+<p class="field-help">Shown under the short description on the product page, for anything else customers should know.</p>
+<p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">
 </p>
 </div>
 <div class="field-row">
@@ -65,6 +85,7 @@
 <label for="size">Size</label>
 <textarea id="size" th:field="*{size}" rows="2">
 </textarea>
+<p class="field-help">Shown as "মাপ". Example: ১২ × ৬ ইঞ্চি</p>
 <p class="error" th:if="${#fields.hasErrors('size')}" th:errors="*{size}">
 </p>
 </div>
@@ -72,14 +93,16 @@
 <label for="material">Material</label>
 <textarea id="material" th:field="*{material}" rows="2">
 </textarea>
+<p class="field-help">Shown as "উপাদান". Example: ৫ মিমি কাঠ</p>
 <p class="error" th:if="${#fields.hasErrors('material')}" th:errors="*{material}">
 </p>
 </div>
 </div>
 <div class="field">
-<label for="engravingHelp">Engraving instructions and limits</label>
+<label for="engravingHelp">What can be written</label>
 <textarea id="engravingHelp" th:field="*{engravingHelp}" rows="3">
 </textarea>
+<p class="field-help">Shown as "কী লেখা যাবে". Example: বাংলা বা ইংরেজি নাম, সর্বোচ্চ ২০ অক্ষর।</p>
 <p class="error" th:if="${#fields.hasErrors('engravingHelp')}" th:errors="*{engravingHelp}">
 </p>
 </div>
@@ -98,62 +121,46 @@
 </div>
 </div>
 <div class="field">
+<label for="care">Care instructions (optional)</label>
+<textarea id="care" th:field="*{care}" rows="3">
+</textarea>
+<p class="field-help">Shown at the end of Product details. Example: নরম শুকনো কাপড়ে মুছুন।</p>
+<p class="error" th:if="${#fields.hasErrors('care')}" th:errors="*{care}">
+</p>
+</div>
+<p class="field-help">Making days appear on the page as "বানাতে সময়". Delivery time comes from Settings.</p>
+<div class="field">
 <label class="check-row" for="indoorOnly"><input type="checkbox" id="indoorOnly" th:field="*{indoorOnly}"> Indoor use only</label>
 <p class="field-help">Shows the indoor-only warning to customers. It stays on once saved.</p>
 <p class="error" th:if="${#fields.hasErrors('indoorOnly')}" th:errors="*{indoorOnly}">
 </p>
 </div>
 </fieldset>
-<fieldset class="edit-section product-photo-picker">
-<legend>3. Photos</legend>
-<p class="field-help">Choose up to 4 JPEG or PNG photos, each up to 5 MB and 20 megapixels. The first photo is the main one. Photos are saved with the product.</p>
+<fieldset class="edit-section product-photo-picker" id="sec-photos">
+<legend>Photos</legend>
+<th:block th:replace="~{admin/landing-editor :: sectionSwitch('gallery', ${landingForm.sections.gallery}, 'The gallery is hidden from the order page. Photos are still used in the shop list.')}"></th:block>
+<p class="field-help">Choose up to 4 JPEG or PNG photos, each up to 5 MB and 20 megapixels. The first photo is shown first in the gallery under Product details on the customer page.</p>
 <label for="photos" th:text="${productId == null ? 'Choose photos' : 'Add more photos (optional)'}"></label>
 <input id="photos" name="photos" type="file" accept="image/jpeg,image/png" multiple aria-describedby="photo-help">
 <p id="photo-help" class="field-help">At least one photo is needed to publish. The product name is used as its photo description.</p>
 </fieldset>
-<details class="product-extra" th:open="${#fields.hasErrors('slug') or #fields.hasErrors('sortOrder') or #fields.hasErrors('quantityHelp') or #fields.hasErrors('description') or #fields.hasErrors('care')}">
+<details class="product-extra" th:open="${#fields.hasErrors('sortOrder')}">
 <summary>More options <span class="muted">Optional</span></summary>
-<div class="field">
-<label for="slug">Custom product link (optional)</label>
-<input id="slug" th:field="*{slug}" type="text" maxlength="150" aria-describedby="slug-help">
-<p id="slug-help" class="field-help">Leave blank to create the link automatically. Or use lowercase English letters, numbers and hyphens. Changing it on a published product breaks links already shared.</p>
-<p class="error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">
-</p>
-</div>
-<div class="field">
-<label for="quantityHelp">What quantity means (optional, shown to customers)</label>
-<textarea id="quantityHelp" th:field="*{quantityHelp}" rows="2" maxlength="500">
-</textarea>
-<p class="error" th:if="${#fields.hasErrors('quantityHelp')}" th:errors="*{quantityHelp}">
-</p>
-</div>
-<div class="field">
-<label for="description">Extra details (optional)</label>
-<textarea id="description" th:field="*{description}" rows="3">
-</textarea>
-<p class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">
-</p>
-</div>
-<div class="field">
-<label for="care">Care (optional)</label>
-<textarea id="care" th:field="*{care}" rows="3">
-</textarea>
-<p class="error" th:if="${#fields.hasErrors('care')}" th:errors="*{care}">
-</p>
-</div>
 <div class="field"><label for="sortOrder">Display order</label><input id="sortOrder" form="product-form" th:field="*{sortOrder}" type="number" min="0" step="1"><p class="field-help">Lower numbers appear first.</p><p class="error" th:if="${#fields.hasErrors('sortOrder')}" th:errors="*{sortOrder}"></p></div>
 </details>
-<fieldset class="edit-section">
-<legend>Ready to submit</legend>
+<div th:replace="~{admin/landing-editor :: editor}"></div>
+<fieldset class="edit-section submit-bar">
+<div class="submit-row">
 <label for="status">Visibility</label>
 <select id="status" form="product-form" th:field="*{status}">
 <option value="ACTIVE">Publish now — visible in the shop</option>
 <option value="DRAFT">Save privately — finish later</option>
 <option value="PAUSED" th:if="${productId != null}">Paused — visible, ordering stopped</option>
 </select>
-<p class="field-help">Publishing requires all product details and at least one photo. Saving privately is optional.</p>
-<p class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></p>
+<p class="section-count" data-section-count aria-live="polite"></p>
 <div class="product-submit"><button class="button" th:text="${productId == null ? 'Add product' : 'Save product'}">Add product</button><a th:href="@{/admin/products}">Cancel</a></div>
+</div>
+<p class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></p>
 </fieldset>
 </form>
 <section th:if="${productId != null}" class="edit-section photos-editor" aria-labelledby="photos-title">
@@ -176,7 +183,9 @@
 </div>
 </div>
 </section>
+<section th:replace="~{admin/landing-editor :: images}"></section>
 </div>
 </main>
+<script th:src="@{/js/landing-admin.js}" defer></script>
 </body>
 </html>

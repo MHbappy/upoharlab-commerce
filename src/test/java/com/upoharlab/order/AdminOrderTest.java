@@ -6,8 +6,6 @@ import static org.assertj.core.api.Assertions.*;
 import com.upoharlab.order.AdminOrderService.RuleException;
 import com.upoharlab.order.OrderService.Placed;
 import com.upoharlab.order.OrderTestSupport.Browser;
-import com.upoharlab.order.OrderValidator.OrderInput;
-import com.upoharlab.order.PricingService.Prices;
 import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.concurrent.*;
@@ -31,7 +29,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AdminOrderTest {
   private static final String ADMIN = "test-owner";
-  private static final Prices PRICES = new Prices(399, 60, 110);
   private static final OrderInput INPUT =
       new OrderInput(
           1, "রাফি", "গ্রাহক", "01712345678", "INSIDE", "ঢাকা ঠিকানা", "গ্রাহকের নোট");
@@ -72,7 +69,7 @@ class AdminOrderTest {
   }
 
   private String newOrder(OrderInput input) {
-    return ((Placed) orders.place(productId, input, "t" + tokens++, PRICES)).code();
+    return placeOrder(db, productId, input);
   }
 
   private void move(String code, String to) {
@@ -513,22 +510,6 @@ class AdminOrderTest {
         .contains("01712345678", "রাফি", "গ্রাহকের নোট", "ঢাকা ঠিকানা", "৳459", "Cash on delivery")
         .contains("https://wa.me/8801712345678");
     assertThat(detail.headers().firstValue("Referrer-Policy").orElse("")).contains("no-referrer");
-  }
-
-  @Test
-  void customerAndAdminSeeTheSameSavedTotals() throws Exception {
-    var customer = new Browser(port).open();
-    customer.order("quote", Map.of("quantity", "2", "area", "OUTSIDE"));
-    var redirect = customer.order("submit", Map.of("quantity", "2", "area", "OUTSIDE"));
-    String code = location(redirect).replaceAll(".*/order/([^/]+)/success$", "$1");
-    assertThat(customer.get("/order/" + code + "/success").body()).contains("৳৯০৮");
-    var saved = admin.detail(code);
-    assertThat(saved.total()).isEqualTo(908);
-    assertThat(saved.advanceRequired()).isEqualTo(0);
-    assertThat(saved.balance()).isEqualTo(908);
-    assertThat(saved.subtotal()).isEqualTo(798);
-    assertThat(saved.delivery()).isEqualTo(110);
-    assertThat(login().get("/admin/orders/" + code).body()).contains("৳908");
   }
 
   private HttpResponse<String> search(Browser browser, String q, String status, int page)

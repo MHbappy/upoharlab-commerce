@@ -15,7 +15,7 @@
     </div>
     <div class="hero-art" th:with="featured=${products.isEmpty() ? null : products[0]}">
       <span class="art-label">আপনার নামেই হোক গল্পটা</span>
-      <a class="featured-photo" th:if="${featured != null and !featured.photos.isEmpty()}" th:href="@{/p/{slug}(slug=${featured.details.slug})}">
+      <a class="featured-photo" th:if="${featured != null and !featured.photos.isEmpty()}" th:href="@{${featured.orderPath()}}">
         <img fetchpriority="high" width="600" height="600" th:src="@{/media/{name}(name=${featured.photos[0].filename})}" th:alt="${featured.photos[0].alt}">
         <span class="featured-caption"><span th:text="${featured.details.title}"></span><span aria-hidden="true">↗</span></span>
       </a>
@@ -30,7 +30,7 @@
   <div class="trust-strip" aria-label="অর্ডার সম্পর্কে জানুন">
     <div><span class="trust-icon" aria-hidden="true">✎</span><span><strong>আপনার পছন্দের লেখা</strong><small>নামেই থাকুক নিজের ছোঁয়া</small></span></div>
     <div><span class="trust-icon" aria-hidden="true">✓</span><span><strong>আগে ডিজাইনে সম্মতি</strong><small>বানান ও ডিজাইন মিলিয়ে নিন</small></span></div>
-    <div><span class="trust-icon" aria-hidden="true">৳</span><span><strong>পুরো ক্যাশ অন ডেলিভারি</strong><small>অগ্রিম লাগবে না</small></span></div>
+    <div><span class="trust-icon" aria-hidden="true">৳</span><span><strong>পুরো ক্যাশ অন ডেলিভারি</strong><small>পণ্য হাতে পেয়ে টাকা দিন</small></span></div>
   </div>
   <section id="products" class="catalog section-space" aria-labelledby="catalog-title">
     <div class="section-heading"><div><p class="eyebrow">যত্নে বেছে নেওয়া</p><h2 id="catalog-title">ছোট্ট কিছু, বিশেষ কারও জন্য।</h2></div><p class="section-caption">নিজের জন্য, প্রিয়জনের জন্য।<br>একটি নামেই আলাদা হয়ে যাক।</p></div>
@@ -42,7 +42,7 @@
       <div class="product-grid">
         <article class="panel product-card" th:each="p, row : ${products}">
           <div class="card-image"><img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" width="480" height="400" th:attr="loading=${row.index < 3 ? 'eager' : 'lazy'}"><span class="photo-placeholder" th:if="${p.photos.isEmpty()}">পণ্যের ছবি আসছে</span><span class="image-arrow" aria-hidden="true">↗</span></div>
-          <div class="card-body"><h3><a class="card-link" th:href="@{/p/{slug}(slug=${p.details.slug})}" th:text="${p.details.title}"></a></h3>
+          <div class="card-body"><h3><a class="card-link" th:href="@{${p.orderPath()}}" th:text="${p.details.title}"></a></h3>
           <p class="card-description" th:if="${!#strings.isEmpty(p.details.shortDescription)}" th:text="${p.details.shortDescription}"></p>
           <p class="badge" th:if="${p.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
           <p class="card-footer"><span class="card-price" th:text="${@bn.money(p.details.price)}"></span><span class="card-action" aria-hidden="true">বিস্তারিত দেখুন →</span></p></div>
@@ -55,13 +55,13 @@
     <ol class="steps">
       <li><span class="step-number" aria-hidden="true">০১</span><h3>পণ্য ও লেখা বাছুন</h3><p>পছন্দের পণ্য আর খোদাই করার নাম জানান।</p></li>
       <li><span class="step-number" aria-hidden="true">০২</span><h3>ডিজাইন দেখে সম্মতি দিন</h3><p>WhatsApp-এ ডিজাইন দেখে বানান নিশ্চিত করুন।</p></li>
-      <li><span class="step-number" aria-hidden="true">০৩</span><h3>আমরা বানিয়ে পাঠাব</h3><p>ডিজাইন পছন্দ হলে বানানো শুরু হবে। অগ্রিম লাগবে না।</p></li>
+      <li><span class="step-number" aria-hidden="true">০৩</span><h3>আমরা বানিয়ে পাঠাব</h3><p>ডিজাইন পছন্দ হলে বানানো শুরু হবে।</p></li>
       <li><span class="step-number" aria-hidden="true">০৪</span><h3>উপহার বুঝে নিন</h3><p>বানানো শেষে কুরিয়ারে পাঠাব। পুরো টাকা ডেলিভারিতে।</p></li>
     </ol>
   </section>
   <section class="home-faq section-space" aria-labelledby="faq-title"><div><p class="eyebrow">নিশ্চিন্ত হয়ে বেছে নিন</p><h2 id="faq-title">মনে কিছু প্রশ্ন?</h2><p class="muted">অর্ডারের আগে জেনে রাখুন।</p><a class="text-link" th:href="@{/faq}">সব প্রশ্নের উত্তর →</a></div><div class="faq-list">
     <details><summary>বানানোর আগে ডিজাইন দেখতে পাব?</summary><p>হ্যাঁ। WhatsApp-এ ডিজাইন পাঠাব। নামের বানান ও ডিজাইন নিশ্চিত করে সম্মতি দেওয়ার পরেই বানানো শুরু হবে।</p></details>
-    <details><summary>অর্ডারের সময়ই কি টাকা দিতে হবে?</summary><p>না। সব অর্ডার ক্যাশ অন ডেলিভারি। পণ্য হাতে পেয়ে পুরো টাকা দেবেন। অগ্রিম লাগবে না।</p></details>
+    <details><summary>অর্ডারের সময়ই কি টাকা দিতে হবে?</summary><p>না। অর্ডার পাঠানোর সময় কোনো টাকা দিতে হবে না। কিছু পণ্যে ডিজাইনে সম্মতির পরে অল্প অগ্রিম লাগে, পণ্যের পাতায় তা লেখা থাকে। বাকি টাকা পণ্য হাতে পেয়ে দেবেন।</p></details>
     <details><summary>উপহার হাতে পেতে কত দিন লাগবে?</summary><p>বানানোর সময় পণ্যের পাতায় পাবেন। ডিজাইনে সম্মতির পরে সেই সময় শুরু হবে। এর সঙ্গে কুরিয়ারের সময় যোগ হবে।</p></details>
   </div></section>
   <section class="contact-banner"><div><p class="eyebrow">একসঙ্গে ভাবি</p><h2>কোন নামটা খোদাই করতে চান?</h2><p>উপহার বাছতে বা লেখা ঠিক করতে প্রশ্ন থাকলে আমাদের জানান।</p></div><a class="button button-light" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ কথা বলুন ↗</a><a class="button button-light" th:if="${whatsapp == null}" th:href="@{/bulk}">বিশেষ অর্ডার সম্পর্কে জানুন ↗</a></section>

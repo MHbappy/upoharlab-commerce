@@ -26,8 +26,10 @@ services:
       ORDERS_PER_HOUR: ${ORDERS_PER_HOUR:-5}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      FACEBOOK_PIXEL_ID: ${FACEBOOK_PIXEL_ID:-}
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-upoharlab}
       DB_USER: ${DB_USER:-upoharlab}
+      DB_USERNAME: ${DB_USER:-upoharlab}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     volumes:
       - uploads_data:/data/uploads

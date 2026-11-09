@@ -9,3 +9,4 @@ uploads/
 *.iml
 application-local.yml
 *.dump
+info.txt

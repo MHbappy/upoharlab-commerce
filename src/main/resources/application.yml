@@ -2,9 +2,10 @@ spring:
   application:
     name: upoharlab
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5433/upoharlab}
-    username: ${DB_USER:upoharlab}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:172.168.20.240}:${DB_PORT:5432}/${DB_NAME:uph_test}?stringtype=unspecified}
+    username: ${DB_USERNAME:suffixit01}
+    password: ${DB_PASSWORD:SilTest@321!}
+    driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5
       connection-init-sql: SET TIME ZONE 'UTC'
@@ -23,7 +24,8 @@ spring:
     multipart:
       # The 5 MB photo rule is enforced in ImageStorage so the editor can explain it.
       max-file-size: 20MB
-      max-request-size: 21MB
+      # A product can carry several 5 MB landing images in one save.
+      max-request-size: 90MB
   mvc:
     log-request-details: false
   web:
@@ -37,6 +39,8 @@ spring:
             enabled: true
             paths: /**
 server:
+  compression:
+    enabled: true
   error:
     include-message: never
     include-binding-errors: never
@@ -44,7 +48,9 @@ server:
   forward-headers-strategy: none
   tomcat:
     # Read over-limit uploads to the end, so browsers get the error page and not a reset.
-    max-swallow-size: 25MB
+    max-swallow-size: 95MB
+    # The product editor posts every landing page field as its own multipart part.
+    max-part-count: 600
   servlet:
     session:
       timeout: 8h
@@ -56,6 +62,8 @@ app:
   business-zone: Asia/Dhaka
   uploads-directory: ${UPLOADS_DIRECTORY:./uploads}
   base-url: ${APP_BASE_URL:}
+  facebook:
+    pixel-id: ${FACEBOOK_PIXEL_ID:}
   orders:
     max-per-hour: ${ORDERS_PER_HOUR:5}
   tracking:

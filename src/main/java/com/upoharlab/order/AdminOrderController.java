@@ -3,26 +3,62 @@ package com.upoharlab.order;
 import com.upoharlab.order.AdminOrderService.Detail;
 import com.upoharlab.order.AdminOrderService.RuleException;
 import com.upoharlab.settings.SettingsService;
+import com.upoharlab.shared.BnDigits;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import com.upoharlab.landing.PreviewSvgRenderer;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriUtils;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminOrderController {
+  private static final MediaType SVG = MediaType.parseMediaType("image/svg+xml;charset=UTF-8");
+
   private final AdminOrderService orders;
   private final SettingsService settings;
+  private final LandingOrderService landingOrders;
+  private final PreviewSvgRenderer svg;
 
-  public AdminOrderController(AdminOrderService orders, SettingsService settings) {
+  public AdminOrderController(
+      AdminOrderService orders,
+      SettingsService settings,
+      LandingOrderService landingOrders,
+      PreviewSvgRenderer svg) {
     this.orders = orders;
     this.settings = settings;
+    this.landingOrders = landingOrders;
+    this.svg = svg;
+  }
+
+  /** Rebuilt from saved parameters on every request. The download holds only the text layer. */
+  @GetMapping("/orders/{code}/preview.svg")
+  ResponseEntity<String> preview(
+      @PathVariable String code, @RequestParam(defaultValue = "false") boolean download)
+      throws java.io.IOException {
+    var selection =
+        landingOrders
+            .selection(code)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    var response = ResponseEntity.ok().contentType(SVG).cacheControl(CacheControl.noStore());
+    if (download)
+      response.header(
+          HttpHeaders.CONTENT_DISPOSITION,
+          ContentDisposition.attachment().filename(code + ".svg").build().toString());
+    return response.body(svg.render(selection, !download));
   }
 
   @GetMapping({"", "/"})
@@ -66,6 +102,8 @@ public class AdminOrderController {
   String detail(@PathVariable String code, Model m) {
     Detail order = orders.detail(code);
     m.addAttribute("order", order);
+    m.addAttribute("selection", landingOrders.selection(code).orElse(null));
+    m.addAttribute("neededBy", landingOrders.neededBy(code).orElse(null));
     m.addAttribute("whatsappLinks", whatsappLinks(order, settings.all()));
     return "admin/order-detail";
   }
@@ -80,7 +118,30 @@ public class AdminOrderController {
           "Design message",
           withText(
               base,
-              "আপনার অর্ডার " + order.code() + "-এর ডিজাইন পাঠালাম। ডিজাইন ও বানান দেখে সম্মতি জানান।"));
+              "আপনার অর্ডার "
+                  + order.code()
+                  + "-এর ডিজাইন পাঠালাম। ডিজাইন ও বানান দেখে সম্মতি জানান।"
+                  + (order.advanceRequired() > 0
+                      ? " সম্মতির পরে ৳" + BnDigits.toBangla(String.valueOf(order.advanceRequired())) + " অগ্রিম লাগবে।"
+                      : "")));
+    // Payment details go out only after approval, so nobody is asked to pay for an unseen design.
+    if (status == OrderStatus.DESIGN_SENT
+        && order.designApprovedAt() != null
+        && order.netPaid() < order.advanceRequired()) {
+      String bkash = values.getOrDefault("bkash_number", "");
+      links.put(
+          "Advance message",
+          withText(
+              base,
+              "ডিজাইনে সম্মতির জন্য ধন্যবাদ। অর্ডার "
+                  + order.code()
+                  + " বানানো শুরু করতে ৳"
+                  + BnDigits.toBangla(String.valueOf(order.advanceRequired() - order.netPaid()))
+                  + " অগ্রিম পাঠান"
+                  + (bkash.isBlank() ? "।" : " bKash: " + bkash + "।")
+                  + " পাঠিয়ে ট্রানজেকশন নম্বরটি জানান।"));
+      if (bkash.isBlank()) links.put("Missing bKash", base);
+    }
     if (order.courier() != null && status != OrderStatus.CANCELLED)
       links.put(
           "Shipping message",

@@ -1,5 +1,8 @@
 package com.upoharlab.admin;
 
+import com.upoharlab.landing.LandingFonts;
+import com.upoharlab.landing.LandingForm;
+import com.upoharlab.order.LandingPageModel;
 import com.upoharlab.product.*;
 import com.upoharlab.settings.*;
 import jakarta.validation.Valid;
@@ -19,12 +22,36 @@ public class AdminController {
   private final SettingsService settings;
   private final ImageStorage images;
   private final ProductEditor editor;
+  private final LandingPageModel landingPages;
 
-  public AdminController(ProductStore p, SettingsService s, ImageStorage i, ProductEditor editor) {
+  public AdminController(
+      ProductStore p,
+      SettingsService s,
+      ImageStorage i,
+      ProductEditor editor,
+      LandingPageModel landingPages) {
     products = p;
     settings = s;
     images = i;
     this.editor = editor;
+    this.landingPages = landingPages;
+  }
+
+  /** The landing editor's rows are plain public fields. */
+  @InitBinder("landingForm")
+  void landingBinder(org.springframework.web.bind.WebDataBinder binder) {
+    binder.initDirectFieldAccess();
+  }
+
+  private void landingEditor(Model m, Long id, LandingForm form) {
+    m.addAttribute("landingForm", form);
+    m.addAttribute("fontChoices", LandingFonts.FILES.keySet());
+    List<ProductStore.Photo> landing = id == null ? List.of() : products.get(id).landingPhotos();
+    List<ProductStore.Photo> gallery = id == null ? List.of() : products.get(id).photos();
+    List<ProductStore.Photo> all = new ArrayList<>(landing);
+    all.addAll(gallery);
+    m.addAttribute("landingPhotos", landing);
+    m.addAttribute("imageChoices", all);
   }
 
   @GetMapping("/login")
@@ -44,6 +71,9 @@ public class AdminController {
     form.setStatus("ACTIVE");
     m.addAttribute("productForm", form);
     m.addAttribute("photos", List.of());
+    LandingForm landing = LandingForm.from(null);
+    landing.enabled = true;
+    landingEditor(m, null, landing);
     return "admin/product-edit";
   }
 
@@ -53,6 +83,7 @@ public class AdminController {
     m.addAttribute("productForm", p.details());
     m.addAttribute("productId", id);
     m.addAttribute("photos", p.photos());
+    landingEditor(m, id, LandingForm.from(p.landing()));
     return "admin/product-edit";
   }
 
@@ -61,13 +92,20 @@ public class AdminController {
       @PathVariable(required = false) Long id,
       @Valid @ModelAttribute ProductForm productForm,
       BindingResult errors,
+      @ModelAttribute("landingForm") LandingForm landingForm,
+      BindingResult landingErrors,
       @RequestParam(required = false) List<MultipartFile> photos,
+      @RequestParam Map<String, MultipartFile> files,
       Model m,
       RedirectAttributes flash) {
     Long saved = null;
+    landingErrors.getFieldErrors().stream()
+        .map(e -> "Landing page: enter a whole number for " + e.getField() + ".")
+        .distinct()
+        .forEach(message -> errors.reject("landing", message));
     if (!errors.hasErrors())
       try {
-        saved = editor.save(id, productForm, errors, photos);
+        saved = editor.save(id, productForm, landingForm, errors, photos, files);
       } catch (org.springframework.dao.DuplicateKeyException ex) {
         errors.rejectValue("slug", "duplicate", "This URL is already used.");
       } catch (IOException | IllegalArgumentException ex) {
@@ -75,9 +113,10 @@ public class AdminController {
             ? "Unable to read or store a photo. Please choose another JPEG or PNG." : ex.getMessage());
       }
     if (errors.hasErrors()) {
-      m.addAttribute("reselectPhotos", photos != null && photos.stream().anyMatch(file -> !file.isEmpty()));
+      m.addAttribute("reselectPhotos", files.values().stream().anyMatch(file -> !file.isEmpty()));
       m.addAttribute("productId", id);
       m.addAttribute("photos", id == null ? List.of() : products.get(id).photos());
+      landingEditor(m, id, LandingForm.from(landingForm.toConfig()));
       return "admin/product-edit";
     }
     flash.addFlashAttribute("message", "ACTIVE".equals(productForm.getStatus()) ? "Product saved and published in your shop." : "Product saved.");
@@ -103,11 +142,25 @@ public class AdminController {
     return "redirect:/admin/products/" + id;
   }
 
+  /** Renders the customer page for any status, with ordering switched off. */
+  @GetMapping("/products/{id}/landing-preview")
+  String landingPreview(@PathVariable long id, Model m, RedirectAttributes flash) {
+    var product = products.get(id);
+    if (product.landing() == null) {
+      flash.addFlashAttribute("error", "Save the landing page section first.");
+      return "redirect:/admin/products/" + id;
+    }
+    landingPages.fill(
+        m, product, landingPages.defaults(product.orderLanding()), null, false, true, null);
+    return "landing/page";
+  }
+
   @PostMapping("/products/{id}/photos/{photo}/remove")
   String remove(@PathVariable long id, @PathVariable long photo, RedirectAttributes flash) {
     try {
+      var page = products.get(id);
       var filename =
-          products.get(id).photos().stream()
+          java.util.stream.Stream.concat(page.photos().stream(), page.landingPhotos().stream())
               .filter(p -> p.id() == photo)
               .map(ProductStore.Photo::filename)
               .findFirst();
@@ -128,17 +181,6 @@ public class AdminController {
   String move(@PathVariable long id, @PathVariable long photo, @RequestParam String direction) {
     products.movePhoto(id, photo, direction);
     return "redirect:/admin/products/" + id;
-  }
-
-  @GetMapping("/products/{id}/preview")
-  String preview(@PathVariable long id, Model m) {
-    m.addAttribute("product", products.get(id));
-    m.addAttribute("settings", settings.all());
-    m.addAttribute("whatsapp", settings.whatsapp(settings.all()));
-    m.addAttribute("preview", true);
-    m.addAttribute("orderable", false);
-    m.addAttribute("showForm", false);
-    return "site/product";
   }
 
   @GetMapping("/settings")

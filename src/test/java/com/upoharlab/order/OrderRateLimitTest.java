@@ -38,7 +38,11 @@ class OrderRateLimitTest {
 
   @BeforeEach
   void setUp() {
-    resetShop(db);
+    long id = resetShop(db);
+    db.update(
+        "UPDATE product SET landing_config=CAST(? AS jsonb) WHERE id=?",
+        LandingOrderFlowTest.CONFIG,
+        id);
   }
 
   @AfterEach
@@ -46,22 +50,34 @@ class OrderRateLimitTest {
     clear(db);
   }
 
+  private static final String PAGE = "/order/" + SLUG;
+  private static final String TOTAL = "1369";
+
+  private java.net.http.HttpResponse<String> submit(Browser b, String phone) throws Exception {
+    b.get(PAGE);
+    return send(b, phone);
+  }
+
+  private java.net.http.HttpResponse<String> send(Browser b, String phone) throws Exception {
+    Map<String, String> f = new java.util.LinkedHashMap<>();
+    f.put("engraving", "নাম"); f.put("confirmEngraving", "নাম"); f.put("font", "Galada");
+    f.put("design", "0"); f.put("packageIndex", "1"); f.put("opt0", "1"); f.put("upsells", "0");
+    f.put("name", "গোপন-গ্রাহক"); f.put("phone", phone); f.put("area", "OUTSIDE"); f.put("address", "ঢাকা");
+    f.put("shownTotal", TOTAL); f.put("action", "submit"); f.put("submitToken", b.submitToken);
+    return b.post(PAGE, f);
+  }
+
   @Test
   void onlyNewOrdersUseTheAllowance() throws Exception {
-    var browser = new Browser(port).open();
-    for (int i = 0; i < 5; i++) browser.order("quote", Map.of());
-    var first = location(browser.order("submit", Map.of()));
+    Browser b = new Browser(port);
+    var first = submit(b, "01712345678");
+    assertThat(first.statusCode()).isEqualTo(302);
     for (int i = 0; i < 5; i++)
-      assertThat(location(browser.order("submit", Map.of()))).isEqualTo(first);
-
-    browser.open();
-    browser.order("quote", Map.of());
-    assertThat(browser.order("submit", Map.of()).statusCode()).isEqualTo(302);
+      assertThat(send(b, "01712345678").statusCode()).as("repeat click").isEqualTo(302);
+    assertThat(orderCount(db)).isEqualTo(1);
+    assertThat(submit(b, "01812345678").statusCode()).isEqualTo(302);
     assertThat(orderCount(db)).isEqualTo(2);
-
-    browser.open();
-    browser.order("quote", Map.of());
-    var blocked = browser.order("submit", Map.of());
+    var blocked = submit(b, "01912345678");
     assertThat(blocked.statusCode()).isEqualTo(429);
     assertThat(blocked.body()).contains("WhatsApp", "গোপন-গ্রাহক");
     assertThat(orderCount(db)).isEqualTo(2);

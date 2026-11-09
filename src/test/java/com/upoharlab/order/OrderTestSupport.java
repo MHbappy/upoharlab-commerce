@@ -40,9 +40,11 @@ final class OrderTestSupport {
   }
 
   static void clear(JdbcTemplate db) {
+    db.update("DELETE FROM payment");
     db.update("DELETE FROM order_event");
     db.update("DELETE FROM orders");
     db.update("DELETE FROM order_code_counter");
+    db.update("DELETE FROM product_image WHERE product_id IN (SELECT id FROM product WHERE slug=?)", SLUG);
     db.update("DELETE FROM product WHERE slug=?", SLUG);
     setting(db, "accepting_orders", "false");
     setting(db, "whatsapp", "");
@@ -76,13 +78,6 @@ final class OrderTestSupport {
               HttpResponse.BodyHandlers.ofString()));
     }
 
-    /** Opens the product page and keeps its hidden form values, as a browser does. */
-    Browser open() throws Exception {
-      var page = get("/p/" + SLUG);
-      assertThat(page.statusCode()).isEqualTo(200);
-      return this;
-    }
-
     HttpResponse<String> post(String path, Map<String, String> fields) throws Exception {
       StringBuilder body = new StringBuilder("_csrf=" + encode(csrf));
       fields.forEach(
@@ -98,14 +93,49 @@ final class OrderTestSupport {
               HttpResponse.BodyHandlers.ofString()));
     }
 
-    /** Sends the form with the hidden values currently on the page, plus these overrides. */
-    HttpResponse<String> order(String action, Map<String, String> overrides) throws Exception {
-      Map<String, String> fields = validOrder();
-      fields.put("action", action);
-      fields.put("submitToken", submitToken);
-      fields.put("shownTotal", shownTotal);
-      fields.putAll(overrides);
-      return post("/p/" + SLUG + "/order", fields);
+    HttpResponse<String> multipart(String path, Map<String, String> fields) throws Exception {
+      String boundary = "test-boundary";
+      StringBuilder body = new StringBuilder();
+      fields.forEach(
+          (k, v) ->
+              body.append("--").append(boundary).append("\r\nContent-Disposition: form-data; name=\"")
+                  .append(k).append("\"\r\n\r\n").append(v).append("\r\n"));
+      body.append("--").append(boundary).append("--\r\n");
+      return remember(
+          client.send(
+              HttpRequest.newBuilder(URI.create(base + path))
+                  .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                  .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
+                  .build(),
+              HttpResponse.BodyHandlers.ofString()));
+    }
+
+    /** A multipart post with one file per entry of {@code files}, as a browser sends it. */
+    HttpResponse<String> multipart(
+        String path, Map<String, String> fields, Map<String, byte[]> files) throws Exception {
+      String boundary = "test-boundary-files";
+      var body = new java.io.ByteArrayOutputStream();
+      for (var f : fields.entrySet())
+        body.write(
+            ("--" + boundary + "\r\nContent-Disposition: form-data; name=\"" + f.getKey()
+                    + "\"\r\n\r\n" + f.getValue() + "\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+      for (var f : files.entrySet()) {
+        body.write(
+            ("--" + boundary + "\r\nContent-Disposition: form-data; name=\"" + f.getKey()
+                    + "\"; filename=\"a.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+        body.write(f.getValue());
+        body.write("\r\n".getBytes(StandardCharsets.UTF_8));
+      }
+      body.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+      return remember(
+          client.send(
+              HttpRequest.newBuilder(URI.create(base + path))
+                  .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                  .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
+                  .build(),
+              HttpResponse.BodyHandlers.ofString()));
     }
 
     private HttpResponse<String> remember(HttpResponse<String> response) {
@@ -127,19 +157,33 @@ final class OrderTestSupport {
     }
   }
 
-  /** Order fields only; hidden values come from the page. */
-  static Map<String, String> validOrder() {
-    Map<String, String> fields = new LinkedHashMap<>();
-    fields.put("quantity", "1");
-    fields.put("engraving", "রাফি");
-    fields.put("name", "গোপন-গ্রাহক");
-    fields.put("phone", "01712345678");
-    fields.put("area", "INSIDE");
-    fields.put("address", "গোপন-ঠিকানা, ঢাকা");
-    return fields;
+  static String location(HttpResponse<String> response) {
+    return response.headers().firstValue("location").orElse("");
   }
 
-  static String location(HttpResponse<String> response) {
-    return response.headers().firstValue("Location").orElse("");
+  /** A saved order for admin and tracking tests; total = 399 x quantity + delivery. */
+  record OrderInput(
+      int quantity, String engraving, String name, String phone, String area, String address, String note) {}
+
+  private static final java.util.concurrent.atomic.AtomicLong NEXT_CODE =
+      new java.util.concurrent.atomic.AtomicLong(1000);
+
+  static String placeOrder(JdbcTemplate db, long productId, OrderInput in) {
+    String code = "UL-202601-" + NEXT_CODE.incrementAndGet();
+    int delivery = "INSIDE".equals(in.area()) ? 60 : 110;
+    Long id =
+        db.queryForObject(
+            "INSERT INTO orders (code, submit_token, product_id, product_title_snapshot, quantity,"
+                + " engraving_text, customer_name, phone, area, address, note, unit_price_snapshot,"
+                + " delivery_charge_snapshot, total, advance_required, status)"
+                + " VALUES (?,?,?,'পরীক্ষার চাবির রিং',?,?,?,?,?,?,?,399,?,?,0,'NEW') RETURNING id",
+            Long.class,
+            code, "t" + code, productId, in.quantity(), in.engraving(), in.name(), in.phone(),
+            in.area(), in.address(), in.note(), delivery, 399 * in.quantity() + delivery);
+    db.update(
+        "INSERT INTO order_event (order_id, event_type, to_status, actor)"
+            + " VALUES (?, 'CREATED', 'NEW', 'customer')",
+        id);
+    return code;
   }
 }

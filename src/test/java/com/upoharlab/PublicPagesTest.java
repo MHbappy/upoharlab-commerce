@@ -119,10 +119,10 @@ class PublicPagesTest {
         .contains("<loc>https://upoharlab.com/policies/privacy</loc>")
         .doesNotContain("/admin", "/order", "/track", "/p/");
     db.update(
-        "UPDATE product SET status='ACTIVE', price=899, making_days_min=1, making_days_max=2"
-            + " WHERE slug='door-name-plate'");
+        "UPDATE product SET status='ACTIVE', price=899, making_days_min=1, making_days_max=2,"
+            + " landing_config='{\"enabled\":true}'::jsonb WHERE slug='door-name-plate'");
     assertThat(get("/sitemap.xml").body())
-        .contains("<loc>https://upoharlab.com/p/door-name-plate</loc>")
+        .contains("<loc>https://upoharlab.com/order/door-name-plate</loc>")
         .doesNotContain("keyring-gift-pair");
   }
 

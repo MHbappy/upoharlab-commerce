@@ -27,8 +27,10 @@ public class TrackingController {
           "DELIVERED", "পৌঁছে গেছে।",
           "CANCELLED", "অর্ডারটি বাতিল হয়েছে।");
 
+  private static final String APPROVED =
+      "ডিজাইনে আপনার সম্মতি পেয়েছি। বানানোর প্রস্তুতি চলছে।";
   private static final String APPROVED_AWAITING_ADVANCE =
-      "ডিজাইনে আপনার সম্মতি পেয়েছি। বানানোর প্রস্তুতি চলছে। পুরো টাকা ডেলিভারিতে দেবেন।";
+      "ডিজাইনে আপনার সম্মতি পেয়েছি। অগ্রিম পেলে বানানো শুরু হবে।";
 
   private final TrackingService tracking;
   private final SettingsService settings;
@@ -93,9 +95,9 @@ public class TrackingController {
 
   /** Approval is recorded separately; the owner confirms the order before production. */
   private static String label(TrackingService.Status order) {
-    return "DESIGN_SENT".equals(order.status()) && order.approvedAt() != null
-        ? APPROVED_AWAITING_ADVANCE
-        : LABELS.get(order.status());
+    if (!"DESIGN_SENT".equals(order.status()) || order.approvedAt() == null)
+      return LABELS.get(order.status());
+    return order.advanceDue() ? APPROVED_AWAITING_ADVANCE : APPROVED;
   }
 
   private void contact(Model m) {

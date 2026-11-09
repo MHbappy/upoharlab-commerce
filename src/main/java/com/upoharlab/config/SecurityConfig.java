@@ -23,7 +23,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 
 @Configuration
 public class SecurityConfig {
-  private static final Pattern EXPIRED_ORDER_FORM = Pattern.compile("/p/([a-z0-9-]+)/order");
+  private static final Pattern EXPIRED_LANDING_FORM = Pattern.compile("/order/([a-z0-9-]+)");
 
   @Bean
   PasswordEncoder passwordEncoder() {
@@ -55,15 +55,23 @@ public class SecurityConfig {
   private static void denied(
       HttpServletRequest req, HttpServletResponse res, AccessDeniedException ex)
       throws IOException, ServletException {
-    var form = EXPIRED_ORDER_FORM.matcher(req.getRequestURI());
-    if (ex instanceof CsrfException && form.matches()) {
+    var landing = EXPIRED_LANDING_FORM.matcher(req.getRequestURI());
+    if (ex instanceof CsrfException && landing.matches()) {
       res.setStatus(HttpServletResponse.SC_SEE_OTHER);
-      res.setHeader("Location", "/p/" + form.group(1) + "?expired=1#order");
+      res.setHeader("Location", "/order/" + landing.group(1) + "?expired=1#order");
     } else new AccessDeniedHandlerImpl().handle(req, res, ex);
   }
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http, Clock clock) throws Exception {
+  SecurityFilterChain securityFilterChain(
+      HttpSecurity http, Clock clock, com.upoharlab.FacebookPixel pixel) throws Exception {
+    // Facebook's addresses are allowed only on sites that have chosen to use the Pixel.
+    String facebookImages = pixel.enabled() ? " https://www.facebook.com" : "";
+    String facebookScripts =
+        pixel.enabled()
+            ? " script-src 'self' https://connect.facebook.net; connect-src 'self'"
+                + " https://www.facebook.com https://connect.facebook.net;"
+            : "";
     return http.authorizeHttpRequests(
             a ->
                 a.requestMatchers(
@@ -121,8 +129,11 @@ public class SecurityConfig {
                         c ->
                             c.policyDirectives(
                                 "default-src 'self'; font-src 'self'; style-src 'self'; img-src"
-                                    + " 'self'; frame-ancestors 'none'; form-action 'self';"
-                                    + " base-uri 'self'")))
+                                    + " 'self' data: blob:"
+                                    + facebookImages
+                                    + ";"
+                                    + facebookScripts
+                                    + " frame-ancestors 'none'; form-action 'self'; base-uri 'self'")))
         .build();
   }
 }

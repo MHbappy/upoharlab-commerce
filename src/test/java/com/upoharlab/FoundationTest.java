@@ -43,7 +43,7 @@ class FoundationTest {
     assertThat(
             jdbc.queryForObject(
                 "SELECT count(*) FROM product WHERE status = 'DRAFT'", Integer.class))
-        .isEqualTo(4);
+        .isEqualTo(6);
     assertThat(
             jdbc.queryForObject("SELECT count(*) FROM product WHERE price IS NULL", Integer.class))
         .isEqualTo(2);
@@ -60,7 +60,7 @@ class FoundationTest {
               jdbc.queryForObject(
                   "SELECT value FROM setting WHERE key = 'delivery_inside'", String.class))
           .isEqualTo("75");
-      assertThat(jdbc.queryForObject("SELECT count(*) FROM product", Integer.class)).isEqualTo(4);
+      assertThat(jdbc.queryForObject("SELECT count(*) FROM product", Integer.class)).isEqualTo(6);
     } finally {
       jdbc.update("UPDATE setting SET value = '60' WHERE key = 'delivery_inside'");
     }
@@ -178,12 +178,9 @@ class FoundationTest {
                 HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/p/phase2-test"))
                     .build(),
                 HttpResponse.BodyHandlers.ofString());
-    assertThat(response.statusCode()).isEqualTo(200);
-    assertThat(response.body()).contains("শুধু ঘরের ভেতরের জন্য", "৳৫০০");
-    assertThat(response.body())
-        .as("shop is closed: the reason replaces ordering, and one photo needs no thumbnails")
-        .contains("এখনো অনলাইনে অর্ডার নেওয়া শুরু হয়নি")
-        .doesNotContain("href=\"#order\"", "id=\"order\"", "class=\"thumbnails\"");
+    assertThat(response.statusCode()).as("no landing page, so nothing to show").isEqualTo(404);
+    assertThat(products.list(false)).noneMatch(p -> p.id() == id);
+    jdbc.update("UPDATE product SET landing_config='{\"enabled\":true}'::jsonb WHERE id=?", id);
     var home =
         HttpClient.newHttpClient()
             .send(
@@ -317,8 +314,7 @@ class FoundationTest {
             "/admin/settings",
             "/admin/products",
             "/admin/products/new",
-            "/admin/products/1",
-            "/admin/products/1/preview")) {
+            "/admin/products/1")) {
       var response =
           client.send(
               HttpRequest.newBuilder(URI.create(base + path)).build(),

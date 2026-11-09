@@ -157,12 +157,22 @@ the database account. A missing first-boot credential causes a clear startup fai
 ## Ordering
 
 The order form appears on active products once **Accepting new orders** is enabled in Settings.
-All orders are cash on delivery with no advance. Customers order without an account using their name, phone and address; engraving instructions are optional and can be agreed afterwards. Admins can record missing engraving details on the order before design approval. The server recalculates every amount, and saves an order
+Customers order without an account using their name, phone and address; engraving instructions are optional and can be agreed afterwards. Admins can record missing engraving details on the order before design approval. The server recalculates every amount, and saves an order
 only after the customer has seen the current total; if prices change first, they review it again.
 
 Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` for optional owner alerts, and
 `APP_BASE_URL` to include an admin link in them. Alerts never contain a phone or address, and a
 failed alert does not affect the order. `ORDERS_PER_HOUR` limits new orders per IP address.
+
+## Landing pages
+
+Every product sells through a one-page order site at `/order/{link}`, built entirely from the **Landing page** section of the product editor: hero, benefits, social proof, three packages, options, extras, advance, delivery charges and preview designs with their fonts. No template changes are needed for a new product. A product cannot be published without one, and older `/p/{link}` addresses redirect there.
+
+Add images with the upload box beside each image slot, or choose one already saved, and use **Preview page** to check a draft. Reviews, counts and the urgency line are hidden until filled in; enter only real ones.
+
+Confirming a landing order needs both design approval and the advance recorded as a payment. The order page shows **Download SVG**, which holds only the text at its real position; laser software needs that font installed (files are in `static/fonts`). To add a font, add its WOFF2 file and an entry in `LandingFonts` and `landing.css`.
+
+Set `FACEBOOK_PIXEL_ID` in `.env` to turn on ViewContent, InitiateCheckout and Purchase events. Empty means no Facebook code or address is used.
 
 ## Managing orders
 

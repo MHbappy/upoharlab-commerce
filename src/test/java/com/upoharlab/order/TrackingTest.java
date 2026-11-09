@@ -5,8 +5,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.upoharlab.order.OrderService.Placed;
 import com.upoharlab.order.OrderTestSupport.Browser;
-import com.upoharlab.order.OrderValidator.OrderInput;
-import com.upoharlab.order.PricingService.Prices;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,14 +57,8 @@ class TrackingTest {
             .format(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Dhaka"))),
         NEXT_CODE.incrementAndGet());
     code =
-        ((Placed)
-                orders.place(
-                    productId,
-                    new OrderInput(
-                        1, "গোপন-খোদাই", "গোপন-নাম", PHONE, "INSIDE", "গোপন-ঠিকানা", "গোপন-নোট"),
-                    "track-" + System.nanoTime(),
-                    new Prices(399, 60, 110)))
-            .code();
+        placeOrder(db, productId, new OrderInput(
+                        1, "গোপন-খোদাই", "গোপন-নাম", PHONE, "INSIDE", "গোপন-ঠিকানা", "গোপন-নোট"));
   }
 
   @AfterEach

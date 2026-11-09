@@ -39,7 +39,7 @@ After your first login at `https://upoharlab.com/admin/login`, delete `ADMIN_USE
 
 ## Before taking real orders
 
-In the admin, add real contacts and durations in **Settings**, then complete and publish products with real photos and final prices. Enable **Accepting new orders** last. Place one test order through the live HTTPS site.
+In the admin, add real contacts and durations in **Settings**, then complete and publish products with real photos and final prices. If a landing page takes an advance, also add your bKash number. Enable **Accepting new orders** last. Place one test order through the live HTTPS site.
 
 ## Logs
 

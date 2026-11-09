@@ -28,6 +28,17 @@ public class ImageStorage {
 
   @Transactional
   public void upload(long product, MultipartFile file, String alt) throws IOException {
+    upload(product, file, alt, "GALLERY");
+  }
+
+  /** Stored like any photo, but kept out of the product's gallery. */
+  @Transactional
+  public String uploadLanding(long product, MultipartFile file, String alt) throws IOException {
+    return upload(product, file, alt, "LANDING");
+  }
+
+  private String upload(long product, MultipartFile file, String alt, String purpose)
+      throws IOException {
     products.lock(product);
     if (file.isEmpty() || file.getSize() > 5 * 1024 * 1024)
       throw new IllegalArgumentException("Choose a JPEG or PNG up to 5 MB.");
@@ -62,12 +73,13 @@ public class ImageStorage {
       write(decoded, 1200, full);
       write(decoded, 600, thumb);
       db.update(
-          "INSERT INTO product_image(product_id,filename,alt_bn,sort_order) VALUES (?,?,?,(SELECT"
-              + " coalesce(max(sort_order),-1)+1 FROM product_image WHERE product_id=?))",
+          "INSERT INTO product_image(product_id,filename,alt_bn,sort_order,purpose) VALUES (?,?,?,(SELECT"
+              + " coalesce(max(sort_order),-1)+1 FROM product_image WHERE product_id=?),?)",
           product,
           name,
           alt.strip(),
-          product);
+          product,
+          purpose);
       org.springframework.transaction.support.TransactionSynchronizationManager
           .registerSynchronization(
               new org.springframework.transaction.support.TransactionSynchronization() {
@@ -86,6 +98,7 @@ public class ImageStorage {
       Files.deleteIfExists(thumb);
       throw ex;
     }
+    return name;
   }
 
   private void write(BufferedImage image, int max, Path path) throws IOException {
@@ -107,6 +120,21 @@ public class ImageStorage {
     }
     if (!ImageIO.write(result, "JPEG", path.toFile()))
       throw new IOException("JPEG writer unavailable");
+  }
+
+  /** Width and height of a stored image, read without decoding it. */
+  public int[] dimensions(String filename) throws IOException {
+    try (ImageInputStream input = ImageIO.createImageInputStream(path(filename).toFile())) {
+      var readers = input == null ? Collections.<ImageReader>emptyIterator() : ImageIO.getImageReaders(input);
+      if (!readers.hasNext()) throw new IOException("Unreadable image");
+      ImageReader reader = readers.next();
+      try {
+        reader.setInput(input, true, true);
+        return new int[] {reader.getWidth(0), reader.getHeight(0)};
+      } finally {
+        reader.dispose();
+      }
+    }
   }
 
   public void removeFiles(String filename) throws IOException {

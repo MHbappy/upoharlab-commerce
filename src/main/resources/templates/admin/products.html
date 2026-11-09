@@ -28,7 +28,7 @@
 </h2>
 <p th:text="${p.details.price != null ? '৳' + p.details.price : 'No price yet'}">
 </p>
-<p class="photo-actions"><a th:href="@{/admin/products/{id}(id=${p.id})}">Edit product</a><a th:href="@{/admin/products/{id}/preview(id=${p.id})}">Preview</a></p>
+<p class="photo-actions"><a th:href="@{/admin/products/{id}(id=${p.id})}">Edit product</a><a th:if="${p.landing != null}" th:href="@{/admin/products/{id}/landing-preview(id=${p.id})}">Preview</a><span class="muted" th:if="${p.details.status != 'DRAFT' and !p.landingEnabled()}">Hidden: needs a landing page</span></p>
 </article>
 </div>
 </main>

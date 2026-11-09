@@ -239,7 +239,7 @@ public class AdminOrderService {
               instant(r, "created_at"),
               net,
               status == OrderStatus.CANCELLED ? null : Long.valueOf(total - net),
-              missingForConfirmation(approved != null),
+              missingForConfirmation(approved != null, advance, net),
               status.beforeShipping(),
               status.beforeShipping(),
               payments,
@@ -248,9 +248,11 @@ public class AdminOrderService {
         id);
   }
 
-  private static List<String> missingForConfirmation(boolean approved) {
+  private static List<String> missingForConfirmation(boolean approved, int advance, long paid) {
     List<String> missing = new ArrayList<>();
     if (!approved) missing.add("Customer design approval has not been recorded.");
+    if (paid < advance)
+      missing.add("The ৳" + advance + " advance has not been recorded in full (received ৳" + paid + ").");
     return missing;
   }
 
@@ -318,7 +320,7 @@ public class AdminOrderService {
       case CONFIRMED, MAKING -> {
         List<String> missing =
             missingForConfirmation(
-                order.approved());
+                order.approved(), order.advanceRequired(), netPaid(order.id()));
         if (!missing.isEmpty()) throw new RuleException(String.join(" ", missing));
       }
       case SHIPPED -> saveCourier(order.id(), courier, tracking);
@@ -366,7 +368,7 @@ public class AdminOrderService {
     if (refund && "COD".equals(method))
       throw new RuleException("A refund cannot be recorded as cash on delivery.");
     int amount = amount(rawAmount);
-    String reference = OrderValidator.text(rawRef, false).toUpperCase(Locale.ROOT);
+    String reference = OrderText.text(rawRef, false).toUpperCase(Locale.ROOT);
     if (reference.length() > 100) throw new RuleException("That reference is too long.");
     if ("BKASH".equals(method) && reference.isEmpty())
       throw new RuleException("A bKash record needs its transaction reference.");
@@ -418,7 +420,7 @@ public class AdminOrderService {
   /** Completes personalization omitted at guest checkout, before design approval. */
   @Transactional
   public void completeEngraving(String code, String engraving, String actor) {
-    String clean = required(engraving, OrderValidator.MAX_ENGRAVING, "Enter the agreed engraving text.");
+    String clean = required(engraving, OrderText.MAX_ENGRAVING, "Enter the agreed engraving text.");
     Locked order = lock(code);
     if ((order.status() != OrderStatus.NEW && order.status() != OrderStatus.DESIGN_SENT)
         || order.approved())
@@ -434,11 +436,11 @@ public class AdminOrderService {
   @Transactional
   public void updateContact(
       String code, String name, String rawPhone, String address, String actor) {
-    String cleanName = OrderValidator.text(name, false);
-    if (cleanName.isEmpty() || OrderValidator.length(cleanName) > OrderValidator.MAX_NAME)
+    String cleanName = OrderText.text(name, false);
+    if (cleanName.isEmpty() || OrderText.length(cleanName) > OrderText.MAX_NAME)
       throw new RuleException("Enter a name of up to 100 characters.");
-    String cleanAddress = OrderValidator.text(address, true);
-    if (cleanAddress.isEmpty() || OrderValidator.length(cleanAddress) > OrderValidator.MAX_ADDRESS)
+    String cleanAddress = OrderText.text(address, true);
+    if (cleanAddress.isEmpty() || OrderText.length(cleanAddress) > OrderText.MAX_ADDRESS)
       throw new RuleException("Enter an address of up to 500 characters.");
     String phone;
     try {
@@ -476,9 +478,9 @@ public class AdminOrderService {
   }
 
   private static String required(String raw, int max, String message) {
-    String value = OrderValidator.text(raw, true);
+    String value = OrderText.text(raw, true);
     if (value.isEmpty()) throw new RuleException(message);
-    if (OrderValidator.length(value) > max)
+    if (OrderText.length(value) > max)
       throw new RuleException("Keep this under " + max + " characters.");
     return value;
   }

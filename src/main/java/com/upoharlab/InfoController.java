@@ -89,7 +89,7 @@ public class InfoController {
     String base = base();
     for (String page : PUBLIC_PAGES) xml.append(entry(base + page));
     for (var product : products.list(false))
-      xml.append(entry(base + "/p/" + product.details().getSlug()));
+      xml.append(entry(base + product.orderPath()));
     return xml.append("</urlset>\n").toString();
   }
 
@@ -100,7 +100,7 @@ public class InfoController {
   @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
   @ResponseBody
   String robots(HttpServletRequest req) {
-    return "User-agent: *\nDisallow: /admin\nDisallow: /order\nDisallow: /track\n\nSitemap: "
+    return "User-agent: *\nDisallow: /admin\nDisallow: /order/UL-\nDisallow: /track\n\nSitemap: "
         + base()
         + "/sitemap.xml\n";
   }

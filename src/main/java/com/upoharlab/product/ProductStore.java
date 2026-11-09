@@ -1,5 +1,8 @@
 package com.upoharlab.product;
 
+import com.upoharlab.landing.LandingConfig;
+import com.upoharlab.landing.LandingConfigCodec;
+import com.upoharlab.landing.LandingValidator;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -23,13 +26,33 @@ public class ProductStore {
 
   public record Photo(long id, String filename, String alt, int sortOrder) {}
 
-  public record Page(long id, ProductForm details, List<Photo> photos) {}
+  /** {@code landing} is null for products without a landing page configuration. */
+  public record Page(
+      long id,
+      ProductForm details,
+      List<Photo> photos,
+      LandingConfig landing,
+      List<Photo> landingPhotos) {
+    /** The landing page as customers order against it, or null without one. */
+    public LandingConfig orderLanding() {
+      return landing == null ? null : landing.forOrdering();
+    }
+
+    public boolean landingEnabled() {
+      return landing != null && landing.enabled();
+    }
+
+    /** Where customers should be sent to buy this product. */
+    public String orderPath() {
+      return "/order/" + details.getSlug();
+    }
+  }
 
   public List<Page> list(boolean admin) {
     return db
         .query(
             "SELECT * FROM product "
-                + (admin ? "" : "WHERE status='ACTIVE' ")
+                + (admin ? "" : "WHERE status='ACTIVE' AND landing_config->>'enabled'='true' ")
                 + "ORDER BY sort_order,id",
             (r, n) -> row(r))
         .stream()
@@ -53,7 +76,7 @@ public class ProductStore {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
-  private record Row(long id, ProductForm details) {}
+  private record Row(long id, ProductForm details, LandingConfig landing) {}
 
   private Row row(ResultSet r) throws SQLException {
     ProductForm f = new ProductForm();
@@ -73,7 +96,17 @@ public class ProductStore {
     f.setIndoorOnly(r.getBoolean("indoor_only"));
     f.setStatus(r.getString("status"));
     f.setSortOrder(r.getInt("sort_order"));
-    return new Row(r.getLong("id"), f);
+    return new Row(r.getLong("id"), f, landing(r.getString("landing_config")));
+  }
+
+  /** A damaged configuration must not take the shop down, so that product simply has no page. */
+  private static LandingConfig landing(String json) {
+    if (json == null) return null;
+    try {
+      return LandingConfigCodec.read(json);
+    } catch (IllegalArgumentException ex) {
+      return null;
+    }
   }
 
   /**
@@ -84,15 +117,30 @@ public class ProductStore {
     return new Page(
         row.id(),
         row.details(),
-        db.query(
-            "SELECT * FROM product_image WHERE product_id=? ORDER BY sort_order,id",
-            (i, n) ->
-                new Photo(
-                    i.getLong("id"),
-                    i.getString("filename"),
-                    i.getString("alt_bn"),
-                    i.getInt("sort_order")),
-            row.id()));
+        photos(row.id(), "GALLERY"),
+        row.landing(),
+        photos(row.id(), "LANDING"));
+  }
+
+  private List<Photo> photos(long product, String purpose) {
+    return db.query(
+        "SELECT * FROM product_image WHERE product_id=? AND purpose=? ORDER BY sort_order,id",
+        (i, n) ->
+            new Photo(
+                i.getLong("id"),
+                i.getString("filename"),
+                i.getString("alt_bn"),
+                i.getInt("sort_order")),
+        product,
+        purpose);
+  }
+
+  /** The caller validates first. Cast because deployments differ in how they send strings. */
+  public void saveLanding(long id, LandingConfig config) {
+    db.update(
+        "UPDATE product SET landing_config=CAST(? AS jsonb), updated_at=now() WHERE id=?",
+        LandingConfigCodec.write(config),
+        id);
   }
 
   /** Holds the product row for this transaction. An unknown product is a 404. */
@@ -103,9 +151,17 @@ public class ProductStore {
 
   @Transactional
   public Long save(Long id, ProductForm f, Errors errors) {
+    return save(id, f, errors, true);
+  }
+
+  /** {@code detailsShown} is false when the page hides Product details, making that text optional. */
+  public Long save(Long id, ProductForm f, Errors errors, boolean detailsShown) {
     if (id != null) {
       lock(id);
       if (get(id).details().getIndoorOnly()) f.setIndoorOnly(true);
+      // No longer edited, but stored text is kept.
+      f.setQuantityHelp(get(id).details().getQuantityHelp());
+      if (f.getPrice() == null) f.setPrice(get(id).details().getPrice());
     }
     if (db.queryForObject(
             "SELECT count(*) FROM product WHERE slug=? AND id<>?",
@@ -119,7 +175,9 @@ public class ProductStore {
       errors.rejectValue("makingDaysMax", "range", "Maximum days must be at least the minimum.");
     if (!"DRAFT".equals(f.getStatus())) {
       for (String field :
-          List.of("shortDescription", "includes", "material", "size", "engravingHelp")) {
+          detailsShown
+              ? List.of("shortDescription", "includes", "material", "size", "engravingHelp")
+              : List.<String>of()) {
         String value =
             switch (field) {
               case "shortDescription" -> f.getShortDescription();
@@ -167,8 +225,14 @@ public class ProductStore {
   public void removePhoto(long product, long photo) {
     lock(product);
     Page p = get(product);
-    if (!p.details().getStatus().equals("DRAFT") && p.photos().size() <= 1)
+    boolean gallery = p.photos().stream().anyMatch(item -> item.id() == photo);
+    if (gallery && !p.details().getStatus().equals("DRAFT") && p.photos().size() <= 1)
       throw new IllegalArgumentException("Set the product to draft before removing its last photo.");
+    if (p.landing() != null)
+      for (Photo item : java.util.stream.Stream.concat(p.photos().stream(), p.landingPhotos().stream()).toList())
+        if (item.id() == photo && LandingValidator.images(p.landing()).contains(item.filename()))
+          throw new IllegalArgumentException(
+              "This image is used on the landing page. Choose a different one there first.");
     db.update("DELETE FROM product_image WHERE id=? AND product_id=?", photo, product);
   }
 

@@ -1,6 +1,5 @@
 package com.upoharlab.order;
 
-import com.upoharlab.order.PricingService.Prices;
 import jakarta.servlet.http.HttpSession;
 import java.io.Serializable;
 import java.security.SecureRandom;
@@ -20,7 +19,7 @@ public final class OrderSession implements Serializable {
   public static final class Token implements Serializable {
     final String value;
     final long productId;
-    Prices shownPrices;
+    String shownFingerprint;
     String orderCode;
 
     private Token(String value, long productId) {
