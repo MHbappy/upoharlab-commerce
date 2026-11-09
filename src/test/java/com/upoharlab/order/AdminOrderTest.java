@@ -180,22 +180,32 @@ class AdminOrderTest {
   }
 
   @Test
-  void confirmingNeedsApprovalAndAdvance() {
+  void missingGuestEngravingCanBeRecordedOnceBeforeApproval() {
+    String code = newOrder();
+    db.update("UPDATE orders SET engraving_text='' WHERE code=?", code);
+    admin.completeEngraving(code, "নতুন নাম", ADMIN);
+    assertThat(admin.detail(code).engraving()).isEqualTo("নতুন নাম");
+    assertThatThrownBy(() -> admin.completeEngraving(code, "অন্য নাম", ADMIN))
+        .hasMessageContaining("already recorded");
+    String confirmed = orderAt("CONFIRMED");
+    db.update("UPDATE orders SET engraving_text='' WHERE code=?", confirmed);
+    assertThatThrownBy(() -> admin.completeEngraving(confirmed, "নাম", ADMIN))
+        .hasMessageContaining("before design approval");
+  }
+
+  @Test
+  void confirmingAndMakingNeedApprovalButNoAdvance() {
     String code = newOrder();
     move(code, "DESIGN_SENT");
     assertThatThrownBy(() -> move(code, "CONFIRMED"))
-        .isInstanceOf(RuleException.class)
-        .hasMessageContaining("approval")
-        .hasMessageContaining("৳230");
-
+        .isInstanceOf(RuleException.class).hasMessageContaining("approval");
     admin.approveDesign(code, ADMIN);
-    assertThat(admin.detail(code).status()).as("approval alone stays put").isEqualTo("DESIGN_SENT");
-    assertThat(admin.detail(code).missingForConfirmation()).hasSize(1);
-    pay(code, 229, "short");
-    assertThatThrownBy(() -> move(code, "CONFIRMED")).hasMessageContaining("৳1 more");
-    pay(code, 1, "rest");
+    assertThat(admin.detail(code).missingForConfirmation()).isEmpty();
+    assertThat(admin.detail(code).netPaid()).isZero();
     move(code, "CONFIRMED");
-    assertThat(admin.detail(code).status()).isEqualTo("CONFIRMED");
+    move(code, "MAKING");
+    assertThat(admin.detail(code).status()).isEqualTo("MAKING");
+    assertThat(admin.detail(code).balance()).isEqualTo(459);
   }
 
   @Test
@@ -216,11 +226,11 @@ class AdminOrderTest {
   }
 
   @Test
-  void refundBelowAdvanceBlocksStartOfMaking() {
+  void refundDoesNotBlockCodProduction() {
     String code = orderAt("CONFIRMED");
     admin.recordMoney(code, "REFUND", "BKASH", "100", "ref-back", ADMIN);
-    assertThatThrownBy(() -> move(code, "MAKING")).hasMessageContaining("৳100 more");
-    assertThat(admin.detail(code).status()).isEqualTo("CONFIRMED");
+    move(code, "MAKING");
+    assertThat(admin.detail(code).status()).isEqualTo("MAKING");
   }
 
   @Test
@@ -500,7 +510,7 @@ class AdminOrderTest {
     var detail = browser.get("/admin/orders/" + code);
     assertThat(detail.statusCode()).isEqualTo(200);
     assertThat(detail.body())
-        .contains("01712345678", "রাফি", "গ্রাহকের নোট", "ঢাকা ঠিকানা", "৳459", "৳230")
+        .contains("01712345678", "রাফি", "গ্রাহকের নোট", "ঢাকা ঠিকানা", "৳459", "Cash on delivery")
         .contains("https://wa.me/8801712345678");
     assertThat(detail.headers().firstValue("Referrer-Policy").orElse("")).contains("no-referrer");
   }
@@ -511,14 +521,14 @@ class AdminOrderTest {
     customer.order("quote", Map.of("quantity", "2", "area", "OUTSIDE"));
     var redirect = customer.order("submit", Map.of("quantity", "2", "area", "OUTSIDE"));
     String code = location(redirect).replaceAll(".*/order/([^/]+)/success$", "$1");
-    assertThat(customer.get("/order/" + code + "/success").body()).contains("৳৯০৮", "৳৪৫৪");
+    assertThat(customer.get("/order/" + code + "/success").body()).contains("৳৯০৮");
     var saved = admin.detail(code);
     assertThat(saved.total()).isEqualTo(908);
-    assertThat(saved.advanceRequired()).isEqualTo(454);
+    assertThat(saved.advanceRequired()).isEqualTo(0);
     assertThat(saved.balance()).isEqualTo(908);
     assertThat(saved.subtotal()).isEqualTo(798);
     assertThat(saved.delivery()).isEqualTo(110);
-    assertThat(login().get("/admin/orders/" + code).body()).contains("৳908", "৳454");
+    assertThat(login().get("/admin/orders/" + code).body()).contains("৳908");
   }
 
   private HttpResponse<String> search(Browser browser, String q, String status, int page)
@@ -646,7 +656,7 @@ class AdminOrderTest {
       move(fresh, "DESIGN_SENT");
       admin.approveDesign(fresh, ADMIN);
       assertThat(browser.get("/admin/orders/" + fresh).body())
-          .contains("Advance message", "Open advance message", "Record the advance");
+          .doesNotContain("Advance message", "Open advance message", "Record the advance");
       admin.changeStatus(fresh, "CANCELLED", "Customer changed their mind", null, null, ADMIN);
       assertThat(browser.get("/admin/orders/" + fresh).body())
           .contains("Open chat")

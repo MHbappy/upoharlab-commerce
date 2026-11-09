@@ -35,7 +35,7 @@
 </p>
 </div>
 <div class="field">
-<label for="bkash_number">bKash number</label>
+<label for="bkash_number">bKash number (optional, for payment records/refunds)</label>
 <input id="bkash_number" th:field="*{values[bkash_number]}" type="text">
 <p class="error" th:if="${#fields.hasErrors('values[bkash_number]')}" th:errors="*{values[bkash_number]}">
 </p>

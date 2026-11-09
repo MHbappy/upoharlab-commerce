@@ -28,7 +28,7 @@ public class TrackingController {
           "CANCELLED", "অর্ডারটি বাতিল হয়েছে।");
 
   private static final String APPROVED_AWAITING_ADVANCE =
-      "ডিজাইনে আপনার সম্মতি পেয়েছি। অগ্রিম পেলে বানানো শুরু হবে।";
+      "ডিজাইনে আপনার সম্মতি পেয়েছি। বানানোর প্রস্তুতি চলছে। পুরো টাকা ডেলিভারিতে দেবেন।";
 
   private final TrackingService tracking;
   private final SettingsService settings;
@@ -91,7 +91,7 @@ public class TrackingController {
     return "site/track";
   }
 
-  /** Approval does not change the status, because the order also needs its advance to move on. */
+  /** Approval is recorded separately; the owner confirms the order before production. */
   private static String label(TrackingService.Status order) {
     return "DESIGN_SENT".equals(order.status()) && order.approvedAt() != null
         ? APPROVED_AWAITING_ADVANCE

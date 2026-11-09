@@ -5,9 +5,8 @@ public class ProductForm {
   @jakarta.validation.constraints.Size(max = 200)
   private String title;
 
-  @jakarta.validation.constraints.NotNull(message = "Enter a URL slug.")
   @jakarta.validation.constraints.Pattern(
-      regexp = "[a-z0-9]+(?:-[a-z0-9]+)*",
+      regexp = "(?:[a-z0-9]+(?:-[a-z0-9]+)*)?",
       message = "Use lowercase English letters, numbers and single hyphens, like door-name-plate.")
   @jakarta.validation.constraints.Size(max = 150)
   private String slug;

@@ -101,7 +101,7 @@ BEGIN
       tracking_no, delivered_at, created_at, updated_at)
   VALUES (order_code, 'demo-' || n, p.id, p.title_bn, qty, engraving, customer, customer_phone,
       delivery_area, customer_address, customer_note, p.price, charge, order_total,
-      (order_total + 1) / 2, final_status,
+      0, final_status,
       CASE WHEN final_status IN ('CONFIRMED','MAKING','SHIPPED','DELIVERED')
              OR internal_note = 'approved' THEN placed + interval '1 day' END,
       CASE WHEN final_status IN ('SHIPPED','DELIVERED') THEN 'Pathao' END,

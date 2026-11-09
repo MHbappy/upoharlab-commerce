@@ -49,7 +49,7 @@ public class PricingService {
     if (subtotal == null || delivery == null)
       return new Quote(prices.unit(), quantity, subtotal, delivery, null, null, null);
     int total = subtotal + delivery;
-    int advance = (total + 1) / 2;
+    int advance = 0;
     return new Quote(prices.unit(), quantity, subtotal, delivery, total, advance, total - advance);
   }
 }

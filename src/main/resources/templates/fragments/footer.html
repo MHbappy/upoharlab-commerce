@@ -4,8 +4,8 @@
 <footer th:fragment="footer" class="site-footer" th:with="contact=${@settingsService.publicContact()}">
 <div class="container footer-inner">
 <div>
-<p class="footer-brand">উপহার ল্যাব</p>
-<p>আপনার নাম, যত্নে খোদাই করা</p>
+<p class="footer-brand">উপহার ল্যাব<span aria-hidden="true"> ✳</span></p>
+<p>ছোট্ট উপহার। মনে রাখার মতো গল্প।</p>
 <p class="footer-contact" th:if="${!contact.isEmpty()}">
 <a th:if="${contact['whatsappLink'] != null}" th:href="${contact['whatsappLink']}">WhatsApp</a>
 <a th:if="${contact['phone'] != null}" th:href="${'tel:' + contact['phone']}" th:text="${contact['phone']}"></a>
@@ -22,6 +22,7 @@
 <a th:href="@{/policies/privacy}">গোপনীয়তা</a>
 </nav>
 </div>
+<div class="container footer-bottom"><span>যত্নে খোদাই, ভালোবেসে দেওয়া।</span><span>উপহার ল্যাব · বাংলাদেশ</span></div>
 </footer>
 </body>
 </html>

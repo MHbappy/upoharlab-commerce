@@ -145,8 +145,7 @@ from your ignored `.env` file. They are not printed in logs or committed.
 Keep that file private. After the first bootstrap, editing its password does not reset
 the database account. A missing first-boot credential causes a clear startup failure.
 
-- **Products:** edit a draft, save, add real JPEG/PNG photos and their Bangla descriptions,
-  then complete the required details and switch to Active. Use Preview to inspect drafts.
+- **Products:** enter the details, select up to four JPEG/PNG photos, and click Add product to publish in one step. Product links are generated automatically unless customized. Choose Save privately only when you want to finish later. Existing products can save detail changes and new photos together.
 - **Photos:** up to 5 MB and 20 megapixels. Phone rotation is applied, then photos are stored as
   resized JPEGs with random filenames, full and thumbnail versions. The original filename and metadata are discarded.
 - **Availability:** Draft is private, Active appears in the home grid, Paused keeps the
@@ -158,7 +157,7 @@ the database account. A missing first-boot credential causes a clear startup fai
 ## Ordering
 
 The order form appears on active products once **Accepting new orders** is enabled in Settings.
-Customers pay nothing on the website. The server recalculates every amount, and saves an order
+All orders are cash on delivery with no advance. Customers order without an account using their name, phone and address; engraving instructions are optional and can be agreed afterwards. Admins can record missing engraving details on the order before design approval. The server recalculates every amount, and saves an order
 only after the customer has seen the current total; if prices change first, they review it again.
 
 Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env` for optional owner alerts, and
@@ -171,7 +170,7 @@ Open **Orders** in the admin. Search by code or phone, then work an order throug
 
 `NEW` → `DESIGN_SENT` → `CONFIRMED` → `MAKING` → `SHIPPED` → `DELIVERED`, or `CANCELLED` before shipping.
 
-- **Confirming** needs written approval recorded and verified payments covering the advance.
+- **Confirming** needs customer design approval recorded (by phone or WhatsApp), but no payment. The full amount is collected on delivery. Existing payment and refund records are preserved when migrating to COD.
 - **Payments:** check your bKash account or the actual settlement first, then record it. A customer's
   screenshot alone is not verification. Overpayments, excess refunds and repeated transaction
   references are rejected. Delivered does not mean paid, so record the balance when it arrives.

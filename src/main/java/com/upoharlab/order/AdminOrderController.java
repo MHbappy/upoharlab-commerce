@@ -81,22 +81,6 @@ public class AdminOrderController {
           withText(
               base,
               "আপনার অর্ডার " + order.code() + "-এর ডিজাইন পাঠালাম। ডিজাইন ও বানান দেখে সম্মতি জানান।"));
-    long advanceDue = order.advanceRequired() - order.netPaid();
-    String bkash = values.getOrDefault("bkash_number", "");
-    // Asking for money is only right once the design has gone out, and never on a closed order.
-    if ((status == OrderStatus.DESIGN_SENT || status == OrderStatus.CONFIRMED)
-        && advanceDue > 0
-        && !bkash.isBlank())
-      links.put(
-          "Advance message",
-          withText(
-              base,
-              "ডিজাইনে সম্মতির পরে ৳"
-                  + advanceDue
-                  + " অগ্রিম bKash "
-                  + bkash
-                  + " নম্বরে পাঠিয়ে Transaction ID জানান। অর্ডার কোড: "
-                  + order.code()));
     if (order.courier() != null && status != OrderStatus.CANCELLED)
       links.put(
           "Shipping message",
@@ -166,6 +150,13 @@ public class AdminOrderController {
     flash.addFlashAttribute("moneyMethod", method);
     flash.addFlashAttribute("moneyAmount", amount);
     flash.addFlashAttribute("moneyReference", reference);
+  }
+
+  @PostMapping("/orders/{code}/engraving")
+  String engraving(@PathVariable String code, @RequestParam String engraving,
+      Principal admin, RedirectAttributes flash) {
+    return act(code, flash, "Engraving recorded.",
+        () -> orders.completeEngraving(code, engraving, admin.getName()));
   }
 
   @PostMapping("/orders/{code}/contact")

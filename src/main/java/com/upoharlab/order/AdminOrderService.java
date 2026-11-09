@@ -239,7 +239,7 @@ public class AdminOrderService {
               instant(r, "created_at"),
               net,
               status == OrderStatus.CANCELLED ? null : Long.valueOf(total - net),
-              missingForConfirmation(approved != null, advance, net),
+              missingForConfirmation(approved != null),
               status.beforeShipping(),
               status.beforeShipping(),
               payments,
@@ -248,10 +248,9 @@ public class AdminOrderService {
         id);
   }
 
-  private static List<String> missingForConfirmation(boolean approved, int advance, long net) {
+  private static List<String> missingForConfirmation(boolean approved) {
     List<String> missing = new ArrayList<>();
-    if (!approved) missing.add("Written design approval has not been recorded.");
-    if (net < advance) missing.add("Advance not covered: ৳" + (advance - net) + " more needed.");
+    if (!approved) missing.add("Customer design approval has not been recorded.");
     return missing;
   }
 
@@ -319,7 +318,7 @@ public class AdminOrderService {
       case CONFIRMED, MAKING -> {
         List<String> missing =
             missingForConfirmation(
-                order.approved(), order.advanceRequired(), netPaid(order.id()));
+                order.approved());
         if (!missing.isEmpty()) throw new RuleException(String.join(" ", missing));
       }
       case SHIPPED -> saveCourier(order.id(), courier, tracking);
@@ -344,7 +343,7 @@ public class AdminOrderService {
         orderId);
   }
 
-  /** Records that the customer approved the design in writing on WhatsApp. */
+  /** Records customer design approval obtained by phone or WhatsApp. */
   @Transactional
   public void approveDesign(String code, String actor) {
     Locked order = lock(code);
@@ -414,6 +413,21 @@ public class AdminOrderService {
     int amount = Integer.parseInt(value);
     if (amount > MAX_AMOUNT) throw new RuleException("That amount is too large.");
     return amount;
+  }
+
+  /** Completes personalization omitted at guest checkout, before design approval. */
+  @Transactional
+  public void completeEngraving(String code, String engraving, String actor) {
+    String clean = required(engraving, OrderValidator.MAX_ENGRAVING, "Enter the agreed engraving text.");
+    Locked order = lock(code);
+    if ((order.status() != OrderStatus.NEW && order.status() != OrderStatus.DESIGN_SENT)
+        || order.approved())
+      throw new RuleException("Engraving must be supplied before design approval.");
+    String existing = db.queryForObject("SELECT engraving_text FROM orders WHERE id=?", String.class, order.id());
+    if (existing != null && !existing.isBlank())
+      throw new RuleException("Engraving is already recorded. Take a new agreed order for changes.");
+    db.update("UPDATE orders SET engraving_text=?, updated_at=now() WHERE id=?", clean, order.id());
+    event(order.id(), "NOTE", null, null, "Customer supplied the missing engraving details.", actor);
   }
 
   /** Corrects contact details before shipping. The history never copies the old or new values. */

@@ -5,8 +5,10 @@
 <body>
 <header th:replace="~{fragments/header :: header}">
 </header>
-<main id="main" class="container product-main form-width">
-<h1>অর্ডার ট্র্যাক করুন</h1>
+<main id="main" class="container product-main form-width tracking-page">
+<p class="eyebrow">আপনার উপহারের খোঁজ</p>
+<h1>কতদূর এলো আপনার উপহার?</h1>
+<p class="muted">অর্ডার কোড ও ফোন নম্বর দিয়ে বর্তমান অবস্থা দেখুন।</p>
 
 <section class="panel track-result" th:if="${result != null}" aria-labelledby="result-title">
 <h2 id="result-title" th:text="${result.code}"></h2>
@@ -34,9 +36,10 @@
 <p class="error" role="alert" th:if="${notFound}">এই তথ্যে কোনো অর্ডার পাওয়া যায়নি। অর্ডার কোড আর অর্ডারে দেওয়া পুরো ফোন নম্বর মিলিয়ে দেখুন।</p>
 <p class="error" role="alert" th:if="${rateLimited}">অনেকবার চেষ্টা করা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।</p>
 
-<form class="track-form" th:action="@{/track}" method="post">
+<form class="track-form panel" th:action="@{/track}" method="post">
 <label for="code">অর্ডার কোড</label>
-<input id="code" name="code" type="text" required autocomplete="off" placeholder="UL-202611-001" th:value="${code}">
+<p class="field-help" id="code-help">অর্ডার করার পরে যে কোডটি পেয়েছেন, সেটি লিখুন।</p>
+<input aria-describedby="code-help" id="code" name="code" type="text" required autocomplete="off" placeholder="UL-202611-001" th:value="${code}">
 <label for="phone">অর্ডারে দেওয়া ফোন নম্বর</label>
 <input id="phone" name="phone" type="tel" required autocomplete="tel" th:value="${result == null ? phone : null}">
 <button class="button">অবস্থা দেখুন</button>

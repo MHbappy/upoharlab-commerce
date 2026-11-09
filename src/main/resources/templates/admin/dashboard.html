@@ -16,7 +16,7 @@
 </p>
 <p class="error" role="alert" th:if="${error}" th:text="${error}">
 </p>
-<h1>Dashboard</h1>
+<div class="section-heading dashboard-heading"><div><p class="eyebrow">YOUR SHOP, AT A GLANCE</p><h1>Dashboard</h1><p class="muted">A little overview. A clear next step.</p></div><a class="button" th:href="@{/admin/products/new}">+ Add product</a></div>
 <div class="admin-links">
 <a class="panel" th:href="@{/admin/orders(status='NEW')}">
 <p class="stat" th:text="${counts.fresh}"></p>

@@ -157,7 +157,7 @@ class OrderFlowTest {
   void quoteShowsBreakdownAndNeverSaves() throws Exception {
     var page = browser().order("quote", Map.of("quantity", "2"));
     assertThat(page.statusCode()).isEqualTo(200);
-    assertThat(page.body()).contains("৳৮৫৮", "৳৪২৯", "৳৭৯৮");
+    assertThat(page.body()).contains("৳৮৫৮", "৳৭৯৮");
     assertThat(orderCount(db)).isZero();
   }
 
@@ -174,7 +174,7 @@ class OrderFlowTest {
     assertThat(second.statusCode()).isEqualTo(302);
     var order = saved();
     assertThat(order.get("total")).isEqualTo(459);
-    assertThat(order.get("advance_required")).isEqualTo(230);
+    assertThat(order.get("advance_required")).isEqualTo(0);
     assertThat(order.get("unit_price_snapshot")).isEqualTo(399);
     assertThat(order.get("delivery_charge_snapshot")).isEqualTo(60);
     assertThat(order.get("product_title_snapshot")).isEqualTo("পরীক্ষার চাবির রিং");
@@ -222,6 +222,18 @@ class OrderFlowTest {
   }
 
   @Test
+  void guestCanOrderWithoutPersonalizationAndPaysEntireTotalOnDelivery() throws Exception {
+    var guest = browser();
+    guest.order("quote", Map.of("engraving", ""));
+    assertThat(guest.order("submit", Map.of("engraving", "")).statusCode()).isEqualTo(302);
+    assertThat(saved().get("engraving_text")).isEqualTo("");
+    assertThat(saved().get("advance_required")).isEqualTo(0);
+    assertThat(saved().get("total")).isEqualTo(459);
+    assertThatThrownBy(() -> db.update("UPDATE orders SET advance_required=1"))
+        .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+  }
+
+  @Test
   void invalidInputShowsBanglaErrorsKeepsValuesAndSavesNothing() throws Exception {
     var browser = browser();
     var bad = new HashMap<String, String>();
@@ -233,7 +245,7 @@ class OrderFlowTest {
     var page = browser.order("submit", bad);
     assertThat(page.statusCode()).isEqualTo(200);
     assertThat(page.body())
-        .contains("order-errors", "সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন", "কী খোদাই হবে তা লিখুন")
+        .contains("order-errors", "সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন")
         .contains("পরিমাণ ১ থেকে ১০-এর মধ্যে লিখুন", "ঢাকার ভেতরে না বাইরে")
         .contains("value=\"টাইপ করা নাম\"", "value=\"123\"", "গোপন-ঠিকানা, ঢাকা");
     assertThat(page.headers().firstValue("Cache-Control").orElse("")).contains("no-store");
@@ -405,7 +417,7 @@ class OrderFlowTest {
     var page = browser.get("/order/" + code + "/success");
     assertThat(page.statusCode()).isEqualTo(200);
     assertThat(page.body())
-        .contains("আপনার অর্ডার পেয়েছি", code, "৳৪৫৯", "৳২৩০", "৳২২৯", "৬ ঘণ্টার মধ্যে")
+        .contains("আপনার অর্ডার পেয়েছি", code, "৳৪৫৯", "৬ ঘণ্টার মধ্যে")
         .contains("https://wa.me/8801700000000?text=" + code)
         .doesNotContain("গোপন-গ্রাহক", "গোপন-ঠিকানা", "01712345678");
     assertThat(page.headers().firstValue("Cache-Control").orElse("")).contains("no-store");

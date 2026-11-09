@@ -3,65 +3,69 @@
 <head th:replace="~{fragments/head :: head('উপহার ল্যাব — নাম খোদাই করা উপহার', 'নাম খোদাই করা চাবির রিং, বাসা ও অফিসের নেমপ্লেট। বানানোর আগে ডিজাইন দেখুন।', '/', ${products.isEmpty() or products[0].photos.isEmpty() ? null : '/media/' + products[0].photos[0].filename}, false)}">
 </head>
 <body>
-  <header th:replace="~{fragments/header :: header}">
-</header>
-  <main id="main" class="container">
-    <section class="intro" aria-labelledby="welcome-title">
-      <h1 id="welcome-title">আপনার প্রিয়জনের নাম, যত্নে খোদাই করা</h1>
-      <p class="lead">নামের চাবির রিং, বাসা ও অফিসের নেমপ্লেট। বানানোর আগে ডিজাইন দেখাব।</p>
-    </section>
-    <section th:if="${products.isEmpty()}" id="products" class="availability" aria-labelledby="products-title">
-      <p class="eyebrow">আমাদের পণ্য</p>
-      <h2 id="products-title">আপনার জন্য প্রস্তুত হচ্ছে</h2>
-      <p>পণ্যের ছবি, বিস্তারিত ও দাম প্রস্তুত হলে এখানে পাবেন। এখনো অনলাইনে অর্ডার নেওয়া শুরু হয়নি।</p>
-      <p class="muted">নামের চাবির রিং · উপহার-জোড়া · বাসা ও অফিসের নেমপ্লেট</p>
-    </section>
-    <section th:unless="${products.isEmpty()}" id="products" aria-labelledby="catalog-title">
-<h2 id="catalog-title">আপনার জন্য উপহার</h2>
-<p class="notice notice-warning" role="status" th:if="${settings['accepting_orders'] != 'true'}" th:text="${#strings.isEmpty(settings['pause_notice']) ? 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।' : settings['pause_notice']}"></p>
-<div class="product-grid">
-<article class="panel product-card" th:each="p, row : ${products}">
-<img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" th:attr="loading=${row.index < 3 ? 'eager' : 'lazy'}">
-<h3><a class="card-link" th:href="@{/p/{slug}(slug=${p.details.slug})}" th:text="${p.details.title}"></a></h3>
-<p class="card-description" th:if="${!#strings.isEmpty(p.details.shortDescription)}" th:text="${p.details.shortDescription}"></p>
-<p class="badge" th:if="${p.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
-<p class="card-footer"><span class="card-price" th:text="${@bn.money(p.details.price)}"></span><span class="card-action" aria-hidden="true">বিস্তারিত দেখুন →</span></p>
-</article>
-</div>
-</section>
-    <section id="how-it-works" class="process" aria-labelledby="process-title">
-      <h2 id="process-title">অর্ডার যেভাবে হবে</h2>
-      <ol class="steps">
-        <li>
-<span class="step-number" aria-hidden="true">০১</span>
-<h3>পণ্য ও লেখা বাছুন</h3>
-<p>পছন্দের পণ্য আর খোদাই করার নাম জানান।</p>
-</li>
-        <li>
-<span class="step-number" aria-hidden="true">০২</span>
-<h3>ডিজাইন দেখে সম্মতি দিন</h3>
-<p>WhatsApp-এ ডিজাইন দেখে বানান নিশ্চিত করুন।</p>
-</li>
-        <li>
-<span class="step-number" aria-hidden="true">০৩</span>
-<h3>অগ্রিম দিন</h3>
-<p>ডিজাইনে সম্মতির পরে ৫০% অগ্রিম দেবেন।</p>
-</li>
-        <li>
-<span class="step-number" aria-hidden="true">০৪</span>
-<h3>উপহার বুঝে নিন</h3>
-<p>বানানো শেষে কুরিয়ারে পাঠাব। বাকি টাকা ডেলিভারিতে।</p>
-</li>
-      </ol>
-    </section>
-    <section class="contact" th:if="${whatsapp != null or !#strings.isEmpty(settings['phone'])}">
-<h2>কিছু জানতে চান?</h2>
-<p>পণ্য বা খোদাই করার লেখা নিয়ে আমাদের সঙ্গে কথা বলুন।</p>
-<a class="button" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ কথা বলুন</a>
-<p class="contact-phone" th:if="${!#strings.isEmpty(settings['phone'])}">অথবা ফোন করুন: <a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></p>
-</section>
-  </main>
-  <footer th:replace="~{fragments/footer :: footer}">
-</footer>
+<header th:replace="~{fragments/header :: header}"></header>
+<main id="main" class="container home-main">
+  <section class="hero" aria-labelledby="welcome-title">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="tiny-spark" aria-hidden="true">✳</span> ছোট্ট উপহার, ব্যক্তিগত ছোঁয়া</p>
+      <h1 id="welcome-title">শুধু উপহার নয়,<br><em>একটু আপন করে দেওয়া।</em></h1>
+      <p class="lead">আপনার প্রিয়জনের নাম, কিংবা নিজের ঘরের পরিচয়। চাবির রিং ও নেমপ্লেটে খোদাই হোক আপনার মনের কথা।</p>
+      <div class="hero-actions"><a class="button" href="#products">উপহারগুলো দেখুন <span aria-hidden="true">↗</span></a><a class="text-link" href="#how-it-works">কীভাবে অর্ডার করবেন <span aria-hidden="true">↓</span></a></div>
+      <p class="hero-note"><span aria-hidden="true">✓</span> আগে ডিজাইন দেখুন, পছন্দ হলে বানাতে বলুন।</p>
+    </div>
+    <div class="hero-art" th:with="featured=${products.isEmpty() ? null : products[0]}">
+      <span class="art-label">আপনার নামেই হোক গল্পটা</span>
+      <a class="featured-photo" th:if="${featured != null and !featured.photos.isEmpty()}" th:href="@{/p/{slug}(slug=${featured.details.slug})}">
+        <img fetchpriority="high" width="600" height="600" th:src="@{/media/{name}(name=${featured.photos[0].filename})}" th:alt="${featured.photos[0].alt}">
+        <span class="featured-caption"><span th:text="${featured.details.title}"></span><span aria-hidden="true">↗</span></span>
+      </a>
+      <div class="gift-scene" th:if="${featured == null or featured.photos.isEmpty()}" aria-hidden="true">
+        <span class="scene-orbit orbit-one"></span><span class="scene-orbit orbit-two"></span><span class="scene-star star-one">✳</span><span class="scene-star star-two">✧</span>
+        <div class="gift-box"><div class="gift-lid"></div><div class="gift-ribbon"></div><div class="gift-bow bow-left"></div><div class="gift-bow bow-right"></div><div class="gift-tag">শুধু<br><strong>তোমার জন্য</strong><span>♡</span></div></div>
+        <span class="scene-caption">একটি নাম। অনেকটা ভালোবাসা।</span>
+      </div>
+      <span class="art-stamp">নামে নামে<br><strong>আপন</strong></span>
+    </div>
+  </section>
+  <div class="trust-strip" aria-label="অর্ডার সম্পর্কে জানুন">
+    <div><span class="trust-icon" aria-hidden="true">✎</span><span><strong>আপনার পছন্দের লেখা</strong><small>নামেই থাকুক নিজের ছোঁয়া</small></span></div>
+    <div><span class="trust-icon" aria-hidden="true">✓</span><span><strong>আগে ডিজাইনে সম্মতি</strong><small>বানান ও ডিজাইন মিলিয়ে নিন</small></span></div>
+    <div><span class="trust-icon" aria-hidden="true">৳</span><span><strong>পুরো ক্যাশ অন ডেলিভারি</strong><small>অগ্রিম লাগবে না</small></span></div>
+  </div>
+  <section id="products" class="catalog section-space" aria-labelledby="catalog-title">
+    <div class="section-heading"><div><p class="eyebrow">যত্নে বেছে নেওয়া</p><h2 id="catalog-title">ছোট্ট কিছু, বিশেষ কারও জন্য।</h2></div><p class="section-caption">নিজের জন্য, প্রিয়জনের জন্য।<br>একটি নামেই আলাদা হয়ে যাক।</p></div>
+    <div th:if="${products.isEmpty()}" class="availability">
+      <span class="empty-symbol" aria-hidden="true">✳</span><div><h3>আপনার জন্য প্রস্তুত হচ্ছে</h3><p>পণ্যের ছবি, বিস্তারিত ও দাম প্রস্তুত হলে এখানে পাবেন। এখনো অনলাইনে অর্ডার নেওয়া শুরু হয়নি।</p><a class="text-link" th:href="${whatsapp != null ? whatsapp : '/about'}" th:text="${whatsapp != null ? 'পণ্য সম্পর্কে জানতে কথা বলুন ↗' : 'আমাদের গল্প জানুন ↗'}"></a></div>
+    </div>
+    <th:block th:unless="${products.isEmpty()}">
+      <p class="notice notice-warning" role="status" th:if="${settings['accepting_orders'] != 'true'}" th:text="${#strings.isEmpty(settings['pause_notice']) ? 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।' : settings['pause_notice']}"></p>
+      <div class="product-grid">
+        <article class="panel product-card" th:each="p, row : ${products}">
+          <div class="card-image"><img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" width="480" height="400" th:attr="loading=${row.index < 3 ? 'eager' : 'lazy'}"><span class="photo-placeholder" th:if="${p.photos.isEmpty()}">পণ্যের ছবি আসছে</span><span class="image-arrow" aria-hidden="true">↗</span></div>
+          <div class="card-body"><h3><a class="card-link" th:href="@{/p/{slug}(slug=${p.details.slug})}" th:text="${p.details.title}"></a></h3>
+          <p class="card-description" th:if="${!#strings.isEmpty(p.details.shortDescription)}" th:text="${p.details.shortDescription}"></p>
+          <p class="badge" th:if="${p.details.indoorOnly}">শুধু ঘরের ভেতরের জন্য</p>
+          <p class="card-footer"><span class="card-price" th:text="${@bn.money(p.details.price)}"></span><span class="card-action" aria-hidden="true">বিস্তারিত দেখুন →</span></p></div>
+        </article>
+      </div>
+    </th:block>
+  </section>
+  <section id="how-it-works" class="process" aria-labelledby="process-title">
+    <div class="section-heading"><div><p class="eyebrow">সহজ চারটি ধাপে</p><h2 id="process-title">আপনার ভাবনা থেকে,<br>হাতে পাওয়ার আনন্দ।</h2></div><p class="section-caption">শুধু নাম, ফোন ও ঠিকানা দিন।<br>প্রতিটি ধাপে জানবেন কী হচ্ছে।</p></div>
+    <ol class="steps">
+      <li><span class="step-number" aria-hidden="true">০১</span><h3>পণ্য ও লেখা বাছুন</h3><p>পছন্দের পণ্য আর খোদাই করার নাম জানান।</p></li>
+      <li><span class="step-number" aria-hidden="true">০২</span><h3>ডিজাইন দেখে সম্মতি দিন</h3><p>WhatsApp-এ ডিজাইন দেখে বানান নিশ্চিত করুন।</p></li>
+      <li><span class="step-number" aria-hidden="true">০৩</span><h3>আমরা বানিয়ে পাঠাব</h3><p>ডিজাইন পছন্দ হলে বানানো শুরু হবে। অগ্রিম লাগবে না।</p></li>
+      <li><span class="step-number" aria-hidden="true">০৪</span><h3>উপহার বুঝে নিন</h3><p>বানানো শেষে কুরিয়ারে পাঠাব। পুরো টাকা ডেলিভারিতে।</p></li>
+    </ol>
+  </section>
+  <section class="home-faq section-space" aria-labelledby="faq-title"><div><p class="eyebrow">নিশ্চিন্ত হয়ে বেছে নিন</p><h2 id="faq-title">মনে কিছু প্রশ্ন?</h2><p class="muted">অর্ডারের আগে জেনে রাখুন।</p><a class="text-link" th:href="@{/faq}">সব প্রশ্নের উত্তর →</a></div><div class="faq-list">
+    <details><summary>বানানোর আগে ডিজাইন দেখতে পাব?</summary><p>হ্যাঁ। WhatsApp-এ ডিজাইন পাঠাব। নামের বানান ও ডিজাইন নিশ্চিত করে সম্মতি দেওয়ার পরেই বানানো শুরু হবে।</p></details>
+    <details><summary>অর্ডারের সময়ই কি টাকা দিতে হবে?</summary><p>না। সব অর্ডার ক্যাশ অন ডেলিভারি। পণ্য হাতে পেয়ে পুরো টাকা দেবেন। অগ্রিম লাগবে না।</p></details>
+    <details><summary>উপহার হাতে পেতে কত দিন লাগবে?</summary><p>বানানোর সময় পণ্যের পাতায় পাবেন। ডিজাইনে সম্মতির পরে সেই সময় শুরু হবে। এর সঙ্গে কুরিয়ারের সময় যোগ হবে।</p></details>
+  </div></section>
+  <section class="contact-banner"><div><p class="eyebrow">একসঙ্গে ভাবি</p><h2>কোন নামটা খোদাই করতে চান?</h2><p>উপহার বাছতে বা লেখা ঠিক করতে প্রশ্ন থাকলে আমাদের জানান।</p></div><a class="button button-light" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp-এ কথা বলুন ↗</a><a class="button button-light" th:if="${whatsapp == null}" th:href="@{/bulk}">বিশেষ অর্ডার সম্পর্কে জানুন ↗</a></section>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

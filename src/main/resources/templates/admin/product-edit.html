@@ -19,27 +19,22 @@
 <a th:href="@{/admin/products}">← Products</a>
 <h1 th:text="${productId == null ? 'Add product' : 'Edit product'}">
 </h1>
-<p th:text="${productId == null ? 'Save a draft first. You can add photos and publish after that.' : 'Fill in the details, add photos, then publish when everything is ready.'}">
+<p th:text="${productId == null ? 'Add the details and photos below, then submit once. Your product will appear in the shop.' : 'Update details, add photos and save your changes together.'}">
 </p>
 <p th:if="${productId != null}"><a th:href="@{/admin/products/{id}/preview(id=${productId})}">Preview product</a></p>
 <div class="product-form" th:object="${productForm}">
 <div th:if="${#fields.hasAnyErrors()}" class="error" role="alert">
-<p>Please correct the fields marked below.</p>
+<p>Please correct the fields marked below. Your text has been kept.</p>
+<ul th:if="${#fields.hasGlobalErrors()}"><li th:each="e : ${#fields.globalErrors()}" th:text="${e}"></li></ul>
+<p th:if="${reselectPhotos}">Please select your photos again before submitting.</p>
 </div>
-<form id="product-form" th:action="${productId == null ? '/admin/products/new' : '/admin/products/' + productId}" method="post">
+<form id="product-form" th:action="${productId == null ? '/admin/products/new' : '/admin/products/' + productId}" method="post" enctype="multipart/form-data">
 <fieldset class="edit-section">
-<legend>Basic information</legend>
+<legend>1. Product information</legend>
 <div class="field">
 <label for="title">Product name (Bangla)</label>
 <input id="title" th:field="*{title}" type="text" maxlength="200">
 <p class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">
-</p>
-</div>
-<div class="field">
-<label for="slug">Product URL slug</label>
-<input id="slug" th:field="*{slug}" type="text" maxlength="150" aria-describedby="slug-help">
-<p id="slug-help" class="field-help">Lowercase English letters, numbers and hyphens. Changing it on a published product breaks links already shared.</p>
-<p class="error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">
 </p>
 </div>
 <div class="field">
@@ -51,7 +46,7 @@
 </div>
 </fieldset>
 <fieldset class="edit-section">
-<legend>Price and details</legend>
+<legend>2. Price and making details</legend>
 <div class="field">
 <label for="price">Price (whole taka)</label>
 <input id="price" th:field="*{price}" type="number" min="1" max="1000000" step="1">
@@ -108,6 +103,23 @@
 <p class="error" th:if="${#fields.hasErrors('indoorOnly')}" th:errors="*{indoorOnly}">
 </p>
 </div>
+</fieldset>
+<fieldset class="edit-section product-photo-picker">
+<legend>3. Photos</legend>
+<p class="field-help">Choose up to 4 JPEG or PNG photos, each up to 5 MB and 20 megapixels. The first photo is the main one. Photos are saved with the product.</p>
+<label for="photos" th:text="${productId == null ? 'Choose photos' : 'Add more photos (optional)'}"></label>
+<input id="photos" name="photos" type="file" accept="image/jpeg,image/png" multiple aria-describedby="photo-help">
+<p id="photo-help" class="field-help">At least one photo is needed to publish. The product name is used as its photo description.</p>
+</fieldset>
+<details class="product-extra" th:open="${#fields.hasErrors('slug') or #fields.hasErrors('sortOrder') or #fields.hasErrors('quantityHelp') or #fields.hasErrors('description') or #fields.hasErrors('care')}">
+<summary>More options <span class="muted">Optional</span></summary>
+<div class="field">
+<label for="slug">Custom product link (optional)</label>
+<input id="slug" th:field="*{slug}" type="text" maxlength="150" aria-describedby="slug-help">
+<p id="slug-help" class="field-help">Leave blank to create the link automatically. Or use lowercase English letters, numbers and hyphens. Changing it on a published product breaks links already shared.</p>
+<p class="error" th:if="${#fields.hasErrors('slug')}" th:errors="*{slug}">
+</p>
+</div>
 <div class="field">
 <label for="quantityHelp">What quantity means (optional, shown to customers)</label>
 <textarea id="quantityHelp" th:field="*{quantityHelp}" rows="2" maxlength="500">
@@ -129,12 +141,24 @@
 <p class="error" th:if="${#fields.hasErrors('care')}" th:errors="*{care}">
 </p>
 </div>
+<div class="field"><label for="sortOrder">Display order</label><input id="sortOrder" form="product-form" th:field="*{sortOrder}" type="number" min="0" step="1"><p class="field-help">Lower numbers appear first.</p><p class="error" th:if="${#fields.hasErrors('sortOrder')}" th:errors="*{sortOrder}"></p></div>
+</details>
+<fieldset class="edit-section">
+<legend>Ready to submit</legend>
+<label for="status">Visibility</label>
+<select id="status" form="product-form" th:field="*{status}">
+<option value="ACTIVE">Publish now — visible in the shop</option>
+<option value="DRAFT">Save privately — finish later</option>
+<option value="PAUSED" th:if="${productId != null}">Paused — visible, ordering stopped</option>
+</select>
+<p class="field-help">Publishing requires all product details and at least one photo. Saving privately is optional.</p>
+<p class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></p>
+<div class="product-submit"><button class="button" th:text="${productId == null ? 'Add product' : 'Save product'}">Add product</button><a th:href="@{/admin/products}">Cancel</a></div>
 </fieldset>
-<p class="form-actions"><button class="button" th:text="${productId == null ? 'Save draft' : 'Save details'}">Save details</button></p>
 </form>
 <section th:if="${productId != null}" class="edit-section photos-editor" aria-labelledby="photos-title">
-<h2 id="photos-title">Photos</h2>
-<p>Use your own JPEG or PNG product photos, up to 5 MB and 20 megapixels. The first photo is the main one. Save any text changes above before adding a photo, because adding one reloads this page.</p>
+<h2 id="photos-title">Saved photos</h2>
+<p>The first photo is the main one. Save your changes before reordering or removing existing photos.</p>
 <div class="photo-row" th:each="photo, row : ${photos}">
 <img th:src="@{/media/{name}(name=${photo.filename})}" th:alt="${photo.alt}" width="120">
 <div>
@@ -151,35 +175,7 @@
 </div>
 </div>
 </div>
-<form th:action="@{/admin/products/{id}/photos(id=${productId})}" method="post" enctype="multipart/form-data">
-<label for="photo">Add a photo</label>
-<input id="photo" name="photo" type="file" accept="image/jpeg,image/png" required>
-<label for="alt">Describe this photo (Bangla)</label>
-<input id="alt" name="alt" maxlength="250" required>
-<button class="button">Add photo</button>
-</form>
 </section>
-<fieldset class="edit-section">
-<legend>Publishing</legend>
-<div class="field">
-<label for="status">Status</label>
-<select id="status" form="product-form" th:field="*{status}">
-<option value="DRAFT">Draft: hidden from customers</option>
-<option value="ACTIVE">Active: visible and can be ordered</option>
-<option value="PAUSED">Paused: visible, ordering stopped</option>
-</select>
-<p class="error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">
-</p>
-</div>
-<div class="field">
-<label for="sortOrder">Display order</label>
-<input id="sortOrder" form="product-form" th:field="*{sortOrder}" type="number" min="0" step="1" aria-describedby="sort-help">
-<p id="sort-help" class="field-help">Lower numbers appear first in the shop.</p>
-<p class="error" th:if="${#fields.hasErrors('sortOrder')}" th:errors="*{sortOrder}">
-</p>
-</div>
-</fieldset>
-<p class="form-actions"><button class="button" form="product-form">Save product</button></p>
 </div>
 </main>
 </body>

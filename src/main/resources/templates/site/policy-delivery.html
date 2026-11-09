@@ -11,12 +11,12 @@
 <p>ঢাকার ভেতরে ও বাইরে কুরিয়ারে পাঠাই।</p>
 <p th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}" th:text="${'ঢাকার ভেতরে ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside']) + '। প্রতি অর্ডারে একবার।'}"></p>
 <h2>কত দিন লাগবে</h2>
-<p>বানানোর সময় শুরু হয় ডিজাইনে সম্মতি ও অগ্রিম পাওয়ার পরে, অর্ডার পাঠানোর দিন থেকে নয়। প্রতিটি পণ্যের বানানোর সময় তার পাতায় দেওয়া আছে।</p>
+<p>বানানোর সময় শুরু হয় ডিজাইনে সম্মতির পরে, অর্ডার পাঠানোর দিন থেকে নয়। প্রতিটি পণ্যের বানানোর সময় তার পাতায় দেওয়া আছে।</p>
 <p th:if="${!#strings.isEmpty(settings['courier_days_inside_min'])}" th:text="${'বানানো শেষে ঢাকার ভেতরে কুরিয়ারে ' + @bn.digits(settings['courier_days_inside_min']) + '–' + @bn.digits(settings['courier_days_inside_max']) + ' দিন।'}"></p>
 <p th:if="${!#strings.isEmpty(settings['courier_days_outside_min'])}" th:text="${'ঢাকার বাইরে কুরিয়ারে ' + @bn.digits(settings['courier_days_outside_min']) + '–' + @bn.digits(settings['courier_days_outside_max']) + ' দিন।'}"></p>
 <p th:if="${!#strings.isEmpty(settings['courier_days_inside_min']) or !#strings.isEmpty(settings['courier_days_outside_min'])}">এগুলো আনুমানিক সময়, নিশ্চিত তারিখ নয়।</p>
 <h2>পাঠানোর পরে</h2>
-<p>পাঠানোর পরে কুরিয়ারের নাম ও ট্র্যাকিং নম্বর জানাব। <a th:href="@{/track}">অর্ডার ট্র্যাক</a> পাতাতেও দেখতে পাবেন। বাকি টাকা ডেলিভারিতে দিতে হবে।</p>
+<p>পাঠানোর পরে কুরিয়ারের নাম ও ট্র্যাকিং নম্বর জানাব। <a th:href="@{/track}">অর্ডার ট্র্যাক</a> পাতাতেও দেখতে পাবেন। ডেলিভারিতে পরিশোধ করবেন দিতে হবে।</p>
 </main>
 <footer th:replace="~{fragments/footer :: footer}">
 </footer>

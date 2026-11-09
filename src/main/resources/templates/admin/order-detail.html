@@ -34,13 +34,10 @@
 <li th:each="item : ${order.missingForConfirmation}" th:text="${item}"></li>
 </ul>
 <form th:if="${order.designApprovedAt == null}" th:action="@{/admin/orders/{c}/approve(c=${order.code})}" method="post">
-<button class="button">Design approved on WhatsApp</button>
+<button class="button">Customer approved the design</button>
 </form>
 <p th:if="${order.designApprovedAt != null}" th:text="${'Approved ' + @bn.time(order.designApprovedAt)}"></p>
-<p class="wa-links" th:if="${order.netPaid < order.advanceRequired and order.designApprovedAt != null}">
-<a th:if="${whatsappLinks['Advance message'] != null}" th:href="${whatsappLinks['Advance message']}" target="_blank" rel="noopener noreferrer">Open advance message</a>
-<a href="#money-title">Record the advance</a>
-</p>
+
 <form th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post" th:if="${order.missingForConfirmation.isEmpty()}">
 <input type="hidden" name="to" value="CONFIRMED">
 <button class="button">Confirm order</button>
@@ -87,7 +84,7 @@
 <dl class="facts">
 <dt>Product</dt><dd th:text="${order.productTitle}"></dd>
 <dt>Quantity</dt><dd th:text="${order.quantity}"></dd>
-<dt>Engraving</dt><dd class="preserve-lines" th:text="${order.engraving}"></dd>
+<dt>Engraving</dt><dd class="preserve-lines" th:text="${#strings.isEmpty(order.engraving) ? 'To be confirmed with the customer' : order.engraving}"></dd>
 <th:block th:if="${order.customerNote != null}">
 <dt>Customer's note</dt><dd class="preserve-lines" th:text="${order.customerNote}"></dd>
 </th:block>
@@ -99,6 +96,11 @@
 <dt>Delivered</dt><dd th:text="${@bn.time(order.deliveredAt)}"></dd>
 </th:block>
 </dl>
+<form class="form-width" th:if="${#strings.isEmpty(order.engraving) and order.designApprovedAt == null and (order.status == 'NEW' or order.status == 'DESIGN_SENT')}" th:action="@{/admin/orders/{c}/engraving(c=${order.code})}" method="post">
+<label for="agreed-engraving">Engraving agreed with the customer</label>
+<textarea id="agreed-engraving" name="engraving" maxlength="1000" rows="3" required></textarea>
+<button>Save engraving details</button>
+</form>
 </section>
 
 <section class="panel order-panel" aria-labelledby="customer-title">
@@ -134,7 +136,7 @@
 <dt>Product</dt><dd th:text="${'৳' + order.unitPrice + ' × ' + order.quantity + ' = ৳' + order.subtotal}"></dd>
 <dt>Delivery</dt><dd th:text="${'৳' + order.delivery}"></dd>
 <dt>Total</dt><dd th:text="${'৳' + order.total}"></dd>
-<dt>Advance required</dt><dd th:text="${'৳' + order.advanceRequired}"></dd>
+<dt>Payment method</dt><dd>Cash on delivery · no advance</dd>
 <dt th:text="${order.status == 'CANCELLED' ? 'Money still held' : 'Net paid'}"></dt><dd class="strong" th:text="${'৳' + order.netPaid}"></dd>
 <th:block th:if="${order.balance != null}">
 <dt>Remaining balance</dt><dd class="strong" th:text="${'৳' + order.balance}"></dd>
@@ -160,10 +162,10 @@
 </tbody>
 </table>
 </div>
-<details th:unless="${order.status == 'CANCELLED' and order.netPaid == 0}" th:open="${moneyAmount != null or (order.status == 'DESIGN_SENT' and order.netPaid < order.advanceRequired and order.designApprovedAt != null) or (order.status == 'DELIVERED' and order.balance > 0)}">
+<details th:unless="${order.status == 'CANCELLED' and order.netPaid == 0}" th:open="${moneyAmount != null or (order.status == 'DELIVERED' and order.balance > 0)}">
 <summary th:text="${order.status == 'CANCELLED' ? 'Record verified refund' : 'Record verified payment or refund'}"></summary>
 <form class="form-width" th:action="@{/admin/orders/{c}/money(c=${order.code})}" method="post">
-<p class="muted">First check your bKash account or the actual cash or courier settlement. A customer's screenshot alone is not verification.</p>
+<p class="muted">Record COD after verifying the actual courier settlement or cash received. Existing payment and refund records remain available.</p>
 <label for="money-kind">Type</label>
 <select id="money-kind" name="kind">
 <option value="PAYMENT" th:unless="${order.status == 'CANCELLED'}" th:selected="${moneyKind != 'REFUND'}">Payment received</option>
@@ -173,10 +175,10 @@
 <select id="money-method" name="method">
 <option value="BKASH" th:selected="${moneyMethod == 'BKASH'}">bKash</option>
 <option value="CASH" th:selected="${moneyMethod == 'CASH'}">Cash</option>
-<option value="COD" th:selected="${moneyMethod == 'COD'}">Courier cash on delivery</option>
+<option value="COD" th:selected="${moneyMethod == null or moneyMethod == 'COD'}">Courier cash on delivery</option>
 </select>
 <label for="money-amount">Amount (whole taka)</label>
-<p class="muted" th:if="${order.balance != null and order.balance > 0}" th:text="${(order.netPaid < order.advanceRequired ? 'Advance still needed: ৳' + (order.advanceRequired - order.netPaid) + '. ' : '') + 'Remaining balance: ৳' + order.balance + '.'}"></p>
+<p class="muted" th:if="${order.balance != null and order.balance > 0}" th:text="${'Remaining balance: ৳' + order.balance + '.'}"></p>
 <p class="muted" th:if="${order.status == 'CANCELLED'}" th:text="${'You can refund up to ৳' + order.netPaid + '.'}"></p>
 <input id="money-amount" name="amount" inputmode="numeric" required th:value="${moneyAmount}">
 <label for="money-reference">Transaction reference (required for bKash)</label>
@@ -194,7 +196,7 @@
 <strong th:switch="${e.type}">
 <span th:case="'CREATED'">Order placed</span>
 <span th:case="'STATUS_CHANGED'" th:text="${@bn.status(e.fromStatus) + ' → ' + @bn.status(e.toStatus)}"></span>
-<span th:case="'DESIGN_APPROVED'">Design approved on WhatsApp</span>
+<span th:case="'DESIGN_APPROVED'">Customer approved the design</span>
 <span th:case="'PAYMENT_RECORDED'">Payment recorded</span>
 <span th:case="'REFUND_RECORDED'">Refund recorded</span>
 <span th:case="'CONTACT_UPDATED'">Contact details corrected</span>

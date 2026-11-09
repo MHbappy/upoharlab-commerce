@@ -139,7 +139,7 @@ public class ProductStore {
         errors.rejectValue("makingDaysMax", "required", "Set making time.");
       if (id == null || get(id).photos().isEmpty())
         errors.rejectValue(
-            "status", "photos", "Save as draft and add at least one real photo before publishing.");
+            "status", "photos", "Choose at least one product photo before publishing.");
     }
     if (errors.hasErrors()) return id;
     var params = new BeanPropertySqlParameterSource(f);

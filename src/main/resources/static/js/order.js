@@ -34,15 +34,12 @@
       }
       if (valid && delivery !== null) {
         var total = unit * quantity + delivery;
-        var advance = Math.floor((total + 1) / 2);
         set("total", money(total));
-        set("advance", money(advance));
-        set("balance", money(total - advance));
+        set("balance", money(total));
         shownTotal.value = String(total);
       } else {
         var waiting = valid ? "এলাকা বাছলে দেখাবে" : "সঠিক পরিমাণ লিখলে দেখাবে";
         set("total", waiting);
-        set("advance", waiting);
         set("balance", waiting);
         shownTotal.value = "";
       }
@@ -58,11 +55,14 @@
   // Without JavaScript a thumbnail simply opens the full photo.
   var mainPhoto = document.querySelector(".main-photo");
   if (mainPhoto) {
-    document.querySelectorAll(".thumbnails a").forEach(function (link) {
+    var thumbnails = document.querySelectorAll(".thumbnails a");
+    thumbnails.forEach(function (link, index) {
+      link.setAttribute("aria-current", index === 0 ? "true" : "false");
       link.addEventListener("click", function (event) {
         event.preventDefault();
         mainPhoto.src = link.href;
         mainPhoto.alt = link.querySelector("img").alt;
+        thumbnails.forEach(function (item) { item.setAttribute("aria-current", item === link ? "true" : "false"); });
       });
     });
   }

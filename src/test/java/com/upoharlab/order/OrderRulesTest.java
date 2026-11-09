@@ -16,12 +16,12 @@ class OrderRulesTest {
 
   @ParameterizedTest
   @CsvSource({
-    "1,INSIDE,399,60,459,230,229",
-    "1,OUTSIDE,399,110,509,255,254",
-    "2,INSIDE,798,60,858,429,429",
-    "10,OUTSIDE,3990,110,4100,2050,2050"
+    "1,INSIDE,399,60,459,0,459",
+    "1,OUTSIDE,399,110,509,0,509",
+    "2,INSIDE,798,60,858,0,858",
+    "10,OUTSIDE,3990,110,4100,0,4100"
   })
-  void calculatesTotalsAndRoundsAdvanceUp(
+  void calculatesFullCashOnDeliveryTotals(
       int quantity, String area, int subtotal, int delivery, int total, int advance, int balance) {
     var quote = pricing.quote(prices, quantity, area);
     assertThat(quote.subtotal()).isEqualTo(subtotal);

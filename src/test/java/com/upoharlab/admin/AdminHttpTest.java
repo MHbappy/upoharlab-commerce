@@ -49,6 +49,63 @@ class AdminHttpTest {
       db.update("UPDATE setting SET value='' WHERE key=?", key);
   }
 
+  @Autowired com.upoharlab.product.ProductEditor editor;
+  @Autowired com.upoharlab.product.ProductStore products;
+
+  private com.upoharlab.product.ProductForm completeForm() {
+    var f = new com.upoharlab.product.ProductForm();
+    f.setTitle("নতুন উপহার"); f.setSlug("http-combined"); f.setPrice(500);
+    f.setShortDescription("নিজের নামের উপহার"); f.setIncludes("একটি চাবির রিং");
+    f.setMaterial("কাঠ"); f.setSize("৫ সেমি"); f.setEngravingHelp("একটি নাম");
+    f.setMakingDaysMin(2); f.setMakingDaysMax(4); f.setStatus("ACTIVE");
+    return f;
+  }
+
+  @Test
+  void detailsAndPhotosPublishInOneSubmission() throws Exception {
+    var f = completeForm();
+    var errors = new org.springframework.validation.BeanPropertyBindingResult(f, "productForm");
+    var photo = new org.springframework.mock.web.MockMultipartFile("photos", "photo.jpg", "image/jpeg", rotatedJpeg());
+    long id = editor.save(null, f, errors, java.util.List.of(photo));
+    assertThat(errors.hasErrors()).isFalse();
+    assertThat(products.get(id).details().getStatus()).isEqualTo("ACTIVE");
+    assertThat(products.get(id).photos()).hasSize(1);
+    assertThat(products.get(id).photos().getFirst().alt()).isEqualTo(f.getTitle());
+  }
+
+  @Test
+  void invalidSecondPhotoRollsBackProductAndAllFiles() throws Exception {
+    var f = completeForm();
+    var errors = new org.springframework.validation.BeanPropertyBindingResult(f, "productForm");
+    var photo = new org.springframework.mock.web.MockMultipartFile("photos", "photo.jpg", "image/jpeg", rotatedJpeg());
+    var invalid = new org.springframework.mock.web.MockMultipartFile("photos", "bad.jpg", "image/jpeg", new byte[]{1,2,3});
+    long before;
+    try (var files = Files.list(uploads)) { before = files.count(); }
+    assertThatThrownBy(() -> editor.save(null, f, errors, java.util.List.of(photo, invalid)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(jdbcProductCount()).isZero();
+    try (var files = Files.list(uploads)) { assertThat(files.count()).isEqualTo(before); }
+    assertThat(f.getStatus()).isEqualTo("ACTIVE");
+  }
+
+  @Test
+  void missingPublishingDetailsRollBackUploadedPhotoAndRetainInput() throws Exception {
+    var f = completeForm(); f.setPrice(null);
+    var errors = new org.springframework.validation.BeanPropertyBindingResult(f, "productForm");
+    var photo = new org.springframework.mock.web.MockMultipartFile("photos", "photo.jpg", "image/jpeg", rotatedJpeg());
+    long before;
+    try (var files = Files.list(uploads)) { before = files.count(); }
+    assertThat(editor.save(null, f, errors, java.util.List.of(photo))).isNull();
+    assertThat(errors.hasFieldErrors("price")).isTrue();
+    assertThat(jdbcProductCount()).isZero();
+    try (var files = Files.list(uploads)) { assertThat(files.count()).isEqualTo(before); }
+    assertThat(f.getTitle()).isEqualTo("নতুন উপহার");
+  }
+
+  private int jdbcProductCount() {
+    return db.queryForObject("SELECT count(*) FROM product WHERE slug='http-combined'", Integer.class);
+  }
+
   private String base() {
     return "http://localhost:" + port;
   }

@@ -2,7 +2,9 @@
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
 <body>
 <section th:fragment="order" id="order" class="panel order-section" aria-labelledby="order-title">
-<h2 id="order-title">অর্ডার করুন</h2>
+<p class="eyebrow">আপনার উপহার, আপনার মতো</p>
+<h2 id="order-title">একটু তথ্য, তারপর ডিজাইন।</h2>
+<p class="muted">শুধু নাম, ফোন নম্বর ও ডেলিভারির ঠিকানা দিন। অ্যাকাউন্ট বা অগ্রিম লাগবে না।</p>
 <p id="order-message" class="notice notice-warning" role="status" tabindex="-1" th:if="${orderMessage}" th:text="${orderMessage}">
 </p>
 <p class="notice notice-warning" role="status" th:if="${product.details.status == 'PAUSED'}">এই পণ্যের অর্ডার এখন বন্ধ আছে।</p>
@@ -27,7 +29,7 @@
 </div>
 
 <fieldset>
-<legend>পণ্য</legend>
+<legend><span class="form-step">০১</span> উপহারটি সাজান</legend>
 <div class="field">
 <label for="quantity">পরিমাণ (১–১০)</label>
 <input id="quantity" th:field="*{quantity}" th:errorclass="input-error" th:attr="aria-invalid=${#fields.hasErrors('quantity') ? 'true' : null}" type="text" inputmode="numeric" maxlength="2" aria-describedby="quantity-help">
@@ -39,12 +41,12 @@
 </p>
 </div>
 <div class="field">
-<label for="engraving">কী খোদাই হবে</label>
+<label for="engraving">কী খোদাই হবে (ঐচ্ছিক)</label>
 <textarea id="engraving" th:field="*{engraving}" th:errorclass="input-error" th:attr="aria-invalid=${#fields.hasErrors('engraving') ? 'true' : null}" rows="4" autocomplete="off" aria-describedby="engraving-help">
 </textarea>
 <p id="engraving-help" class="help">
 <span class="preserve-lines" th:if="${!#strings.isEmpty(product.details.engravingHelp)}" th:text="${product.details.engravingHelp}"></span>
-একাধিক পণ্যে আলাদা লেখা হলে প্রতি লাইনে লিখুন, যেমন: ১ম: নাম, ২য়: নাম। বানান WhatsApp-এ মিলিয়ে নেব।
+একাধিক পণ্যে আলাদা লেখা হলে প্রতি লাইনে লিখুন, যেমন: ১ম: নাম, ২য়: নাম। চাইলে এখন খালি রাখুন। ফোনে বা WhatsApp-এ লেখা ও বানান মিলিয়ে নেব।
 </p>
 <p class="error" th:if="${#fields.hasErrors('engraving')}" th:errors="*{engraving}">
 </p>
@@ -52,7 +54,7 @@
 </fieldset>
 
 <fieldset>
-<legend>আপনার তথ্য</legend>
+<legend><span class="form-step">০২</span> আপনার পরিচয়</legend>
 <div class="field">
 <label for="name">আপনার নাম</label>
 <input id="name" th:field="*{name}" th:errorclass="input-error" th:attr="aria-invalid=${#fields.hasErrors('name') ? 'true' : null}" type="text" autocomplete="name">
@@ -60,16 +62,16 @@
 </p>
 </div>
 <div class="field">
-<label for="phone">ফোন নম্বর (WhatsApp থাকলে ভালো)</label>
+<label for="phone">ফোন নম্বর</label>
 <input id="phone" th:field="*{phone}" th:errorclass="input-error" th:attr="aria-invalid=${#fields.hasErrors('phone') ? 'true' : null}" type="tel" autocomplete="tel" aria-describedby="phone-help">
-<p id="phone-help" class="help">১১ সংখ্যার মোবাইল নম্বর। এই নম্বরে ডিজাইন পাঠাব, আর অর্ডার ট্র্যাক করতেও এটি লাগবে।</p>
+<p id="phone-help" class="help">১১ সংখ্যার মোবাইল নম্বর। অর্ডার নিশ্চিত করতে যোগাযোগ করব। WhatsApp থাকা বাধ্যতামূলক নয়।</p>
 <p class="error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">
 </p>
 </div>
 </fieldset>
 
 <fieldset>
-<legend>ডেলিভারি</legend>
+<legend><span class="form-step">০৩</span> কোথায় পৌঁছে দেব</legend>
 <div class="field" id="area">
 <p class="field-label">কোথায় পাঠাব?</p>
 <label class="choice" for="area-inside">
@@ -113,9 +115,7 @@
 </th:block>
 <dt class="total">মোট</dt>
 <dd class="total" data-line="total" th:text="${quote.total != null ? @bn.money(quote.total) : waiting}"></dd>
-<dt>ডিজাইনে সম্মতির পরে ৫০% অগ্রিম</dt>
-<dd data-line="advance" th:text="${quote.advance != null ? @bn.money(quote.advance) : waiting}"></dd>
-<dt>বাকি টাকা ডেলিভারিতে</dt>
+<dt>ডেলিভারিতে পরিশোধ করবেন</dt>
 <dd data-line="balance" th:text="${quote.balance != null ? @bn.money(quote.balance) : waiting}"></dd>
 </dl>
 </section>
@@ -124,7 +124,7 @@
 <p class="notice notice-warning review-note" th:if="${reviewNeeded}">মোট হিসাব মিলিয়ে দেখুন, তারপর অর্ডার পাঠান।</p>
 <button class="link-button" type="submit" name="action" value="quote">হিসাব আপডেট করুন</button>
 <button class="button" type="submit" name="action" value="submit">অর্ডার পাঠান</button>
-<p class="help">এখন টাকা দিতে হবে না। আগে WhatsApp-এ ডিজাইন দেখাব। আপনি সম্মতি দিলে ৫০% অগ্রিম দেবেন।</p>
+<p class="help">ক্যাশ অন ডেলিভারি। পণ্য হাতে পেয়ে পুরো টাকা দেবেন। কোনো অগ্রিম বা লগইন লাগবে না।</p>
 </div>
 </form>
 </section>

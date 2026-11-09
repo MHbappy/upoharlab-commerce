@@ -71,7 +71,7 @@ public class SettingsService {
     for (String k : KEYS) s.put(k, Objects.toString(s.get(k), "").strip());
     for (String k : List.of("phone", "whatsapp", "bkash_number")) {
       if (s.get(k).isBlank()) {
-        if (open)
+        if (open && !k.equals("bkash_number"))
           errors.rejectValue("values[" + k + "]", "required", "Required before accepting orders.");
       } else
         try {

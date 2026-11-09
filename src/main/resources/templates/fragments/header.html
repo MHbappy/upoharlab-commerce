@@ -1,17 +1,9 @@
 <!DOCTYPE html>
-<html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<body>
-<header th:fragment="header" class="site-header">
-  <a class="skip-link" href="#main">মূল বিষয়বস্তুতে যান</a>
-  <div class="container header-inner">
-    <a class="brand" th:href="@{/}" aria-label="উপহার ল্যাব — হোম">উপহার ল্যাব<span>আপনার নাম, যত্নে খোদাই করা</span>
-</a>
-    <nav aria-label="প্রধান নেভিগেশন">
-<a th:href="@{/#products}">পণ্য</a>
-<a th:href="@{/track}">অর্ডার ট্র্যাক</a>
-<a th:href="@{/faq}">সাহায্য</a>
-</nav>
-  </div>
-</header>
-</body>
-</html>
+<html lang="bn" xmlns:th="http://www.thymeleaf.org"><body>
+<header th:fragment="header" class="site-header shop-header">
+<a class="skip-link" href="#main">মূল বিষয়বস্তুতে যান</a>
+<div class="announcement">আপনার পছন্দের নাম। আমাদের যত্নের খোদাই।</div>
+<div class="container header-inner">
+<a class="brand" th:href="@{/}" aria-label="উপহার ল্যাব — হোম"><span class="brand-mark" aria-hidden="true">উ</span><span class="brand-wordmark">উপহার ল্যাব<small>একটু আপন করে দেওয়া</small></span></a>
+<nav aria-label="প্রধান নেভিগেশন"><a th:href="@{/#products}">উপহারগুলো</a><a th:href="@{/#how-it-works}">যেভাবে কাজ করে</a><a th:href="@{/faq}">সাহায্য</a><a class="nav-track" th:href="@{/track}">অর্ডার ট্র্যাক <span aria-hidden="true">↗</span></a></nav>
+</div></header></body></html>

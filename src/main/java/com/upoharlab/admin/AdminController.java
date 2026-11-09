@@ -18,11 +18,13 @@ public class AdminController {
   private final ProductStore products;
   private final SettingsService settings;
   private final ImageStorage images;
+  private final ProductEditor editor;
 
-  public AdminController(ProductStore p, SettingsService s, ImageStorage i) {
+  public AdminController(ProductStore p, SettingsService s, ImageStorage i, ProductEditor editor) {
     products = p;
     settings = s;
     images = i;
+    this.editor = editor;
   }
 
   @GetMapping("/login")
@@ -38,7 +40,9 @@ public class AdminController {
 
   @GetMapping("/products/new")
   String create(Model m) {
-    m.addAttribute("productForm", new ProductForm());
+    ProductForm form = new ProductForm();
+    form.setStatus("ACTIVE");
+    m.addAttribute("productForm", form);
     m.addAttribute("photos", List.of());
     return "admin/product-edit";
   }
@@ -57,21 +61,26 @@ public class AdminController {
       @PathVariable(required = false) Long id,
       @Valid @ModelAttribute ProductForm productForm,
       BindingResult errors,
+      @RequestParam(required = false) List<MultipartFile> photos,
       Model m,
       RedirectAttributes flash) {
     Long saved = null;
     if (!errors.hasErrors())
       try {
-        saved = products.save(id, productForm, errors);
+        saved = editor.save(id, productForm, errors, photos);
       } catch (org.springframework.dao.DuplicateKeyException ex) {
         errors.rejectValue("slug", "duplicate", "This URL is already used.");
+      } catch (IOException | IllegalArgumentException ex) {
+        errors.reject("photos", ex instanceof IOException
+            ? "Unable to read or store a photo. Please choose another JPEG or PNG." : ex.getMessage());
       }
     if (errors.hasErrors()) {
+      m.addAttribute("reselectPhotos", photos != null && photos.stream().anyMatch(file -> !file.isEmpty()));
       m.addAttribute("productId", id);
       m.addAttribute("photos", id == null ? List.of() : products.get(id).photos());
       return "admin/product-edit";
     }
-    flash.addFlashAttribute("message", "Product saved.");
+    flash.addFlashAttribute("message", "ACTIVE".equals(productForm.getStatus()) ? "Product saved and published in your shop." : "Product saved.");
     return "redirect:/admin/products/" + saved;
   }
 

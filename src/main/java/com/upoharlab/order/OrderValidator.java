@@ -48,7 +48,7 @@ public class OrderValidator {
     String name = text(form.getName(), false);
     String address = text(form.getAddress(), true);
     String note = text(form.getNote(), true);
-    required(errors, "engraving", engraving, MAX_ENGRAVING, "কী খোদাই হবে তা লিখুন।");
+    if (length(engraving) > MAX_ENGRAVING) tooLong(errors, "engraving", MAX_ENGRAVING);
     required(errors, "name", name, MAX_NAME, "আপনার নাম লিখুন।");
     required(errors, "address", address, MAX_ADDRESS, "পুরো ঠিকানা লিখুন।");
     if (length(note) > MAX_NOTE) tooLong(errors, "note", MAX_NOTE);
