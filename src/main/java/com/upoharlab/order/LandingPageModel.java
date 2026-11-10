@@ -27,10 +27,9 @@ public class LandingPageModel {
     this.validator = validator;
   }
 
-  /** Starting choices: the popular package, first of everything else, and the sample text. */
+  /** Starting choices: the popular package, first of everything else, and a blank engraving field. */
   public LandingOrderForm defaults(LandingConfig c) {
     LandingOrderForm form = new LandingOrderForm();
-    if (c.sections().preview()) form.setEngraving(c.preview().defaultText());
     form.setFont(c.preview().fonts().isEmpty() ? null : c.preview().fonts().get(0));
     int popular = 0;
     for (int i = 0; i < c.packages().size(); i++) if (c.packages().get(i).isPopular()) popular = i;
@@ -85,6 +84,9 @@ public class LandingPageModel {
     m.addAttribute("orderForm", form);
     m.addAttribute("submitToken", submitToken);
     m.addAttribute("quote", quote);
+    m.addAttribute("selectedOldPrice", selection != null && quote != null && quote.extras() == 0
+        ? c.packages().get(selection.packageIndex()).oldPrice() : null);
+    m.addAttribute("selectedPackageName", selection == null ? null : c.packages().get(selection.packageIndex()).name());
     m.addAttribute("shownTotal", shownTotal);
     m.addAttribute("activeDesign", c.sections().preview() ? activeDesign(c, form) : null);
     m.addAttribute("showOrder", c.sections().order());

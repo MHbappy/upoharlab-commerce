@@ -6,10 +6,13 @@
 <meta name="robots" content="noindex">
 <title>আপনার অর্ডার পেয়েছি — উপহার ল্যাব</title>
 <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+<link rel="stylesheet" th:href="@{/css/app.css}">
 <link rel="stylesheet" th:href="@{/css/landing.css}">
+<link rel="stylesheet" th:href="@{/css/storefront.css}">
 </head>
 <body class="lp">
-<main class="lp-section"><div class="lp-wrap" th:with="s=${thanks.selection()},d=${thanks.selection().design()}">
+<header th:replace="~{fragments/header :: header}"></header>
+<main id="main" class="lp-section"><div class="lp-wrap lp-confirmation" th:with="s=${thanks.selection()},d=${thanks.selection().design()}">
 <h1>আপনার অর্ডার পেয়েছি</h1>
 <p>অর্ডার নম্বর: <strong class="lp-code" th:text="${order.code}"></strong></p>
 <div class="lp-stage">
@@ -28,11 +31,12 @@
 <dt>অগ্রিম</dt><dd th:text="${@bn.money(thanks.advance())}"></dd>
 <dt>হাতে পেয়ে দেবেন</dt><dd th:text="${@bn.money(thanks.balance())}"></dd>
 </dl>
-<p class="lp-notice">১ ঘণ্টার মধ্যে WhatsApp-এ ডিজাইন প্রিভিউ পাবেন</p>
+<p class="lp-notice">আমরা যোগাযোগ করে আপনার লেখা ও ডিজাইন নিশ্চিত করব।</p>
 <p th:if="${thanks.advance() > 0}">এখন কোনো টাকা পাঠাবেন না। ডিজাইন পছন্দ হলে অগ্রিম কীভাবে পাঠাবেন, তা WhatsApp-এ জানিয়ে দেব।</p>
 <a class="lp-btn" th:if="${whatsappWithCode != null}" th:href="${whatsappWithCode}">WhatsApp-এ যোগাযোগ করুন</a>
 <p><a th:href="@{/track}">অর্ডার ট্র্যাক করুন</a></p>
 </div></main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:if="${@pixel.enabled()}" th:src="@{/js/pixel.js}" defer th:with="pixelId=${@pixel.id()}" th:attr="data-pixel=${pixelId},data-purchase=${order.code},data-value=${thanks.total()}"></script>
 </body>
 </html>

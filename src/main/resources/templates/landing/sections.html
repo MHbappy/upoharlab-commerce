@@ -16,19 +16,21 @@
 <div class="lp-hook-copy">
 <h1 th:text="${hero.headline()}"></h1>
 <p class="lp-sub" th:if="${!#strings.isEmpty(hero.subHeadline())}" th:text="${hero.subHeadline()}"></p>
-<p class="lp-price" th:if="${hero.offerPrice() != null}">
-<strong th:text="${@bn.money(hero.offerPrice())}"></strong>
-<s th:if="${hero.oldPrice() != null}" th:text="${@bn.money(hero.oldPrice())}"></s>
-<span class="lp-save" th:if="${hero.oldPrice() != null}" th:text="${@bn.money(hero.oldPrice() - hero.offerPrice()) + ' ছাড়'}"></span>
-</p>
-<p class="lp-cod">সারাদেশে ক্যাশ অন ডেলিভারি</p>
-<a class="lp-btn" href="#order" th:if="${showOrder}">আমার নামে বানাতে চাই</a>
+<div class="lp-offer" th:if="${quote != null or hero.offerPrice() != null}">
+<p class="lp-offer-label">আপনার বেছে নেওয়া উপহার</p>
+<p class="lp-price"><strong data-selected-price th:text="${@bn.money(quote != null ? quote.packagePrice() + quote.extras() : hero.offerPrice())}"></strong><s data-old-price th:hidden="${selectedOldPrice == null}" th:text="${selectedOldPrice != null ? @bn.money(selectedOldPrice) : ''}"></s></p>
+<p class="lp-help"><span data-package-name th:text="${selectedPackageName}"></span> · ডেলিভারি চার্জ আলাদা</p>
+<p class="lp-payment" th:if="${config.advanceAmount() != null}" data-payment-note th:text="${config.advanceAmount() > 0 ? 'ডিজাইনে সম্মতির পরে ' + @bn.money(quote != null and quote.advance() != null ? quote.advance() : config.advanceAmount()) + ' অগ্রিম। বাকি টাকা হাতে পেয়ে।' : 'কোনো অগ্রিম নেই। পুরো টাকা হাতে পেয়ে দেবেন।'}"></p>
+</div>
+<a class="lp-btn" href="#order" th:if="${showOrder and orderable}">আমার নামে বানাতে চাই <span aria-hidden="true">↓</span></a>
+<p class="lp-hero-reassurance">✓ আগে ডিজাইন দেখুন &nbsp; ✓ সম্মতির পরে বানানো</p>
 </div>
 </div>
 </section>
 
 <section th:fragment="preview" id="preview" class="lp-section lp-preview" th:if="${activeDesign != null}" aria-labelledby="preview-title">
 <div class="lp-wrap">
+<p class="lp-kicker">বানানোর আগে দেখে নিন</p>
 <h2 id="preview-title">আপনার নাম লিখে দেখুন</h2>
 <div class="lp-preview-grid">
 <div class="lp-preview-art">
@@ -38,17 +40,18 @@
 <g id="lp-art">
 <rect id="lp-blank" fill="#E6D3B8" width="100%" height="100%"/>
 <image id="lp-base" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" th:if="${!#strings.isEmpty(activeDesign.baseImage())}" th:attr="href=@{/media/{n}(n=${activeDesign.baseImage()})}"/>
-<text id="lp-text" text-anchor="middle" dominant-baseline="central" th:text="${orderForm.engraving}" th:attr="x=${activeDesign.textX()},y=${activeDesign.textY()},font-size=${activeDesign.minFontSize()},fill=${activeDesign.color()},font-family=${orderForm.font},filter=${#strings.isEmpty(activeDesign.shadow()) ? null : 'url(#lp-shadow)'}"></text>
+<text id="lp-text" text-anchor="middle" dominant-baseline="central" th:text="${#strings.isEmpty(orderForm.engraving) ? config.preview().defaultText() : orderForm.engraving}" th:attr="x=${activeDesign.textX()},y=${activeDesign.textY()},font-size=${activeDesign.minFontSize()},fill=${activeDesign.color()},font-family=${orderForm.font},filter=${#strings.isEmpty(activeDesign.shadow()) ? null : 'url(#lp-shadow)'}"></text>
 </g>
 </svg>
 </div>
+<p id="lp-example" class="lp-help" th:hidden="${!#strings.isEmpty(orderForm.engraving)}">এখন নমুনা লেখা দেখছেন। আপনার নাম লিখলে প্রিভিউ বদলে যাবে।</p>
 <p class="lp-caption">এটি আনুমানিক প্রিভিউ। বানানোর আগে চূড়ান্ত ডিজাইন WhatsApp-এ পাঠিয়ে আপনার অনুমোদন নেওয়া হবে।</p>
 </div>
 <div class="lp-controls-col">
 <div class="lp-controls" data-js-only hidden>
 <label for="lp-input">আপনার নাম / লেখা</label>
-<input id="lp-input" type="text" autocomplete="off" th:value="${orderForm.engraving}" th:attr="maxlength=${config.preview().maxChars()}">
-<p class="lp-counter" aria-live="polite"><span id="lp-count"></span> / <span th:text="${@bn.digits(config.preview().maxChars())}"></span> অক্ষর</p>
+<input id="lp-input" type="text" autocomplete="off" placeholder="আপনার নাম বা পছন্দের লেখা" th:value="${orderForm.engraving}" th:attr="maxlength=${config.preview().maxChars()}">
+<p class="lp-counter" aria-live="polite"><span data-character-count></span> / <span th:text="${@bn.digits(config.preview().maxChars())}"></span> অক্ষর</p>
 <p class="lp-warn" id="lp-too-wide" hidden>লেখাটি একটু বড়। ছোট করলে ভালো দেখাবে।</p>
 <div class="lp-group" th:if="${config.preview().designs().size() > 1}">
 <p class="lp-group-label">ডিজাইন</p>
@@ -72,7 +75,7 @@
 </div>
 </div>
 </div>
-<a class="lp-btn" href="#order" th:if="${showOrder}">এই ডিজাইনটাই অর্ডার করুন</a>
+<a class="lp-btn" href="#order" th:if="${showOrder and orderable}">এই ডিজাইনটাই অর্ডার করুন</a>
 <button type="button" class="lp-btn lp-btn-soft" id="lp-share" data-js-only hidden>WhatsApp-এ পরিবারকে দেখান</button>
 </div>
 </div>
@@ -106,7 +109,7 @@
 <dl class="lp-specs">
 <div class="lp-spec" th:if="${!#strings.isEmpty(d.size)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8h20v8H2zM6 8v3M10 8v4M14 8v3M18 8v4"/></svg>মাপ</dt><dd class="lp-pre" th:text="${d.size}"></dd></div>
 <div class="lp-spec" th:if="${!#strings.isEmpty(d.material)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5"/></svg>উপাদান</dt><dd class="lp-pre" th:text="${d.material}"></dd></div>
-<div class="lp-spec" th:if="${hasMaking}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg>বানাতে সময়</dt><dd th:text="${@bn.digits(d.makingDaysMin) + '–' + @bn.digits(d.makingDaysMax) + ' দিন, ডিজাইনে সম্মতির পরে'}"></dd></div>
+<div class="lp-spec" th:if="${hasMaking}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg>বানাতে সময়</dt><dd th:text="${@bn.digits(d.makingDaysMin) + '–' + @bn.digits(d.makingDaysMax) + ' দিন, সম্মতি ও প্রযোজ্য অগ্রিমের পরে'}"></dd></div>
 <div class="lp-spec" th:if="${deliveryInside != null or deliveryOutside != null}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h12v10H2zM14 10h4l4 3v3h-8M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>ডেলিভারি</dt><dd><span class="lp-line" th:if="${deliveryInside != null}" th:text="${'ঢাকায় ' + deliveryInside + ' দিন'}"></span><span class="lp-line" th:if="${deliveryOutside != null}" th:text="${'ঢাকার বাইরে ' + deliveryOutside + ' দিন'}"></span></dd></div>
 <div class="lp-spec lp-spec-wide" th:if="${!#strings.isEmpty(d.includes)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8S10 3 7.5 3a2.5 2.5 0 0 0 0 5zM12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5z"/></svg>কী পাবেন</dt><dd class="lp-pre" th:text="${d.includes}"></dd></div>
 <div class="lp-spec lp-spec-wide" th:if="${!#strings.isEmpty(d.engravingHelp)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 1-5L16 4l4 4L9 19z"/></svg>কী লেখা যাবে</dt><dd class="lp-pre" th:text="${d.engravingHelp}"></dd></div>
@@ -120,6 +123,7 @@
 
 <section th:fragment="proof" class="lp-section lp-proof" th:with="p=${config.socialProof()}" th:if="${config.sections().socialProof() and (!config.socialProof().customerImages().isEmpty() or !config.socialProof().allReviews().isEmpty() or config.socialProof().countNumber() != null)}" aria-label="ক্রেতাদের কথা">
 <div class="lp-wrap">
+<p class="lp-kicker">যাঁদের জন্য বানিয়েছি</p><h2>ক্রেতাদের কথা</h2>
 <div class="lp-photos" th:if="${!p.customerImages().isEmpty()}">
 <img th:each="i : ${p.customerImages()}" th:src="@{/media/{n}(n=${'thumb-' + i})}" alt="ক্রেতার পাঠানো ছবি" loading="lazy" decoding="async" width="300" height="300">
 </div>
@@ -133,16 +137,18 @@
 </div>
 </section>
 
-<section th:fragment="pricing" class="lp-section" th:if="${config.sections().packages() and !config.packages().isEmpty()}" aria-labelledby="pricing-title">
+<section th:fragment="pricing" id="packages" class="lp-section lp-packages" th:if="${config.sections().packages() and !config.packages().isEmpty()}" aria-labelledby="pricing-title">
 <div class="lp-wrap">
+<p class="lp-kicker">আপনার জন্য কোনটি?</p>
 <h2 id="pricing-title">আপনার প্যাকেজ বেছে নিন</h2>
+<p class="lp-section-intro">যা দরকার সেটিই বাছুন। নিচে ডেলিভারিসহ পুরো হিসাব দেখতে পাবেন।</p>
 <div class="lp-cards">
 <article class="lp-card" th:each="t, i : ${config.packages()}" th:classappend="${t.isPopular() ? 'lp-card-popular' : ''}" th:attr="data-card=${i.index}">
 <p class="lp-badge" th:if="${t.isPopular() and config.packages().size() > 1}">সবচেয়ে জনপ্রিয়</p>
 <h3 th:text="${t.name()}"></h3>
 <p class="lp-card-desc" th:text="${t.description()}"></p>
 <p class="lp-price" th:if="${t.price() != null}"><strong th:text="${@bn.money(t.price())}"></strong> <s th:if="${t.oldPrice() != null}" th:text="${@bn.money(t.oldPrice())}"></s></p>
-<a class="lp-btn" href="#order" th:if="${showOrder}" th:attr="data-pick-package=${i.index}">এটিই নেব</a>
+<a class="lp-btn" href="#order" th:if="${showOrder and orderable}" th:attr="data-pick-package=${i.index}">এটিই নেব <span aria-hidden="true">→</span></a>
 </article>
 </div>
 <p class="lp-urgency" th:each="line : ${config.allUrgencyLines()}" th:text="${line}"></p>
@@ -160,12 +166,9 @@
 <p class="lp-foot-links"><a th:href="@{/policies/delivery}">ডেলিভারি</a> <a th:href="@{/policies/returns}">ফেরত ও বাতিল</a> <a th:href="@{/policies/privacy}">গোপনীয়তা</a></p>
 </div>
 </footer>
-<div class="lp-mini" id="lp-mini" hidden aria-hidden="true" th:if="${activeDesign != null}"><svg id="lp-mini-svg" xmlns="http://www.w3.org/2000/svg" th:attr="viewBox=${'0 0 ' + activeDesign.imageWidth() + ' ' + activeDesign.imageHeight()}"><use href="#lp-art"/></svg></div>
-<nav class="lp-sticky" aria-label="অর্ডার" th:if="${showOrder or whatsapp != null}">
-<a class="lp-btn" href="#order" th:if="${showOrder}">অর্ডার করুন</a>
-<a class="lp-btn lp-btn-soft" th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp</a>
+<nav class="lp-sticky" id="lp-sticky" aria-label="অর্ডার" data-js-only hidden th:if="${showOrder and orderable}">
+<div class="lp-sticky-inner"><div class="lp-sticky-price"><small>বাছাই করা প্যাকেজ ও অপশন</small><strong data-selected-price th:text="${quote != null ? @bn.money(quote.packagePrice() + quote.extras()) : ''}"></strong></div><a class="lp-btn" href="#order">অর্ডার করুন <span aria-hidden="true">↓</span></a></div>
 </nav>
 </th:block>
-
 </body>
 </html>

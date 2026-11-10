@@ -1,0 +1,171 @@
+/* The product landing page keeps its own warm, one-page sales presentation. */
+.lp-sales{--bg:#fbf6ee;--surface:#fffdfa;--text:#35281f;--muted:#736253;--primary:#a84422;--primary-dark:#87351b;--border:#e5d8c7;--field-border:#a68b74;--accent:#a84422;background:var(--bg)}
+.lp-sales .lp-wrap{width:min(1100px,calc(100% - 64px))}
+.lp-top{background:var(--surface);border-bottom:1px solid var(--border)}
+.lp-top-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-block:20px}
+.lp-brand{font-size:25px;font-weight:750;line-height:1.5;color:var(--text);text-decoration:none}
+.lp-brand span{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+.lp-top-help{font-size:14px;min-height:44px;display:inline-flex;align-items:center;text-decoration:none}
+.lp-sales .lp-hook{padding:48px 0 56px}
+.lp-sales .lp-hook-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px}
+.lp-sales .lp-hero{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:contain;background:#ede3d5;border-radius:16px}
+.lp-sales .lp-gallery{background:#ede3d5}
+.lp-sales h1{font-size:clamp(30px,3vw,41px);line-height:1.5;letter-spacing:-.02em}
+.lp-sales .lp-sub{font-size:17px;line-height:1.85}
+.lp-offer{padding:20px 0;margin:20px 0 22px;border-block:1px solid var(--border)}
+.lp-offer-label{font-size:13px;color:var(--muted);margin:0 0 4px}
+.lp-sales .lp-price strong{font-size:36px}
+.lp-sales .lp-offer .lp-help{margin:4px 0 0}
+.lp-sales .lp-payment{font-size:14px}
+.lp-hero-reassurance{font-size:13px;color:var(--muted);text-align:center;margin:12px 0 0}
+.lp-sales .lp-btn{min-height:54px;border-radius:9px;box-shadow:0 3px 0 #773017;font-size:17px}
+.lp-sales .lp-btn:active{box-shadow:none;transform:translateY(1px)}
+.lp-sales .lp-btn-soft{background:transparent;color:var(--primary);box-shadow:none;border-color:var(--border);margin-top:12px;font-size:15px}
+.lp-sales .lp-btn-soft:hover{background:#f6ece0;border-color:var(--primary)}
+.lp-sales .lp-section{padding-block:56px}
+.lp-sales .lp-section h2{font-size:30px;margin-bottom:26px}
+.lp-kicker{font-size:14px;font-weight:600;color:var(--primary);margin:0 0 8px}
+.lp-section-intro{color:var(--muted);font-size:16px;margin:-14px 0 32px}
+.lp-sales .lp-preview{position:static;background:var(--surface);border:0;border-block:1px solid var(--border);border-radius:0;padding-inline:0}
+.lp-preview-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:start}
+.lp-preview-art,.lp-controls-col{min-width:0}
+.lp-sales .lp-stage{background:#eadac3;border:1px solid #dac6aa;border-radius:14px}
+.lp-sales .lp-stage svg{max-height:390px}
+.lp-sales .lp-caption{font-size:13px;line-height:1.8;margin-top:12px;max-width:480px}
+.lp-controls>label{margin:0 0 8px;font-size:17px}
+.lp-counter{text-align:right;color:var(--muted);font-size:12px;margin:6px 0 0}
+.lp-group{margin-top:20px}
+.lp-group-label{font-weight:600;font-size:15px;margin:0 0 8px}
+.lp-choices{display:flex;flex-wrap:wrap;gap:10px}
+/* Design cards: same three-column grid at every screen width, so mobile and desktop match. */
+.lp-thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.lp-chip,.lp-thumb{border:1px solid var(--border);background:#fff;border-radius:8px;min-height:46px;padding:8px 14px;font-size:15px;line-height:1.7}
+.lp-chip:hover,.lp-thumb:hover{border-color:var(--primary);background:#fff8f0}
+.lp-chip[aria-pressed=true],.lp-thumb[aria-pressed=true]{color:var(--primary-dark);background:#fff1e4;border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+.lp-font-chip{font-size:20px;flex:1 1 calc(50% - 10px)}
+.lp-thumb{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;min-width:0;padding:6px;font-size:14px;line-height:1.5;text-align:center}
+.lp-thumb img,.lp-thumb:not(:has(img))::before{display:block;width:100%;height:auto;aspect-ratio:4/3;border-radius:4px;object-fit:cover}
+.lp-thumb:not(:has(img))::before{content:"";background:#eadac3}
+.lp-thumb>span{overflow-wrap:anywhere}
+.lp-controls-col>.lp-btn{margin-top:24px}
+.lp-controls-col>.lp-btn-soft{margin-top:12px}
+.lp-sales .lp-benefits{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 32px}
+.lp-sales .lp-benefits li{padding:0 0 0 28px;line-height:1.9}
+.lp-sales .lp-benefits li::before{font-size:18px}
+.lp-sales .lp-info{background:var(--surface)}
+.lp-sales .lp-info-two{gap:40px;align-items:start}
+.lp-sales .lp-info-text>p{font-size:16px}
+.lp-sales .lp-lead{font-weight:600}
+.lp-sales .lp-indoor{background:#fbf0e0}
+.lp-sales .lp-specs{margin-block:24px 16px}
+.lp-sales .lp-spec dd{font-size:15px}
+.lp-sales .lp-proof{background:#f6eee3}
+.lp-sales .lp-reviews blockquote{background:var(--surface);padding:26px}
+.lp-sales .lp-reviews blockquote p{font-size:16px;line-height:1.9}
+.lp-sales .lp-packages>.lp-wrap>.lp-kicker,.lp-sales #pricing-title,.lp-sales .lp-section-intro{text-align:center}
+.lp-sales .lp-cards{gap:20px;align-items:stretch;justify-content:center;padding-top:6px}
+.lp-sales .lp-card{position:relative;display:flex;flex-direction:column;flex:1 1 250px;max-width:400px;padding:30px 24px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px}
+.lp-sales .lp-card-chosen{border:2px solid var(--primary);padding:29px 23px 23px;box-shadow:0 6px 20px #6e432610}
+.lp-sales .lp-card-popular{background:#fff8ef}
+.lp-sales .lp-badge{position:absolute;top:-15px;left:24px;margin:0;padding:3px 12px;background:var(--primary);color:#fff;border-radius:6px;font-size:12px}
+.lp-sales .lp-card h3{font-size:21px;margin-bottom:12px}
+.lp-sales .lp-card-desc{font-size:15px;line-height:1.8;flex:1;margin-bottom:22px}
+.lp-sales .lp-card .lp-price{margin-bottom:22px}
+.lp-sales .lp-card .lp-price strong{font-size:32px}
+.lp-sales .lp-card .lp-btn{background:transparent;color:var(--primary);box-shadow:none}
+.lp-sales .lp-card .lp-btn:hover{background:#f7eadc}
+.lp-sales .lp-card-chosen .lp-btn{background:var(--primary);color:#fff}
+.lp-sales .lp-card-chosen .lp-btn:hover{background:var(--primary-dark)}
+.lp-sales .lp-urgency{font-size:15px;text-align:center;margin:24px 0 0;color:var(--primary-dark)}
+.lp-sales .lp-order{background:#f2e8db}
+.lp-sales .lp-section-heading h2{margin:0}
+.lp-sales .lp-section-heading>.lp-help{border-left:2px solid #d0ad8d;padding-left:16px;font-size:14px}
+.lp-sales .lp-order-grid{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;border:0;padding:0;margin:0}
+.lp-order-customization{border:1px solid #d4bfa7;border-radius:10px;background:#fbf6ef;margin-bottom:28px;min-width:0}
+.lp-order-customization>summary{position:relative;cursor:pointer;padding:18px 42px 18px 18px;font-weight:600;font-size:17px;list-style:none;line-height:1.7}
+.lp-order-customization>summary::-webkit-details-marker{display:none}
+.lp-order-customization>summary::after{content:"+";position:absolute;right:18px;top:16px;font:24px/1.5 sans-serif;color:var(--primary)}
+.lp-order-customization[open]>summary::after{content:"−"}
+.lp-recap-text{display:block;color:var(--muted);font-size:14px;font-weight:400;margin-top:4px;overflow-wrap:anywhere}
+.lp-edit-hint{display:block;color:var(--primary);font-size:13px;font-weight:500;margin-top:6px;text-decoration:underline;text-underline-offset:3px}
+.lp-sales .lp-order-customization>fieldset{padding:6px 18px 0}
+.lp-sales .lp-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.lp-sales .lp-order-main>.lp-step>legend{font-size:21px;margin-bottom:20px}
+.lp-sales .lp-choice:has(input:checked){background:#fff5e9}
+.lp-sales .lp-package{padding:12px;align-items:center;font-size:15px}
+.lp-sales .lp-package input{margin-top:0!important}
+.lp-sales .lp-package-copy>strong{font-size:15px}
+.lp-sales .lp-package-price{font-size:18px}
+.lp-sales .lp-order-side{padding:26px;background:var(--surface);border-radius:12px;border-color:#d4bfa7}
+.lp-sales .lp-order-side h3{font-size:21px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.lp-sales .lp-summary dt.lp-total,.lp-sales .lp-summary dd.lp-total{font-size:25px;padding-top:18px;margin-top:4px}
+.lp-sales .lp-summary dd.lp-total{color:var(--primary-dark)}
+.lp-sales .lp-summary .lp-payment{border-top:1px solid var(--border);padding-top:18px;margin-top:18px}
+.lp-sales .lp-actions{margin-top:24px}
+.lp-sales .lp-extra{border-color:#d4bfa7}
+.lp-sales .lp-extra summary{font-size:14px}
+.lp-footer{padding:28px 0;background:var(--surface);border-top:1px solid var(--border);text-align:center}
+.lp-foot-brand{font-size:21px;font-weight:700;margin:0 0 10px}
+.lp-foot-links{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 24px;margin:0;font-size:14px}
+.lp-foot-links a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:none}
+.lp-foot-links a:hover{text-decoration:underline}
+.lp-sticky{position:fixed;bottom:0;left:0;right:0;z-index:20;background:#fffdfaf5;border-top:1px solid #d9c6af;padding:10px 16px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 20px #4a2e1710}
+.lp-sticky-inner{display:flex;align-items:center;gap:20px;width:100%;max-width:600px;margin:auto}
+.lp-sticky-price{display:flex;flex-direction:column;flex:1;min-width:0}
+.lp-sticky-price small{font-size:11px;color:var(--muted);line-height:1.6}
+.lp-sticky-price strong{font-size:24px;color:var(--primary-dark);line-height:1.5}
+.lp-sales .lp-sticky .lp-btn{width:auto;flex:0 0 auto;min-height:48px;font-size:15px;padding:10px 20px}
+@media(min-width:761px){.lp-sticky{display:none}}
+@media(max-width:960px){
+ .lp-sales .lp-hook-grid,.lp-preview-grid{gap:28px}
+ .lp-sales .lp-benefits{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .lp-sales .lp-order-grid{gap:24px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+ .lp-sales .lp-order-side{padding:20px}
+}
+@media(max-width:760px){
+ .lp-sales.has-order-bar{padding-bottom:84px}
+ .lp-sales .lp-wrap{width:calc(100% - 36px)}
+ .lp-top-inner{padding-block:14px;gap:12px}
+ .lp-brand{font-size:22px}.lp-brand span{font-size:11px}.lp-top-help{font-size:12px;max-width:130px;text-align:right}
+ .lp-sales .lp-hook{padding:24px 0 32px}
+ .lp-sales .lp-hook-grid{grid-template-columns:1fr;gap:26px}
+ .lp-sales .lp-hero{border-radius:12px;aspect-ratio:4/3}
+ .lp-sales h1{font-size:29px;line-height:1.5;margin-bottom:12px}
+ .lp-sales .lp-sub{font-size:16px;line-height:1.8;margin-bottom:16px}
+ .lp-offer{margin:16px 0 18px;padding:16px 0}
+ .lp-sales .lp-price strong{font-size:32px}
+ .lp-sales .lp-section{padding-block:36px}
+ .lp-sales .lp-section h2{font-size:26px;margin-bottom:22px}
+ .lp-kicker{font-size:13px;margin-bottom:6px}
+ .lp-preview-grid{grid-template-columns:1fr;gap:24px}
+ .lp-sales .lp-stage svg{max-height:300px}
+ .lp-sales .lp-caption{font-size:12px}
+ .lp-sales .lp-benefits{grid-template-columns:1fr;gap:16px}
+ .lp-sales .lp-info-two{grid-template-columns:1fr;gap:24px}
+ .lp-sales .lp-info-text>p{font-size:15px}
+ .lp-sales .lp-spec dd{font-size:14px}
+ .lp-section-intro{font-size:14px;margin:-10px 0 26px}
+ .lp-sales .lp-cards{gap:26px}
+ .lp-sales .lp-card{padding:26px 22px 22px;max-width:none;flex-basis:100%}
+ .lp-sales .lp-card-chosen{padding:25px 21px 21px}
+ .lp-sales .lp-card-desc{margin-bottom:16px}
+ .lp-sales .lp-card .lp-price{margin-bottom:18px}
+ .lp-sales .lp-order-grid{grid-template-columns:1fr;gap:28px}
+ .lp-sales .lp-order-side{position:static;padding:22px}
+ .lp-sales .lp-section-heading h2{margin:0}
+ .lp-sales .lp-section-heading>.lp-help{margin-top:12px;border:0;padding:0}
+ .lp-sales .lp-section-heading>.lp-help br{display:none}
+ .lp-sales .lp-order-customization>fieldset{padding-inline:14px}
+ .lp-sales .lp-compact>.lp-choice{flex-basis:100%}
+ .lp-sales #font>.lp-choice{flex-basis:calc(50% - 10px)}
+ .lp-footer{padding-block:24px}
+}
+@media(max-width:360px){
+ .lp-sales .lp-wrap{width:calc(100% - 28px)}
+ .lp-brand{font-size:21px}.lp-top-help{max-width:104px}
+ .lp-sales h1{font-size:27px}.lp-sales .lp-section h2{font-size:24px}
+ .lp-sales .lp-order-side{padding:18px}
+ .lp-hero-reassurance{font-size:12px}
+ .lp-sticky-inner{gap:10px}.lp-sales .lp-sticky .lp-btn{padding-inline:14px}
+ .lp-sales .lp-package{flex-wrap:wrap}.lp-sales .lp-package-price{margin-left:31px}
+}

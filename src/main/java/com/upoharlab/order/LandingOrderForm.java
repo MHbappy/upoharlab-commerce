@@ -10,7 +10,7 @@ public class LandingOrderForm {
   @NotBlank(message = "কী খোদাই হবে তা লিখুন।")
   private String engraving;
 
-  @NotBlank(message = "খোদাইয়ের লেখাটি আবার লিখুন।")
+  // Accepted for older forms; the current page uses one engraving field and a live preview.
   private String confirmEngraving;
 
   private String font;

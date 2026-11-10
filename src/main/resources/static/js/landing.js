@@ -15,7 +15,7 @@
   document.querySelectorAll("[data-no-js-only]").forEach(function (el) { el.hidden = true; });
 
   // Live preview -----------------------------------------------------------------------------
-  var svg = $("lp-svg"), textEl = $("lp-text"), input = $("lp-input"), engraving = $("engraving");
+  var svg = $("lp-svg"), textEl = $("lp-text"), engraving = $("engraving"), input = $("lp-input");
   var state = { font: null, design: 0 };
   var designs = config.preview.designs;
 
@@ -27,7 +27,9 @@
 
   function fit() {
     if (!textEl) return;
-    var d = designs[state.design], size = d.fontSize;
+    var d = designs[state.design];
+    if (!d || !d.fontSize || !d.maxWidth) return;
+    var size = d.fontSize;
     textEl.setAttribute("font-size", size);
     var width = textEl.getComputedTextLength();
     if (width > d.maxWidth) {
@@ -54,31 +56,41 @@
   }
 
   function setText(value, from) {
-    if (textEl) textEl.textContent = value;
     if (input && from !== input) input.value = value;
     if (engraving && from !== engraving) engraving.value = value;
-    if ($("lp-count")) $("lp-count").textContent = bn(Array.from(value).length);
+    // Sample text belongs only in the illustration, never in the submitted order.
+    if (textEl) textEl.textContent = value || config.preview.defaultText || "আপনার নাম";
+    if ($("lp-example")) $("lp-example").hidden = !!value;
+    document.querySelectorAll("[data-character-count]").forEach(function (counter) { counter.textContent = bn(Array.from(value).length); });
+    document.querySelectorAll("[data-font-sample] > span").forEach(function (sample) {
+      sample.textContent = value || "আপনার নাম";
+    });
+    updateSelectionRecap();
     fitWhenReady();
   }
 
   function setFont(name) {
     state.font = name;
-    if (textEl) textEl.setAttribute("font-family", name);
-    document.querySelectorAll("[data-font]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b.dataset.font === name));
+    document.querySelectorAll("[data-font]").forEach(function (button) {
+      button.setAttribute("aria-pressed", String(button.dataset.font === name));
     });
     var radio = form && form.querySelector('input[name="font"][value="' + CSS.escape(name) + '"]');
     if (radio) radio.checked = true;
+    if (textEl && name) textEl.setAttribute("font-family", name);
     fitWhenReady();
   }
 
   function setDesign(index) {
     if (!designs[index]) return;
     state.design = index;
+    document.querySelectorAll("[data-design]").forEach(function (button) {
+      button.setAttribute("aria-pressed", String(+button.dataset.design === index));
+    });
+    var radio = form && form.querySelector('input[name="design"][value="' + index + '"]');
+    if (radio && radio.type === "radio") radio.checked = true;
     var d = designs[index];
     var box = "0 0 " + d.imageWidth + " " + d.imageHeight;
     if (svg) svg.setAttribute("viewBox", box);
-    if ($("lp-mini-svg")) $("lp-mini-svg").setAttribute("viewBox", box);
     var base = $("lp-base");
     if (d.baseImage) {
       if (!base && svg) {
@@ -99,46 +111,77 @@
         $("lp-shadow-drop").setAttribute("flood-color", d.shadow);
       } else { textEl.removeAttribute("filter"); }
     }
-    document.querySelectorAll("[data-design]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(+b.dataset.design === index));
-    });
-    var radio = form && form.querySelector('input[name="design"][value="' + index + '"]');
-    if (radio && radio.type === "radio") radio.checked = true;
     fitWhenReady();
   }
 
+  if (engraving) engraving.addEventListener("input", function () { setText(engraving.value, engraving); });
+  if (input) input.addEventListener("input", function () { setText(input.value, input); });
+  document.querySelectorAll("[data-font]").forEach(function (button) {
+    button.style.fontFamily = '"' + button.dataset.font + '", sans-serif';
+    button.textContent = "আপনার নাম";
+    button.addEventListener("click", function () { setFont(button.dataset.font); });
+  });
+  document.querySelectorAll("[data-design]").forEach(function (button) {
+    button.addEventListener("click", function () { setDesign(+button.dataset.design); });
+  });
+  document.querySelectorAll("[data-font-sample]").forEach(function (sample) {
+    if (config.preview.fonts.indexOf(sample.dataset.fontSample) !== -1)
+      sample.style.fontFamily = '"' + sample.dataset.fontSample + '", sans-serif';
+  });
   if (textEl) {
-    if (input) input.addEventListener("input", function () { setText(input.value, input); });
-    if (engraving) engraving.addEventListener("input", function () { setText(engraving.value, engraving); });
-    document.querySelectorAll("[data-font]").forEach(function (b) {
-      b.addEventListener("click", function () { setFont(b.dataset.font); });
-    });
-    document.querySelectorAll("[data-design]").forEach(function (b) {
-      b.addEventListener("click", function () { setDesign(+b.dataset.design); });
-    });
     state.font = checked("font") || config.preview.fonts[0];
-    var startDesign = checked("design");
-    setDesign(startDesign === null ? 0 : +startDesign);
+    setDesign(+(checked("design") || 0));
     setFont(state.font);
-    setText(engraving ? engraving.value : (input ? input.value : ""), null);
+  }
+  setText(engraving ? engraving.value : "");
+
+  function updateSelectionRecap() {
+    var recap = $("lp-selection-text");
+    if (!recap || !form) return;
+    var pack = config.packages[+checked("packageIndex")];
+    recap.textContent = [(engraving && engraving.value.trim()) || "লেখা যোগ করুন", pack && pack.name].filter(Boolean).join(" · ");
   }
 
-  // Each font is a separate download, so buttons show their style only when scrolled to.
-  var fontChips = document.querySelectorAll(".lp-font-chip");
-  if (fontChips.length && "IntersectionObserver" in window) {
-    var chipWatcher = new IntersectionObserver(function (entries, watcher) {
-      if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
-      watcher.disconnect();
-      fontChips.forEach(function (chip) {
-        chip.style.fontFamily = '"' + chip.dataset.font + '", sans-serif';
-        chip.textContent = (engraving && engraving.value.trim().slice(0, 12)) || "নমুনা";
+  // Choices made in the sales sections stay selected in the final order form.
+  function markChoices() {
+    document.querySelectorAll("[data-option]").forEach(function (button) {
+      button.setAttribute("aria-pressed", String(checked("opt" + button.dataset.option) === button.dataset.value));
+    });
+    document.querySelectorAll("[data-card]").forEach(function (card) {
+      var selected = card.dataset.card === checked("packageIndex");
+      card.classList.toggle("lp-card-chosen", selected);
+      var link = card.querySelector("[data-pick-package]");
+      if (link) {
+        link.textContent = selected ? "এটিই নেব ✓" : "এটিই নেব →";
+        if (selected) link.setAttribute("aria-current", "true"); else link.removeAttribute("aria-current");
+      }
+    });
+    updateSelectionRecap();
+  }
+  if (form) {
+    document.querySelectorAll("[data-option]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var radio = form.querySelector('input[name="opt' + button.dataset.option + '"][value="' + button.dataset.value + '"]');
+        if (radio) { radio.checked = true; updateTotal(); }
       });
     });
-    chipWatcher.observe(fontChips[0]);
+    document.querySelectorAll("[data-pick-package]").forEach(function (link) {
+      link.addEventListener("click", function () {
+        var radio = form.querySelector('input[name="packageIndex"][value="' + link.dataset.pickPackage + '"]');
+        if (radio) { radio.checked = true; updateTotal(); }
+      });
+    });
+    document.querySelectorAll('a[href="#order"]').forEach(function (link) {
+      link.addEventListener("click", function () {
+        var details = $("order-customization");
+        if (details) details.open = !input || !engraving.value.trim() || !!$("order-errors");
+      });
+    });
   }
 
   // Total ------------------------------------------------------------------------------------
   function updateTotal() {
+    markChoices();
     if (!form || !form.querySelector("[data-line=package]")) return;
     var pack = config.packages[+checked("packageIndex")];
     if (!pack) return;
@@ -153,19 +196,26 @@
     var area = checked("area");
     var delivery = area === "INSIDE" ? config.delivery.insideDhakaCharge
       : area === "OUTSIDE" ? config.delivery.outsideDhakaCharge : null;
-    var set = function (name, text) { form.querySelector('[data-line="' + name + '"]').textContent = text; };
+    var set = function (name, text) { var el = form.querySelector('[data-line="' + name + '"]'); if (el) el.textContent = text; };
     var waiting = "এলাকা বাছলে দেখাবে";
     set("package", money(pack.price));
-    document.querySelectorAll("[data-card]").forEach(function (card) {
-      card.classList.toggle("lp-card-chosen", card.dataset.card === checked("packageIndex"));
-    });
     set("extras", money(extras));
     set("delivery", delivery === null ? waiting : money(delivery));
     var total = delivery === null ? null : pack.price + extras + delivery;
-    set("total", total === null ? waiting : money(total));
+    set("total", total === null ? "—" : money(total));
     field("shownTotal").value = total === null ? "" : String(total);
     var advance = total === null ? config.advanceAmount : Math.min(config.advanceAmount, total);
-    set("advance", "মাত্র " + money(advance) + " অগ্রিম, বাকিটা হাতে পেয়ে দেবেন। ডিজাইন পছন্দ না হলে অগ্রিম ফেরত।");
+    document.querySelectorAll("[data-selected-price]").forEach(function (el) { el.textContent = money(pack.price + extras); });
+    document.querySelectorAll("[data-old-price]").forEach(function (el) {
+      el.hidden = !pack.oldPrice || extras !== 0;
+      el.textContent = pack.oldPrice ? money(pack.oldPrice) : "";
+    });
+    document.querySelectorAll("[data-package-name]").forEach(function (el) { el.textContent = pack.name; });
+    document.querySelectorAll("[data-payment-note]").forEach(function (el) {
+      el.textContent = advance > 0
+        ? "ডিজাইনে সম্মতির পরে " + money(advance) + " অগ্রিম। বাকি টাকা হাতে পেয়ে।"
+        : "কোনো অগ্রিম নেই। পুরো টাকা হাতে পেয়ে দেবেন।";
+    });
   }
 
   if (form) {
@@ -173,28 +223,13 @@
       if (event.target.name === "font") setFont(event.target.value);
       if (event.target.name === "design" && event.target.type === "radio") setDesign(+event.target.value);
       updateTotal();
-      markOptions();
     });
-    function markOptions() {
-      document.querySelectorAll("[data-option]").forEach(function (chip) {
-        chip.setAttribute("aria-pressed", String(checked("opt" + chip.dataset.option) === chip.dataset.value));
-      });
-    }
-    document.querySelectorAll("[data-option]").forEach(function (chip) {
-      chip.addEventListener("click", function () {
-        var radio = form.querySelector('input[name="opt' + chip.dataset.option + '"][value="' + chip.dataset.value + '"]');
-        if (radio) { radio.checked = true; updateTotal(); markOptions(); }
-      });
+    window.addEventListener("pageshow", function () {
+      updateTotal();
+      if (engraving) setText(engraving.value);
+      if (textEl) { setFont(checked("font") || config.preview.fonts[0]); setDesign(+(checked("design") || 0)); }
     });
-    markOptions();
-    window.addEventListener("pageshow", updateTotal);
     updateTotal();
-    document.querySelectorAll("[data-pick-package]").forEach(function (link) {
-      link.addEventListener("click", function () {
-        var radio = form.querySelector('input[name="packageIndex"][value="' + link.dataset.pickPackage + '"]');
-        if (radio) { radio.checked = true; updateTotal(); }
-      });
-    });
     var firstTouch = function () {
       document.dispatchEvent(new CustomEvent("lp:checkout"));
       form.removeEventListener("focusin", firstTouch);
@@ -202,13 +237,24 @@
     form.addEventListener("focusin", firstTouch);
   }
 
-  // Small preview that stays in sight while filling in the form ---------------------------------
-  var mini = $("lp-mini"), order = $("order");
-  if (mini && order && svg && "IntersectionObserver" in window) {
-    var inOrder = false, previewSeen = true;
-    var refresh = function () { mini.hidden = !inOrder || previewSeen; };
-    new IntersectionObserver(function (e) { inOrder = e[0].isIntersecting; refresh(); }).observe(order);
-    new IntersectionObserver(function (e) { previewSeen = e[0].isIntersecting; refresh(); }).observe(svg);
+  // Keep the mobile CTA while browsing, but never over the form or keyboard.
+  var sticky = $("lp-sticky"), order = $("order");
+  if (sticky && order) {
+    document.body.classList.add("has-order-bar");
+    var scheduled = false;
+    function refreshSticky() {
+      scheduled = false;
+      var editing = document.activeElement && document.activeElement.matches("input,textarea,select");
+      sticky.hidden = window.innerWidth > 760 || editing || order.getBoundingClientRect().top < window.innerHeight;
+    }
+    function scheduleSticky() {
+      if (!scheduled) { scheduled = true; window.requestAnimationFrame(refreshSticky); }
+    }
+    window.addEventListener("scroll", scheduleSticky, { passive: true });
+    window.addEventListener("resize", scheduleSticky);
+    document.addEventListener("focusin", scheduleSticky);
+    document.addEventListener("focusout", scheduleSticky);
+    refreshSticky();
   }
 
   // Share as a picture ---------------------------------------------------------------------------

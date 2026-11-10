@@ -17,12 +17,15 @@
 </th:block>
 <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
 <link rel="preload" as="font" type="font/woff2" crossorigin th:href="@{/fonts/NotoSansBengali.woff2}">
+<link rel="stylesheet" th:href="@{/css/app.css}">
 <link rel="stylesheet" th:href="@{/css/landing.css}">
+<link rel="stylesheet" th:href="@{/css/landing-sales.css}">
 </head>
-<body class="lp">
+<body class="lp lp-sales">
+<a class="skip-link" href="#main">মূল অংশে যান</a>
 <p class="lp-admin-note" th:if="${preview}">শুধু অ্যাডমিনের জন্য প্রিভিউ · Preview only, orders are off</p>
-<header class="lp-top"><div class="lp-wrap"><a class="lp-brand" th:href="@{/}">উপহার ল্যাব</a></div></header>
-<main>
+<header class="lp-top"><div class="lp-wrap lp-top-inner"><a class="lp-brand" th:href="@{/}">উপহার ল্যাব<span>আপনার নাম, যত্নে খোদাই করা</span></a><a class="lp-top-help" th:href="${whatsapp != null ? whatsapp : '/faq'}">প্রশ্ন আছে? কথা বলুন ↗</a></div></header>
+<main id="main">
 <div class="lp-wrap lp-plain-title" th:unless="${config.sections().hero()}"><h1 th:text="${product.details.title}"></h1></div>
 <th:block th:replace="~{landing/sections :: hook}"></th:block>
 <th:block th:replace="~{landing/sections :: preview}"></th:block>

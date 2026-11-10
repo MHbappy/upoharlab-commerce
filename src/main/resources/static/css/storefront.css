@@ -1,0 +1,78 @@
+/* Shared customer-facing presentation. Admin layouts keep their existing styles. */
+.shop-header{background:#faf9f6}
+.shop-header .header-inner{min-height:88px;padding-block:16px;gap:24px}
+.shop-header .brand .brand-wordmark{font-size:24px}
+.shop-header .brand-wordmark small{font-size:12px}
+.shop-header .header-inner nav{font-size:15px;gap:28px;align-items:center}
+.shop-header .header-inner nav a{display:inline-flex;align-items:center;min-height:44px}
+.shop-header .nav-track{border:1px solid #c5cfc4;border-radius:8px;padding-inline:14px}
+.home-main .shop-intro{display:grid;grid-template-columns:1.25fr 1fr;gap:64px;align-items:center;padding-block:40px 44px}
+.shop-intro h1{font-size:clamp(36px,4vw,56px);line-height:1.25;margin:0 0 20px;letter-spacing:-.025em}
+.shop-intro h1 em{font-style:normal;color:var(--accent)}
+.shop-intro .eyebrow{margin-bottom:14px}
+.shop-intro .lead{font-size:18px;line-height:1.85;max-width:520px;margin-bottom:22px}
+.shop-intro .button{margin:0}
+.intro-note{font-size:14px;color:var(--muted);margin:16px 0 0}
+.intro-photo{display:block;position:relative;padding:16px;background:#efece4;border:1px solid var(--border);border-radius:16px;text-decoration:none;color:var(--text)}
+.intro-photo img{width:100%;height:300px;object-fit:contain;border-radius:8px}
+.intro-photo>span{display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:600;padding:16px 4px 0}
+.home-main .catalog{padding-block:32px 56px;border-top:1px solid var(--border);scroll-margin-top:20px}
+.home-main .section-heading{margin-bottom:26px}
+.home-main .section-heading h2{font-size:32px}
+.home-main .section-heading .eyebrow{margin-bottom:8px}
+.home-main .section-caption{font-size:15px;line-height:1.8}
+.home-main .product-card{border-radius:14px;box-shadow:none;transition:border-color .18s,box-shadow .18s}
+.home-main .product-card:hover{border-color:#8ba294;box-shadow:0 8px 24px #233c330a}
+.home-main .product-card .card-image{border-radius:13px 13px 0 0;background:#f1eee8}
+.home-main .product-card .card-image img{aspect-ratio:4/3;padding:14px;object-fit:contain}
+.home-main .card-body{padding:22px}
+.home-main .product-card h3{font-size:22px;line-height:1.5}
+.home-main .card-description{font-size:15px;line-height:1.8}
+.home-main .card-footer{margin-top:20px}
+.home-main .card-price{font-size:25px}
+.home-main .card-action{font-size:14px}
+.home-main .process{border-radius:14px;box-shadow:none}
+.home-main .steps p{font-size:15px;line-height:1.8}
+.home-main .steps h3{font-size:18px}
+.home-main .step-number{font-size:16px}
+.home-main .home-faq{padding-block:56px}
+.home-main .contact-banner{border-radius:14px;margin-bottom:56px}
+.site-footer .footer-links a,.site-footer .footer-contact a{font-size:14px;min-height:44px;display:inline-flex;align-items:center}
+.site-footer .footer-bottom{font-size:12px}
+@media(max-width:760px){
+ .shop-header .header-inner{padding-block:14px;gap:10px}
+ .shop-header .header-inner nav{width:100%;justify-content:space-between;gap:12px;font-size:14px}
+ .shop-header .brand .brand-wordmark{font-size:23px}
+ .shop-header .brand-wordmark small{font-size:12px}
+ .shop-header .nav-track{padding-inline:12px}
+ .home-main .shop-intro{grid-template-columns:1fr;padding-block:28px;gap:0}
+ .shop-intro h1{font-size:38px;margin-bottom:14px;line-height:1.35}
+ .shop-intro .eyebrow{font-size:13px;margin-bottom:10px}
+ .shop-intro .lead{font-size:16px;margin-bottom:18px}
+ .intro-photo{display:none}
+ .intro-note{font-size:14px;line-height:1.7;margin-top:14px}
+ .home-main .catalog{padding-block:28px 36px}
+ .home-main .section-heading{display:block;margin-bottom:20px}
+ .home-main .section-heading h2{font-size:27px}
+ .home-main .section-caption{margin-top:8px;font-size:14px}
+ .home-main .product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+ .home-main .card-body{padding:18px}
+ .home-main .product-card h3{font-size:20px}
+ .home-main .home-faq{padding-block:36px}
+ .home-main .steps p{font-size:14px}
+ .home-main .steps h3{font-size:17px}
+}
+@media(max-width:520px){
+ .home-main .product-grid{grid-template-columns:1fr}
+ .home-main .product-card .card-image img{aspect-ratio:3/2;max-height:260px}
+ .home-main .card-footer{margin-top:14px}
+ .home-main .card-description{margin-bottom:8px}
+ .shop-header .brand span{display:block}
+ .shop-header .brand .brand-mark{display:grid}
+ .home-main .process{padding:24px 20px}
+ .home-main .steps{grid-template-columns:1fr;gap:20px}
+ .home-main .steps li{position:relative;padding-left:46px}
+ .home-main .step-number{position:absolute;left:0;top:0;width:32px;height:32px;margin:0}
+ .home-main .steps h3{margin-bottom:4px}
+}
+@media(prefers-reduced-motion:reduce){.home-main .product-card{transition:none}}

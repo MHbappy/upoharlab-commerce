@@ -151,7 +151,7 @@ class LandingAdminFlowTest {
     assertThat(products.get(id).photos()).as("landing images stay out of the gallery").hasSize(1);
     assertThat(products.get(id).landing().preview().designs().get(0).imageWidth()).isEqualTo(600);
     String html = new Browser(port).get("/order/admin-mug").body();
-    assertThat(html).contains("নিজের নামের মগ", "আমার মগ কনফার্ম করুন", "সবচেয়ে জনপ্রিয়");
+    assertThat(html).contains("নিজের নামের মগ", "অর্ডার পাঠান", "সবচেয়ে জনপ্রিয়");
   }
 
   @Test

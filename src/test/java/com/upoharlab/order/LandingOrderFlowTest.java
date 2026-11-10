@@ -103,6 +103,43 @@ class LandingOrderFlowTest {
     assertThat(html).contains("\\u003c/script\\u003e");
   }
 
+  @Test
+  void salesSectionsLeadToTheFinalOrderForm() throws Exception {
+    db.update("UPDATE product SET description_bn='পণ্যের বিবরণ', "
+        + "landing_config=jsonb_set(landing_config,'{socialProof}',"
+        + "'{\"reviews\":[{\"name\":\"ক্রেতা\",\"text\":\"পছন্দ হয়েছে\"}]}'::jsonb) WHERE id=?", productId);
+    String html = new Browser(port).get(PAGE).body();
+    int previous = -1;
+    for (String section : List.of("class=\"lp-hook\"", "id=\"preview\"", "id=\"why-title\"",
+        "id=\"info-title\"", "class=\"lp-section lp-proof\"", "id=\"packages\"", "id=\"order\"")) {
+      int position = html.indexOf(section);
+      assertThat(position).as(section + " follows the previous sales section").isGreaterThan(previous);
+      previous = position;
+    }
+    assertThat(html).contains("id=\"lp-input\"", "data-pick-package=\"1\"", "id=\"order-customization\" open");
+  }
+
+  @Test
+  void sampleTextIsNotSubmittedAsCustomerEngraving() throws Exception {
+    Browser browser = new Browser(port);
+    String html = browser.get(PAGE).body();
+    var engraving = Pattern.compile("<input[^>]*id=\"engraving\"[^>]*>").matcher(html);
+    assertThat(engraving.find()).isTrue();
+    assertThat(engraving.group()).contains("value=\"\"");
+    assertThat(html).contains("data-selected-price>৳৯৯৯", "class=\"lp-brand\" href=\"/\"", "data-payment-note");
+    Map<String, String> fields = valid(Integer.toString(TOTAL));
+    fields.put("engraving", "");
+    fields.put("confirmEngraving", "");
+    var missing = post(browser, fields, "submit");
+    assertThat(missing.statusCode()).isEqualTo(200);
+    assertThat(missing.body()).contains("কী খোদাই হবে তা লিখুন।");
+    assertThat(orderCount(db)).isZero();
+    fields.put("engraving", "নিজের লেখা");
+    fields.remove("confirmEngraving");
+    assertThat(post(browser, fields, "submit").statusCode()).isEqualTo(302);
+    assertThat(saved().get("engraving_text")).isEqualTo("নিজের লেখা");
+  }
+
   private void hide(String... sections) {
     String json = "{" + String.join(",", java.util.Arrays.stream(sections).map(n -> "\"" + n + "\":false").toList()) + "}";
     db.update(
@@ -239,7 +276,7 @@ class LandingOrderFlowTest {
     Map<String, String> f = valid(Integer.toString(TOTAL));
     f.put("confirmEngraving", "অন্য");
     var res = post(new Browser(port), f, "submit");
-    assertThat(res.body()).contains("দুটি লেখা মিলছে না", "value=\"অন্য\"");
+    assertThat(res.body()).contains("দুটি লেখা মিলছে না", "value=\"ক্ষেত্র\"");
     assertThat(orderCount(db)).isZero();
   }
 
@@ -291,7 +328,7 @@ class LandingOrderFlowTest {
     var res = post(b, valid(Integer.toString(TOTAL)), "submit");
     String location = res.headers().firstValue("location").orElseThrow();
     String html = b.get(location.substring(location.indexOf("/order/"))).body();
-    assertThat(html).contains(saved().get("code").toString(), "১ ঘণ্টার মধ্যে WhatsApp-এ ডিজাইন প্রিভিউ পাবেন", "ক্ষেত্র");
+    assertThat(html).contains(saved().get("code").toString(), "আমরা যোগাযোগ করে আপনার লেখা ও ডিজাইন নিশ্চিত করব।", "ক্ষেত্র");
   }
 
   @Test

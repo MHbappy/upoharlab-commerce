@@ -3,7 +3,7 @@
 <body>
 <section th:fragment="order" id="order" class="lp-section lp-order" th:if="${showOrder}" aria-labelledby="order-title">
 <div class="lp-wrap">
-<h2 id="order-title">অর্ডার করুন</h2>
+<div class="lp-section-heading"><div><p class="lp-kicker">পছন্দ হয়েছে? এবার আপনার জন্য বানাই</p><h2 id="order-title">অর্ডার করুন</h2></div><p class="lp-help">এখন কোনো টাকা দিতে হবে না।<br>অর্ডার পেলে আমরা যোগাযোগ করব।</p></div>
 <p id="order-message" class="lp-notice" role="status" tabindex="-1" th:if="${orderMessage}" th:text="${orderMessage}"></p>
 <p class="lp-notice" role="status" th:if="${!orderable and !preview}" th:text="${product.details.status == 'PAUSED' ? 'এই পণ্যের অর্ডার এখন বন্ধ আছে।' : (#strings.isEmpty(settings['pause_notice']) ? 'অনলাইনে অর্ডার নেওয়া এখন বন্ধ আছে।' : settings['pause_notice'])}"></p>
 <form th:if="${showForm}" id="lp-form" th:object="${orderForm}" th:action="@{/order/{s}(s=${product.details.slug})} + '#order'" method="post" novalidate>
@@ -18,35 +18,39 @@
 
 <div class="lp-order-grid">
 <div class="lp-order-main">
-<fieldset>
-<legend>কী বানাব</legend>
+<details class="lp-order-customization" id="order-customization" open><summary>আপনার বাছাই <span class="lp-recap-text" id="lp-selection-text">লেখা, প্যাকেজ ও অপশন মিলিয়ে নিন</span><span class="lp-edit-hint">দেখুন / পরিবর্তন করুন</span></summary>
+<fieldset class="lp-step">
+<legend class="lp-sr-only">প্যাকেজ ও লেখা</legend>
+<fieldset class="lp-field" id="packageIndex" th:if="${!config.packages().isEmpty()}">
+<legend class="lp-label">প্যাকেজ</legend>
+<div class="lp-package-choices">
+<label class="lp-choice lp-package" th:each="t, i : ${config.packages()}">
+<input type="radio" name="packageIndex" th:value="${i.index}" th:checked="${orderForm.packageIndex == '' + i.index}">
+<span class="lp-package-copy"><strong th:text="${t.name()}"></strong></span>
+<strong class="lp-package-price" th:if="${t.price() != null}" th:text="${@bn.money(t.price())}"></strong>
+</label>
+</div>
+<p class="lp-error" th:if="${#fields.hasErrors('packageIndex')}" th:errors="*{packageIndex}"></p>
+</fieldset>
 <div class="lp-field">
 <label for="engraving">কী খোদাই হবে</label>
-<input id="engraving" th:field="*{engraving}" type="text" autocomplete="off" th:errorclass="lp-invalid" th:attr="maxlength=${config.preview().maxChars()}">
+<input id="engraving" th:field="*{engraving}" type="text" autocomplete="off" placeholder="আপনার নাম বা পছন্দের লেখা" aria-describedby="engraving-help" th:errorclass="lp-invalid" th:attr="maxlength=${config.preview().maxChars()}">
+<div class="lp-input-help"><p class="lp-help" id="engraving-help">বানান মিলিয়ে লিখুন। বানানোর আগে আবার নিশ্চিত করব।</p><span class="lp-help" data-js-only hidden><span data-character-count>০</span> / <span th:text="${@bn.digits(config.preview().maxChars())}"></span></span></div>
 <p class="lp-error" th:if="${#fields.hasErrors('engraving')}" th:errors="*{engraving}"></p>
+<p class="lp-error" id="confirmEngraving" th:if="${#fields.hasErrors('confirmEngraving')}" th:errors="*{confirmEngraving}"></p>
 </div>
-<div class="lp-field">
-<label for="confirmEngraving">লেখাটি আবার লিখুন (বানান মেলাতে)</label>
-<input id="confirmEngraving" th:field="*{confirmEngraving}" type="text" autocomplete="off" th:errorclass="lp-invalid" th:attr="maxlength=${config.preview().maxChars()}">
-<p class="lp-error" th:if="${#fields.hasErrors('confirmEngraving')}" th:errors="*{confirmEngraving}"></p>
-</div>
-<div class="lp-field" id="packageIndex" th:if="${!config.packages().isEmpty()}">
-<p class="lp-label">প্যাকেজ</p>
-<label class="lp-choice" th:each="t, i : ${config.packages()}"><input type="radio" name="packageIndex" th:value="${i.index}" th:checked="${orderForm.packageIndex == '' + i.index}"> <span th:text="${t.name() + (t.price() != null ? ' — ' + @bn.money(t.price()) : '')}"></span></label>
-<p class="lp-error" th:if="${#fields.hasErrors('packageIndex')}" th:errors="*{packageIndex}"></p>
-</div>
-<div class="lp-field lp-compact" th:id="${optRow.first ? 'options' : null}" th:each="o, optRow : ${config.options()}">
+<div class="lp-field lp-compact" role="group" th:attr="aria-label=${o.label()}" th:id="${optRow.first ? 'options' : null}" th:each="o, optRow : ${config.options()}">
 <p class="lp-label" th:text="${o.label()}"></p>
 <label class="lp-choice" th:each="v, i : ${o.values()}"><input type="radio" th:name="${'opt' + optRow.index}" th:value="${i.index}" th:checked="${orderForm.options.size() > optRow.index and orderForm.options[optRow.index] == '' + i.index}"> <img th:if="${!#strings.isEmpty(v.image())}" th:src="@{/media/{n}(n=${'thumb-' + v.image()})}" alt="" loading="lazy" width="40" height="40"> <span th:text="${v.name() + (v.priceDelta() != null and v.priceDelta() > 0 ? ' (+' + @bn.money(v.priceDelta()) + ')' : '')}"></span></label>
 </div>
 <p class="lp-error" th:if="${#fields.hasErrors('options')}" th:errors="*{options}"></p>
 <input type="hidden" name="font" th:unless="${config.sections().preview()}" th:value="${config.preview().fonts()[0]}">
-<div class="lp-field lp-compact" id="font" th:if="${config.sections().preview() and !config.preview().fonts().isEmpty()}">
+<div class="lp-field lp-compact" role="group" aria-label="ফন্ট" id="font" th:if="${config.sections().preview() and !config.preview().fonts().isEmpty()}">
 <p class="lp-label">ফন্ট</p>
-<label class="lp-choice" th:each="f, i : ${config.preview().fonts()}"><input type="radio" name="font" th:value="${f}" th:checked="${orderForm.font == f}"> <span th:text="${'ফন্ট ' + @bn.digits(i.count)}"></span></label>
+<label class="lp-choice" th:each="f, i : ${config.preview().fonts()}"><input type="radio" name="font" th:value="${f}" th:checked="${orderForm.font == f}"> <span class="lp-font-sample" th:attr="data-font-sample=${f}" th:classappend="${'font-' + i.index}"><span>আপনার নাম</span><small th:text="${f}"></small></span></label>
 <p class="lp-error" th:if="${#fields.hasErrors('font')}" th:errors="*{font}"></p>
 </div>
-<div class="lp-field lp-compact" id="design" th:if="${config.sections().preview() and config.preview().designs().size() > 1}">
+<div class="lp-field lp-compact" role="group" aria-label="ডিজাইন" id="design" th:if="${config.sections().preview() and config.preview().designs().size() > 1}">
 <p class="lp-label">ডিজাইন</p>
 <label class="lp-choice" th:each="d, i : ${config.preview().designs()}"><input type="radio" name="design" th:value="${i.index}" th:checked="${orderForm.design == '' + i.index}"> <span th:text="${d.name()}"></span></label>
 <p class="lp-error" th:if="${#fields.hasErrors('design')}" th:errors="*{design}"></p>
@@ -57,14 +61,9 @@
 <label class="lp-choice" th:each="u, i : ${config.upsells()}"><input type="checkbox" name="upsells" th:value="${i.index}" th:checked="${orderForm.upsells != null and orderForm.upsells.contains('' + i.index)}"> <span th:text="${u.label() + (u.price() != null ? ' (+' + @bn.money(u.price()) + ')' : '')}"></span></label>
 <p class="lp-error" th:if="${#fields.hasErrors('upsells')}" th:errors="*{upsells}"></p>
 </div>
-<div class="lp-field">
-<label for="neededBy">কবের মধ্যে লাগবে? (ঐচ্ছিক)</label>
-<input id="neededBy" th:field="*{neededBy}" type="date" th:errorclass="lp-invalid">
-<p class="lp-error" th:if="${#fields.hasErrors('neededBy')}" th:errors="*{neededBy}"></p>
-</div>
 </fieldset>
-
-<fieldset>
+</details>
+<fieldset class="lp-step">
 <legend>আপনার তথ্য</legend>
 <div class="lp-field">
 <label for="name">আপনার নাম</label>
@@ -76,7 +75,7 @@
 <input id="phone" th:field="*{phone}" type="tel" autocomplete="tel" inputmode="tel" placeholder="01XXXXXXXXX" th:errorclass="lp-invalid">
 <p class="lp-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></p>
 </div>
-<div class="lp-field lp-compact" id="area">
+<div class="lp-field lp-compact" role="group" aria-label="ডেলিভারি কোথায়" id="area">
 <p class="lp-label">ডেলিভারি কোথায়</p>
 <th:block th:with="d=${config.delivery()}">
 <label class="lp-choice"><input type="radio" name="area" value="INSIDE" th:checked="${orderForm.area == 'INSIDE'}"> <span th:text="${'ঢাকার ভেতরে' + (d.insideDhakaCharge() != null ? ' (' + @bn.money(d.insideDhakaCharge()) + ')' : '')}"></span></label>
@@ -89,30 +88,41 @@
 <textarea id="address" th:field="*{address}" rows="3" autocomplete="street-address" th:errorclass="lp-invalid"></textarea>
 <p class="lp-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></p>
 </div>
+<details class="lp-extra" th:open="${#fields.hasErrors('neededBy') or #fields.hasErrors('note') or !#strings.isEmpty(orderForm.neededBy) or !#strings.isEmpty(orderForm.note)}"><summary>সময় বা বিশেষ কোনো অনুরোধ? <span class="lp-optional">(ঐচ্ছিক)</span></summary>
+<div class="lp-field">
+<label for="neededBy">কবের মধ্যে লাগবে? (ঐচ্ছিক)</label>
+<input id="neededBy" th:field="*{neededBy}" type="date" th:errorclass="lp-invalid">
+<p class="lp-error" th:if="${#fields.hasErrors('neededBy')}" th:errors="*{neededBy}"></p>
+</div>
 <div class="lp-field">
 <label for="note">কিছু জানাতে চান? (ঐচ্ছিক)</label>
 <textarea id="note" th:field="*{note}" rows="2" th:errorclass="lp-invalid"></textarea>
 <p class="lp-error" th:if="${#fields.hasErrors('note')}" th:errors="*{note}"></p>
 </div>
+</details>
 </fieldset>
 
 </div>
 <aside class="lp-order-side">
+<h3>আপনার অর্ডারের হিসাব</h3>
 <section class="lp-summary" aria-live="polite" aria-label="মোট হিসাব" th:if="${quote != null}">
 <dl>
-<dt>প্যাকেজ</dt><dd data-line="package" th:text="${@bn.money(quote.packagePrice())}"></dd>
+<dt>প্যাকেজ <span class="lp-summary-package" data-package-name th:text="${selectedPackageName}"></span></dt><dd data-line="package" th:text="${@bn.money(quote.packagePrice())}"></dd>
 <dt>অতিরিক্ত</dt><dd data-line="extras" th:text="${@bn.money(quote.extras())}"></dd>
 <dt>ডেলিভারি</dt><dd data-line="delivery" th:text="${quote.delivery() != null ? @bn.money(quote.delivery()) : 'এলাকা বাছলে দেখাবে'}"></dd>
-<dt class="lp-total">মোট</dt><dd class="lp-total" data-line="total" th:text="${quote.total() != null ? @bn.money(quote.total()) : 'এলাকা বাছলে দেখাবে'}"></dd>
+<dt class="lp-total">মোট</dt><dd class="lp-total" data-line="total" th:text="${quote.total() != null ? @bn.money(quote.total()) : '—'}"></dd>
 </dl>
-<p class="lp-advance" th:text="${'মাত্র ' + @bn.money(quote.advance() != null ? quote.advance() : config.advanceAmount()) + ' অগ্রিম, বাকিটা হাতে পেয়ে দেবেন। ডিজাইন পছন্দ না হলে অগ্রিম ফেরত।'}" data-line="advance"></p>
+<p class="lp-payment" data-payment-note th:text="${config.advanceAmount() > 0 ? 'ডিজাইনে সম্মতির পরে ' + @bn.money(quote.advance() != null ? quote.advance() : config.advanceAmount()) + ' অগ্রিম। বাকি টাকা হাতে পেয়ে।' : 'কোনো অগ্রিম নেই। পুরো টাকা হাতে পেয়ে দেবেন।'}"></p>
+<p class="lp-help">অর্ডার পাঠানোর সময় কোনো টাকা দিতে হবে না।</p>
 </section>
 
 <div class="lp-actions" th:if="${orderable}">
 <p class="lp-notice" th:if="${reviewNeeded}">মোট হিসাব মিলিয়ে দেখুন, তারপর আবার চাপুন।</p>
 <button class="lp-link" type="submit" name="action" value="quote" data-no-js-only>হিসাব আপডেট করুন</button>
-<button class="lp-btn lp-submit" type="submit" name="action" value="submit" th:text="${'আমার ' + product.details.title + ' কনফার্ম করুন'}"></button>
+<button class="lp-btn lp-submit" type="submit" name="action" value="submit">অর্ডার পাঠান <span aria-hidden="true">→</span></button>
 </div>
+<p class="lp-help lp-submit-help">আমরা যোগাযোগ করে লেখা ও ডিজাইন নিশ্চিত করব।</p>
+<a class="lp-link" th:if="${whatsapp != null}" th:href="${whatsapp}">প্রশ্ন আছে? WhatsApp-এ কথা বলুন ↗</a>
 </aside>
 </div>
 </form>
