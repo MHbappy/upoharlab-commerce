@@ -5,7 +5,7 @@
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
 <main id="main" class="container home-main">
-  <section class="shop-intro" aria-labelledby="welcome-title">
+  <section class="shop-intro" th:classappend="${featured == null ? 'no-feature' : ''}" aria-labelledby="welcome-title">
     <div>
       <p class="eyebrow" th:text="#{home.eyebrow}"></p>
       <h1 id="welcome-title"><th:block th:text="#{home.title.line1}"></th:block><br><em th:text="#{home.title.line2}"></em></h1>
@@ -13,9 +13,21 @@
       <a class="button" href="#products"><th:block th:text="#{home.cta}"></th:block> <span aria-hidden="true">↓</span></a>
       <p class="intro-note" th:text="#{home.cta.note}"></p>
     </div>
-    <a class="intro-photo" th:if="${!products.isEmpty() and products[0].cardImage() != null}" th:href="@{${products[0].orderPath()}}">
-      <img fetchpriority="high" width="600" height="400" th:src="@{/media/{name}(name=${products[0].cardImage()})}" th:alt="${products[0].cardImageAlt()}">
-      <span><span th:text="${products[0].details.title}"></span><span aria-hidden="true">↗</span></span>
+    <a class="hero-feature" th:if="${featured != null}" th:with="p=${featured},a=${arrival[featured.id()]}" th:href="@{${p.orderPath()}}">
+      <span class="hero-feature-photo">
+        <img th:src="@{/media/{n}(n=${p.cardImage()})}" th:alt="${p.cardImageAlt()}" width="800" height="600" fetchpriority="high">
+        <span class="hero-feature-label" th:text="#{home.featured.label}"></span>
+        <span class="card-save" th:if="${p.cardDiscountPercent() != null}" th:text="#{home.card.discount(${@bn.digits(p.cardDiscountPercent())})}"></span>
+      </span>
+      <span class="hero-feature-body">
+        <span class="hero-feature-name" th:text="${p.details.title}"></span>
+        <span class="hero-feature-desc" th:if="${!#strings.isEmpty(p.details.shortDescription)}" th:text="${p.details.shortDescription}"></span>
+        <span class="card-meta" th:if="${a != null}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h12v10H2zM14 10h4l4 3v3h-8M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg><th:block th:text="${a.single() ? #messages.msg('home.card.arrival.one', @bn.digits(a.min())) : #messages.msg('home.card.arrival', @bn.digits(a.min()), @bn.digits(a.max()))}"></th:block></span>
+        <span class="hero-feature-buy">
+          <span class="card-price-group" th:classappend="${p.cardOldPrice() != null ? 'has-offer' : ''}"><span class="card-price" th:text="${@bn.money(p.details.price)}"></span> <s class="card-old-price" th:if="${p.cardOldPrice() != null}" th:text="${@bn.money(p.cardOldPrice())}"></s></span>
+          <span class="card-action" aria-hidden="true" th:text="#{home.card.action}"></span>
+        </span>
+      </span>
     </a>
   </section>
   <section id="products" class="catalog section-space" aria-labelledby="catalog-title">

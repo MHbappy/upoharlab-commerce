@@ -13,9 +13,6 @@
 .shop-intro .lead{font-size:18px;line-height:1.85;max-width:520px;margin-bottom:22px}
 .shop-intro .button{margin:0}
 .intro-note{font-size:14px;color:var(--muted);margin:16px 0 0}
-.intro-photo{display:block;position:relative;padding:16px;background:#efece4;border:1px solid var(--border);border-radius:16px;text-decoration:none;color:var(--text)}
-.intro-photo img{width:100%;height:300px;object-fit:contain;border-radius:8px}
-.intro-photo>span{display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:600;padding:16px 4px 0}
 .home-main .catalog{padding-block:32px 56px;border-top:1px solid var(--border);scroll-margin-top:20px}
 .home-main .section-heading{margin-bottom:26px}
 .home-main .section-heading h2{font-size:32px}
@@ -29,7 +26,6 @@
  .shop-intro h1{font-size:38px;margin-bottom:14px;line-height:1.35}
  .shop-intro .eyebrow{font-size:13px;margin-bottom:10px}
  .shop-intro .lead{font-size:16px;margin-bottom:18px}
- .intro-photo{display:none}
  .intro-note{font-size:14px;line-height:1.7;margin-top:14px}
  .home-main .catalog{padding-block:28px 36px}
  .home-main .section-heading{display:block;margin-bottom:20px}
@@ -197,3 +193,33 @@ nav.shop-footer-col{display:block}
  .shop-footer-bottom{flex-direction:column}
 }
 @media(prefers-reduced-motion:reduce){.footer-whatsapp{transition:none}}
+
+/*
+ * Featured product in the hero: the owner's pick, shown large with price, offer and an order
+ * button. Price, offer tag and button reuse the product card styles so they match.
+ */
+.home-main .hero-feature{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:18px;background:var(--surface);overflow:hidden;color:var(--text);text-decoration:none;box-shadow:0 14px 36px #233c3312;transition:transform .2s,box-shadow .2s}
+.home-main .hero-feature:hover{transform:translateY(-3px);box-shadow:0 18px 40px #233c331c}
+.home-main .hero-feature-photo{position:relative;display:block;aspect-ratio:4/3;background:#f1eee8;overflow:hidden}
+.home-main .hero-feature-photo img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.home-main .hero-feature:hover .hero-feature-photo img{transform:scale(1.04)}
+.home-main .hero-feature-label{position:absolute;top:12px;right:12px;padding:3px 12px;border-radius:999px;background:#fffffff0;color:var(--primary);font-size:12px;font-weight:700;line-height:1.6;box-shadow:0 2px 8px #0000001a}
+.home-main .hero-feature-body{display:flex;flex-direction:column;padding:18px 20px 20px}
+.home-main .hero-feature-name{font-size:21px;font-weight:700;line-height:1.45;margin-bottom:4px}
+.home-main .hero-feature-desc{font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.home-main .hero-feature .card-meta{margin-bottom:12px}
+.home-main .hero-feature-buy{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.home-main .hero-feature-buy .card-price-group{margin:0}
+.home-main .hero-feature-buy .card-price{font-size:26px}
+.home-main .hero-feature-buy .card-action{flex:none;padding:0 26px;min-height:44px}
+.home-main .hero-feature:hover .card-action{background:var(--primary-dark)}
+/* No product photo to feature: the intro text takes the full width. */
+.home-main .shop-intro.no-feature{grid-template-columns:1fr}
+@media(max-width:760px){
+ .home-main .hero-feature{margin-top:24px}
+ .home-main .hero-feature-body{padding:14px 16px 16px}
+ .home-main .hero-feature-name{font-size:18px}
+ .home-main .hero-feature-buy .card-price{font-size:22px}
+ .home-main .hero-feature-buy .card-action{padding:0 18px;min-height:42px}
+}
+@media(prefers-reduced-motion:reduce){.home-main .hero-feature,.home-main .hero-feature-photo img{transition:none}.home-main .hero-feature:hover{transform:none}}

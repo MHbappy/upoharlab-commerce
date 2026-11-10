@@ -32,6 +32,11 @@ public class HomeController {
     list.forEach(p -> arrival.put(p.id(),
         ArrivalEstimate.of(p.details().getMakingDaysMin(), p.details().getMakingDaysMax())));
     m.addAttribute("products", list);
+    // The owner's featured product, shown large in the hero. Until one is ticked, the first
+    // product with a photo stands in, so the hero is never empty. Null without any photo.
+    var withPhoto = list.stream().filter(p -> p.cardImage() != null).toList();
+    m.addAttribute("featured", withPhoto.stream().filter(p -> p.details().getFeatured()).findFirst()
+        .orElse(withPhoto.isEmpty() ? null : withPhoto.get(0)));
     m.addAttribute("arrival", arrival);
     m.addAttribute("settings", values);
     m.addAttribute("whatsapp", settings.whatsapp(settings.all()));

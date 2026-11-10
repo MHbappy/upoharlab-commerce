@@ -123,6 +123,7 @@ public class ProductStore {
     f.setMakingDaysMin((Integer) r.getObject("making_days_min"));
     f.setMakingDaysMax((Integer) r.getObject("making_days_max"));
     f.setIndoorOnly(r.getBoolean("indoor_only"));
+    f.setFeatured(r.getBoolean("featured"));
     f.setStatus(r.getString("status"));
     f.setSortOrder(r.getInt("sort_order"));
     return new Row(r.getLong("id"), f, landing(r.getString("landing_config")));
@@ -230,12 +231,15 @@ public class ProductStore {
     }
     if (errors.hasErrors()) return id;
     var params = new BeanPropertySqlParameterSource(f);
+    // Featuring this product un-features any other, so the home page shows exactly one.
+    if (f.getFeatured())
+      db.update("UPDATE product SET featured=false WHERE featured AND id IS DISTINCT FROM ?::bigint", id);
     if (id == null)
       return named.queryForObject(
           "INSERT INTO"
-              + " product(title_bn,slug,short_description_bn,description_bn,includes_bn,material_bn,size_bn,engraving_help_bn,care_bn,quantity_help_bn,price,making_days_min,making_days_max,indoor_only,status,sort_order)"
+              + " product(title_bn,slug,short_description_bn,description_bn,includes_bn,material_bn,size_bn,engraving_help_bn,care_bn,quantity_help_bn,price,making_days_min,making_days_max,indoor_only,featured,status,sort_order)"
               + " VALUES"
-              + " (:title,:slug,:shortDescription,:description,:includes,:material,:size,:engravingHelp,:care,:quantityHelp,:price,:makingDaysMin,:makingDaysMax,:indoorOnly,:status,:sortOrder)"
+              + " (:title,:slug,:shortDescription,:description,:includes,:material,:size,:engravingHelp,:care,:quantityHelp,:price,:makingDaysMin,:makingDaysMax,:indoorOnly,:featured,:status,:sortOrder)"
               + " RETURNING id",
           params,
           Long.class);
@@ -244,7 +248,7 @@ public class ProductStore {
     map.addValue("id", id);
     named.update(
         "UPDATE product SET"
-            + " title_bn=:title,slug=:slug,short_description_bn=:shortDescription,description_bn=:description,includes_bn=:includes,material_bn=:material,size_bn=:size,engraving_help_bn=:engravingHelp,care_bn=:care,quantity_help_bn=:quantityHelp,price=:price,making_days_min=:makingDaysMin,making_days_max=:makingDaysMax,indoor_only=:indoorOnly,status=:status,sort_order=:sortOrder,updated_at=now()"
+            + " title_bn=:title,slug=:slug,short_description_bn=:shortDescription,description_bn=:description,includes_bn=:includes,material_bn=:material,size_bn=:size,engraving_help_bn=:engravingHelp,care_bn=:care,quantity_help_bn=:quantityHelp,price=:price,making_days_min=:makingDaysMin,making_days_max=:makingDaysMax,indoor_only=:indoorOnly,featured=:featured,status=:status,sort_order=:sortOrder,updated_at=now()"
             + " WHERE id=:id",
         map);
     return id;

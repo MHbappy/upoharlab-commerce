@@ -49,6 +49,9 @@ public class ProductForm {
 
   private boolean indoorOnly;
 
+  /** Shown at the top of the home page; only one product at a time. */
+  private boolean featured;
+
   @jakarta.validation.constraints.Pattern(regexp = "DRAFT|ACTIVE|PAUSED")
   private String status = "DRAFT";
 
@@ -157,6 +160,14 @@ public class ProductForm {
 
   public void setMakingDaysMax(Integer value) {
     this.makingDaysMax = value;
+  }
+
+  public boolean getFeatured() {
+    return featured;
+  }
+
+  public void setFeatured(boolean value) {
+    this.featured = value;
   }
 
   public boolean getIndoorOnly() {

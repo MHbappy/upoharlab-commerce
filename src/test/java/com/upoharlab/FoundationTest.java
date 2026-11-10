@@ -197,6 +197,41 @@ class FoundationTest {
   }
 
   @Test
+  void onlyOneProductIsFeaturedAndTheHomePageShowsItWhenPublishedWithAPhoto() throws Exception {
+    var first = draft();
+    first.setFeatured(true);
+    long firstId = products.save(null, first, new org.springframework.validation.BeanPropertyBindingResult(first, "f"));
+    var second = draft();
+    second.setSlug("phase2-second");
+    second.setTitle("বিশেষ পণ্য");
+    second.setFeatured(true);
+    long secondId = products.save(null, second, new org.springframework.validation.BeanPropertyBindingResult(second, "f"));
+    assertThat(products.get(firstId).details().getFeatured()).as("featuring another un-features this").isFalse();
+    assertThat(products.get(secondId).details().getFeatured()).isTrue();
+
+    var home = HttpClient.newHttpClient().send(
+        HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/")).build(),
+        HttpResponse.BodyHandlers.ofString());
+    assertThat(home.body()).as("a draft is never shown").doesNotContain("বিশেষ পণ্য");
+
+    images.upload(secondId, new org.springframework.mock.web.MockMultipartFile("photo", "a.png", "image/png", png()), "ছবি");
+    jdbc.update("UPDATE product SET status='ACTIVE', making_days_min=1, making_days_max=2,"
+        + " landing_config='{\"enabled\":true}'::jsonb WHERE id=?", secondId);
+    home = HttpClient.newHttpClient().send(
+        HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/")).build(),
+        HttpResponse.BodyHandlers.ofString());
+    assertThat(home.body()).contains("class=\"hero-feature\"", "বিশেষ পণ্য", "href=\"/order/phase2-second\"",
+        text("home.featured.label"));
+
+    jdbc.update("UPDATE product SET featured=false WHERE id=?", secondId);
+    home = HttpClient.newHttpClient().send(
+        HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/")).build(),
+        HttpResponse.BodyHandlers.ofString());
+    assertThat(home.body()).as("with none ticked, the first product with a photo stands in")
+        .contains("class=\"hero-feature\"", "বিশেষ পণ্য").doesNotContain("no-feature");
+  }
+
+  @Test
   void unknownProductIsNotFoundInsteadOfAServerError() {
     var f = draft();
     assertThatThrownBy(

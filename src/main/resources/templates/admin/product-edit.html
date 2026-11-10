@@ -161,6 +161,8 @@
 <option value="DRAFT">Save privately — finish later</option>
 <option value="PAUSED" th:if="${productId != null}">Paused — visible, ordering stopped</option>
 </select>
+<label class="check-row feature-row" for="featured"><input type="checkbox" id="featured" th:field="*{featured}"> Feature on the home page</label>
+<p class="field-help">Shows this product large at the top of the home page, with its price, offer and an order button. Only one product can be featured; ticking this one un-features the other. It appears only while the product is published and has a photo. With none ticked, the first product in display order is shown.</p>
 <p class="section-count" data-section-count aria-live="polite"></p>
 <div class="product-submit"><button class="button" th:text="${productId == null ? 'Add product' : 'Save product'}">Add product</button><a th:href="@{/admin/products}">Cancel</a></div>
 </div>
