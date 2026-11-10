@@ -65,9 +65,15 @@
     <div class="faq-cards">
       <details class="faq-card" th:each="n : ${ {1, 2, 3, 4, 5, 6} }"><summary th:text="${#messages.msg('home.faq' + n + '.q')}"></summary><p th:text="${#messages.msg('home.faq' + n + '.a')}"></p></details>
     </div>
-    <p class="faq-more"><a th:href="@{/faq}" th:text="#{home.faq.all}"></a></p>
+    <div class="faq-help">
+      <div class="faq-help-copy"><h3 th:text="#{home.contact.title}"></h3><p th:text="#{home.contact.text}"></p></div>
+      <div class="faq-help-actions">
+        <a class="faq-help-main" th:if="${whatsapp != null}" th:href="${whatsapp}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 18.8L4 20z"/></svg><th:block th:text="#{home.contact.whatsapp}"></th:block></a>
+        <a class="faq-help-main" th:if="${whatsapp == null}" th:href="@{/bulk}" th:text="#{home.contact.bulk}"></a>
+        <a class="faq-help-all" th:href="@{/faq}" th:text="#{home.faq.all}"></a>
+      </div>
+    </div>
   </section>
-  <section class="contact-banner"><div><p class="eyebrow" th:text="#{home.contact.eyebrow}"></p><h2 th:text="#{home.contact.title}"></h2><p th:text="#{home.contact.text}"></p></div><a class="button button-light" th:if="${whatsapp != null}" th:href="${whatsapp}" th:text="#{home.contact.whatsapp}"></a><a class="button button-light" th:if="${whatsapp == null}" th:href="@{/bulk}" th:text="#{home.contact.bulk}"></a></section>
 </main>
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>

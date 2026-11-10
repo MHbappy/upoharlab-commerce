@@ -24,7 +24,7 @@
 <body class="lp lp-sales">
 <a class="skip-link" href="#main" th:text="#{site.skip}"></a>
 <p class="lp-admin-note" th:if="${preview}">শুধু অ্যাডমিনের জন্য প্রিভিউ · Preview only, orders are off</p>
-<header class="lp-top"><div class="lp-wrap lp-top-inner"><a class="lp-brand" th:href="@{/}"><th:block th:text="#{site.name}"></th:block><span th:text="#{site.tagline}"></span></a><a class="lp-top-help" th:href="${whatsapp != null ? whatsapp : '/faq'}" th:text="#{product.top.help}"></a></div></header>
+<header class="lp-top"><div class="lp-wrap lp-top-inner"><a class="lp-brand" th:href="@{/}"><span class="lp-brand-mark" aria-hidden="true" th:text="#{site.mark}"></span><span class="lp-brand-text"><th:block th:text="#{site.name}"></th:block><span th:text="#{site.tagline}"></span></span></a><a class="lp-top-help" th:href="${whatsapp != null ? whatsapp : '/faq'}" th:text="#{product.top.help}"></a></div></header>
 <main id="main">
 <div class="lp-wrap lp-plain-title" th:unless="${config.sections().hero()}"><h1 th:text="${product.details.title}"></h1></div>
 <th:block th:replace="~{landing/sections :: hook}"></th:block>

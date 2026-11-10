@@ -3,8 +3,10 @@
 .lp-sales .lp-wrap{width:min(1100px,calc(100% - 64px))}
 .lp-top{background:var(--surface);border-bottom:1px solid var(--border)}
 .lp-top-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-block:20px}
-.lp-brand{font-size:25px;font-weight:750;line-height:1.5;color:var(--text);text-decoration:none}
-.lp-brand span{display:block;font-size:13px;font-weight:400;color:var(--muted)}
+.lp-brand{display:inline-flex;align-items:center;gap:12px;font-size:25px;font-weight:750;line-height:1.35;color:var(--text);text-decoration:none}
+/* Same logo mark as the shop pages, so the brand looks the same everywhere. */
+.lp-brand-mark{display:grid;place-items:center;flex:none;width:42px;height:46px;border:1px solid currentColor;border-radius:14px 14px 14px 3px;font-size:29px;font-weight:600;line-height:1}
+.lp-brand-text>span{display:block;font-size:13px;font-weight:400;color:var(--muted)}
 .lp-top-help{font-size:14px;min-height:44px;display:inline-flex;align-items:center;text-decoration:none}
 .lp-sales .lp-hook{padding:48px 0 56px}
 .lp-sales .lp-hook-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px}
@@ -131,7 +133,7 @@
  .lp-sales.has-order-bar{padding-bottom:84px}
  .lp-sales .lp-wrap{width:calc(100% - 36px)}
  .lp-top-inner{padding-block:14px;gap:12px}
- .lp-brand{font-size:22px}.lp-brand span{font-size:11px}.lp-top-help{font-size:12px;max-width:130px;text-align:right}
+ .lp-brand{font-size:21px;gap:10px}.lp-brand-text>span{font-size:11px}.lp-brand-mark{width:36px;height:40px;font-size:24px}.lp-top-help{font-size:12px;max-width:130px;text-align:right}
  .lp-sales .lp-hook{padding:24px 0 32px}
  .lp-sales .lp-hook-grid{grid-template-columns:1fr;gap:26px}
  .lp-sales .lp-hero{border-radius:12px;aspect-ratio:4/3}

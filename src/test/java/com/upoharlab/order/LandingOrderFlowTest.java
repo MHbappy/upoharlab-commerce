@@ -455,7 +455,7 @@ class LandingOrderFlowTest {
 
     String location = res.headers().firstValue("location").orElseThrow();
     String thanks = b.get(location.substring(location.indexOf("/order/"))).body();
-    assertThat(thanks).contains(text("thanks.next.plain")).doesNotContain("<svg", text("thanks.next"));
+    assertThat(thanks).contains(text("thanks.next.plain")).doesNotContain("class=\"lp-stage\"", text("thanks.next"));
     assertThat(tracking.find(code, "01712345678")).get().extracting(TrackingService.Status::needsDesign).isEqualTo(false);
 
     assertThatThrownBy(() -> admin.changeStatus(code, "DESIGN_SENT", null, null, null, "test-owner"))

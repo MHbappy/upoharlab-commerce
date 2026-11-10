@@ -1,28 +1,37 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
 <body>
-<footer th:fragment="footer" class="site-footer" th:with="contact=${@settingsService.publicContact()}">
-<div class="container footer-inner">
-<div>
-<p class="footer-brand"><th:block th:text="#{site.name}"></th:block><span aria-hidden="true"> ✳</span></p>
+<footer th:fragment="footer" class="site-footer shop-footer" th:with="contact=${@settingsService.publicContact()}">
+<div class="container shop-footer-grid">
+<div class="shop-footer-brand">
+<a class="footer-logo" th:href="@{/}"><span class="brand-mark" aria-hidden="true" th:text="#{site.mark}"></span><span class="footer-logo-text"><th:block th:text="#{site.name}"></th:block><small th:text="#{site.tagline}"></small></span></a>
 <p th:text="#{footer.line}"></p>
-<p class="footer-contact" th:if="${!contact.isEmpty()}">
-<a th:if="${contact['whatsappLink'] != null}" th:href="${contact['whatsappLink']}">WhatsApp</a>
-<a th:if="${contact['phone'] != null}" th:href="${'tel:' + contact['phone']}" th:text="${contact['phone']}"></a>
-<a th:if="${contact['email'] != null}" th:href="${'mailto:' + contact['email']}" th:text="${contact['email']}"></a>
-</p>
 </div>
-<nav th:attr="aria-label=#{footer.nav.label}" class="footer-links">
-<a th:href="@{/track}" th:text="#{footer.track}"></a>
-<a th:href="@{/faq}" th:text="#{footer.faq}"></a>
-<a th:href="@{/bulk}" th:text="#{footer.bulk}"></a>
-<a th:href="@{/about}" th:text="#{footer.about}"></a>
-<a th:href="@{/policies/delivery}" th:text="#{footer.delivery}"></a>
-<a th:href="@{/policies/returns}" th:text="#{footer.returns}"></a>
-<a th:href="@{/policies/privacy}" th:text="#{footer.privacy}"></a>
+<nav class="shop-footer-col" th:aria-label="#{footer.help.title}">
+<p class="shop-footer-title" th:text="#{footer.help.title}"></p>
+<ul>
+<li><a th:href="@{/track}" th:text="#{footer.track}"></a></li>
+<li><a th:href="@{/faq}" th:text="#{footer.faq}"></a></li>
+<li><a th:href="@{/bulk}" th:text="#{footer.bulk}"></a></li>
+<li><a th:href="@{/about}" th:text="#{footer.about}"></a></li>
+</ul>
 </nav>
+<nav class="shop-footer-col" th:aria-label="#{footer.policy.title}">
+<p class="shop-footer-title" th:text="#{footer.policy.title}"></p>
+<ul>
+<li><a th:href="@{/policies/delivery}" th:text="#{footer.delivery}"></a></li>
+<li><a th:href="@{/policies/returns}" th:text="#{footer.returns}"></a></li>
+<li><a th:href="@{/policies/privacy}" th:text="#{footer.privacy}"></a></li>
+</ul>
+</nav>
+<div class="shop-footer-col shop-footer-contact" th:if="${!contact.isEmpty()}">
+<p class="shop-footer-title" th:text="#{footer.contact.title}"></p>
+<a class="footer-whatsapp" th:if="${contact['whatsappLink'] != null}" th:href="${contact['whatsappLink']}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 18.8L4 20z"/></svg><th:block th:text="#{footer.whatsapp}"></th:block></a>
+<a class="footer-contact-line" th:if="${contact['phone'] != null}" th:href="${'tel:' + contact['phone']}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span th:text="${@bn.digits(contact['phone'])}"></span></a>
+<a class="footer-contact-line" th:if="${contact['email'] != null}" th:href="${'mailto:' + contact['email']}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM3 7l9 6 9-6"/></svg><span th:text="${contact['email']}"></span></a>
 </div>
-<div class="container footer-bottom"><span th:text="#{footer.bottom}"></span><span th:text="#{site.name} + ' · ' + #{footer.country}"></span></div>
+</div>
+<div class="container shop-footer-bottom"><span th:text="'© ' + ${@bn.digits(#dates.year(#dates.createNow()))} + ' ' + #{site.name} + ' · ' + #{footer.country}"></span><span th:text="#{footer.bottom}"></span></div>
 </footer>
 </body>
 </html>

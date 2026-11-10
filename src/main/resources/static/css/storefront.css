@@ -21,15 +21,10 @@
 .home-main .section-heading h2{font-size:32px}
 .home-main .section-heading .eyebrow{margin-bottom:8px}
 .home-main .section-caption{font-size:15px;line-height:1.8}
-.home-main .contact-banner{border-radius:14px;margin-bottom:56px}
-.site-footer .footer-links a,.site-footer .footer-contact a{font-size:14px;min-height:44px;display:inline-flex;align-items:center}
-.site-footer .footer-bottom{font-size:12px}
 @media(max-width:760px){
  .shop-header .header-inner{padding-block:14px;gap:10px}
- .shop-header .header-inner nav{width:100%;justify-content:space-between;gap:12px;font-size:14px}
  .shop-header .brand .brand-wordmark{font-size:23px}
  .shop-header .brand-wordmark small{font-size:12px}
- .shop-header .nav-track{padding-inline:12px}
  .home-main .shop-intro{grid-template-columns:1fr;padding-block:28px;gap:0}
  .shop-intro h1{font-size:38px;margin-bottom:14px;line-height:1.35}
  .shop-intro .eyebrow{font-size:13px;margin-bottom:10px}
@@ -133,9 +128,6 @@
 .home-main .faq-card>summary::after{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#f6ebe2;color:var(--accent);font-size:20px;font-weight:400;line-height:1;transition:background .2s,color .2s}
 .home-main .faq-card[open]>summary::after{background:var(--accent);color:#fff}
 .home-main .faq-card>p{margin:0;padding:0 22px 20px;font-size:15px;line-height:1.85;color:var(--muted)}
-.home-main .faq-more{margin:28px 0 0;text-align:center}
-.home-main .faq-more a{display:inline-flex;align-items:center;min-height:46px;padding:0 24px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--primary);font-weight:600;text-decoration:none;transition:border-color .2s,background .2s}
-.home-main .faq-more a:hover{border-color:var(--primary);background:#f3f5f0}
 @media(max-width:760px){
  .home-main .faq-home{padding:40px 0 44px}
  .home-main .faq-cards{gap:10px}
@@ -143,4 +135,65 @@
  .home-main .faq-card>summary::after{width:28px;height:28px;font-size:18px}
  .home-main .faq-card>p{padding:0 16px 16px;font-size:14px}
 }
-@media(prefers-reduced-motion:reduce){.home-main .faq-card,.home-main .faq-card>summary::after,.home-main .faq-more a{transition:none}}
+/* The FAQ ends with a way to ask: replaces the separate contact banner. */
+.home-main .faq-help{max-width:860px;margin:20px auto 0;display:flex;align-items:center;justify-content:space-between;gap:20px 28px;padding:22px 24px;border-radius:16px;background:#f6ebe2}
+.home-main .faq-help-copy h3{font-size:18px;margin:0 0 4px}
+.home-main .faq-help-copy p{margin:0;font-size:15px;line-height:1.8;color:var(--muted)}
+.home-main .faq-help-actions{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+.home-main .faq-help-main{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 22px;border-radius:999px;background:var(--primary);color:#fff;font-weight:600;text-decoration:none;white-space:nowrap;transition:background .2s}
+.home-main .faq-help-main:hover{background:var(--primary-dark)}
+.home-main .faq-help-main svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.home-main .faq-help-all{font-size:14px;font-weight:600;color:var(--primary);text-decoration:none;padding:6px 4px}
+.home-main .faq-help-all:hover{text-decoration:underline}
+.home-main .faq-home{margin-bottom:24px}
+@media(max-width:760px){
+ .home-main .faq-help{flex-direction:column;align-items:stretch;text-align:center;padding:20px 18px}
+ .home-main .faq-help-copy h3{font-size:17px}
+ .home-main .faq-help-copy p{font-size:14px}
+ .home-main .faq-help-main{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.home-main .faq-card,.home-main .faq-card>summary::after,.home-main .faq-help-main{transition:none}}
+
+/* Header on phones: one row, logo left and "track order" right; the other links live in the footer. */
+@media(max-width:640px){
+ .shop-header .header-inner{flex-wrap:nowrap;min-height:0;padding-block:12px;gap:12px}
+ .shop-header .header-inner nav{width:auto;gap:0}
+ .shop-header .header-inner nav a:not(.nav-track){display:none}
+ .shop-header .nav-track{min-height:40px;padding-inline:12px;font-size:13px;white-space:nowrap}
+ .shop-header .brand{gap:10px}
+ .shop-header .brand .brand-mark{width:38px;height:42px;font-size:26px}
+ .shop-header .brand .brand-wordmark{font-size:21px}
+ .shop-header .brand-wordmark small{font-size:11px}
+}
+
+/* Footer: brand, help, policies and contact in columns; contact leads with WhatsApp. */
+.shop-footer{padding:52px 0 0;background:#f1eee6;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
+.shop-footer-grid{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(2,minmax(0,1fr)) minmax(0,1.3fr);gap:32px 40px;padding-bottom:40px}
+.shop-footer p{margin:0}
+.footer-logo{display:inline-flex;align-items:center;gap:12px;color:var(--text);text-decoration:none;margin-bottom:14px}
+.footer-logo .brand-mark{display:grid;place-items:center;width:40px;height:44px;border:1px solid var(--primary);border-radius:14px 14px 14px 3px;color:var(--primary);font-size:28px;font-weight:600;line-height:1}
+.footer-logo-text{font-size:22px;font-weight:650;line-height:1.35}
+.footer-logo-text small{display:block;font-size:12px;font-weight:400;color:var(--muted)}
+.shop-footer-brand>p{max-width:300px;line-height:1.8}
+.shop-footer-title{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--text);margin:0 0 10px!important}
+/* nav is a flex row site-wide; footer columns stack their heading above the links. */
+nav.shop-footer-col{display:block}
+.shop-footer-col ul{list-style:none;margin:0;padding:0}
+.shop-footer-col li a{display:inline-flex;align-items:center;min-height:36px;color:var(--muted);text-decoration:none}
+.shop-footer-col li a:hover{color:var(--accent)}
+.shop-footer-contact{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.footer-whatsapp{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;margin-bottom:6px;border-radius:999px;background:var(--primary);color:#fff;font-weight:600;text-decoration:none;transition:background .2s}
+.footer-whatsapp:hover{background:var(--primary-dark)}
+.footer-contact-line{display:inline-flex;align-items:center;gap:8px;min-height:36px;color:var(--muted);text-decoration:none;overflow-wrap:anywhere}
+.footer-contact-line:hover{color:var(--accent)}
+.shop-footer svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.shop-footer-bottom{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 20px;padding-block:18px;border-top:1px solid #dcd6c8;font-size:12px}
+@media(max-width:900px){.shop-footer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){
+ .shop-footer{padding-top:36px}
+ .shop-footer-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-bottom:28px}
+ .shop-footer-brand,.shop-footer-contact{grid-column:1/-1}
+ .footer-whatsapp{width:100%;justify-content:center}
+ .shop-footer-bottom{flex-direction:column}
+}
+@media(prefers-reduced-motion:reduce){.footer-whatsapp{transition:none}}

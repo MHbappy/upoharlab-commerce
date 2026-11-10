@@ -102,10 +102,10 @@ class SiteTextAdminTest {
   @Test
   void resetPutsEveryTextBack() throws Exception {
     admin.get("/admin/texts");
-    admin.post("/admin/texts", Map.of("t:nav.help", "সাহায্য"));
-    assertThat(new Browser(port).get("/").body()).contains(">সাহায্য<");
+    admin.post("/admin/texts", Map.of("t:nav.help", "সহায়তা কেন্দ্র"));
+    assertThat(new Browser(port).get("/").body()).contains(">সহায়তা কেন্দ্র<");
     admin.get("/admin/texts");
     admin.post("/admin/texts/reset", Map.of());
-    assertThat(new Browser(port).get("/").body()).doesNotContain(">সাহায্য<").contains(">জিজ্ঞাসা<");
+    assertThat(new Browser(port).get("/").body()).doesNotContain(">সহায়তা কেন্দ্র<").contains(">জিজ্ঞাসা<");
   }
 }
