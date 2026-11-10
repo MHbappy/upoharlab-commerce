@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Site text · Upohar Lab admin</title>
+<link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/admin :: header}"></header>
+<main class="container admin-main texts-page">
+<p class="notice" role="status" th:if="${message}" th:text="${message}"></p>
+<h1>Site text</h1>
+<p class="texts-intro">Change any wording customers see, page by page. Empty a box to go back to the default.
+Where you see <code>{0}</code> or <code>{1}</code>, the page puts in a value such as a price or a date; keep it where that value should appear.
+Each product can also have its own wording for the customer's text field and preview, in the product's <strong>Landing page</strong> section.</p>
+
+<div class="error" role="alert" th:if="${!problems.isEmpty()}">
+<p>Nothing was saved. Fix these first:</p>
+<ul><li th:each="p : ${problems}"><a th:href="${'#t-' + p.key}" th:text="${p.key + ': ' + p.value}"></a></li></ul>
+</div>
+
+<div class="texts-tools" data-js-only hidden>
+<label for="text-search">Find a text</label>
+<input id="text-search" type="search" placeholder="Type a word you see on the site" autocomplete="off">
+<p class="field-help" id="text-search-count" aria-live="polite"></p>
+</div>
+
+<form id="texts-form" th:action="@{/admin/texts}" method="post">
+<details class="edit-section texts-group" th:each="g, gi : ${groups}" th:open="${gi.first or !problems.isEmpty()}"
+         th:with="changed=${changedByGroup[g.title()]}">
+<summary><span th:text="${g.title()}"></span> <span class="muted texts-count" th:text="${#lists.size(g.entries()) + ' texts' + (changed > 0 ? ' · ' + changed + ' changed' : '')}"></span></summary>
+<div class="text-field" th:each="e : ${g.entries()}" th:attr="data-search=${#strings.toLowerCase(e.key() + ' ' + e.defaultText() + ' ' + current[e.key()])}"
+     th:classappend="${#sets.contains(edited, e.key()) ? 'is-edited' : ''}">
+<label th:for="${'t-' + e.key()}"><span class="text-default" th:text="${e.defaultText()}"></span>
+<code class="text-key" th:text="${e.key()}"></code><span class="muted text-optional" th:if="${e.optional()}">Leave empty to hide</span><span class="text-badge" th:if="${#sets.contains(edited, e.key())}">Changed</span></label>
+<textarea th:id="${'t-' + e.key()}" th:name="${'t:' + e.key()}" th:rows="${#strings.length(e.defaultText()) > 160 ? 4 : (#strings.length(e.defaultText()) > 70 ? 2 : 1)}"
+          th:attr="data-default=${e.defaultText()}" th:classappend="${problems.containsKey(e.key()) ? 'invalid' : ''}" th:text="${current[e.key()]}"></textarea>
+<p class="error" th:if="${problems.containsKey(e.key())}" th:text="${problems[e.key()]}"></p>
+<button type="button" class="link-button text-use-default" data-js-only hidden>Use default</button>
+</div>
+</details>
+<div class="texts-save">
+<button class="button" type="submit">Save changes</button>
+<span class="muted" th:text="${total + ' texts · ' + #sets.size(edited) + ' changed'}"></span>
+</div>
+</form>
+
+<form class="texts-reset" th:action="@{/admin/texts/reset}" method="post" data-confirm="Put every text back to its default wording? Your changes will be lost.">
+<button class="link-button" type="submit">Reset every text to default</button>
+</form>
+</main>
+<script th:src="@{/js/texts-admin.js}" defer></script>
+</body>
+</html>
