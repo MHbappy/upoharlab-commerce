@@ -134,6 +134,7 @@
 </blockquote>
 </div>
 <p class="lp-count-line" th:if="${p.countNumber() != null}" th:text="#{product.proof.count(${@bn.digits(p.countNumber())}, ${p.proofLine()})}"></p>
+<p class="lp-proof-cta" th:if="${showOrder and orderable}"><a class="lp-btn" href="#order"><th:block th:text="#{product.proof.cta}"></th:block> <span aria-hidden="true">↓</span></a></p>
 </div>
 </section>
 
@@ -167,7 +168,7 @@
 </div>
 </footer>
 <nav class="lp-sticky" id="lp-sticky" th:aria-label="#{product.sticky.cta}" data-js-only hidden th:if="${showOrder and orderable}">
-<div class="lp-sticky-inner"><div class="lp-sticky-price"><small th:text="#{product.sticky.price}"></small><strong data-selected-price th:text="${quote != null ? @bn.money(quote.packagePrice() + quote.extras()) : ''}"></strong></div><a class="lp-btn" href="#order"><th:block th:text="#{product.sticky.cta}"></th:block> <span aria-hidden="true">↓</span></a></div>
+<div class="lp-sticky-inner"><p class="lp-sticky-name" th:text="${product.details.title}"></p><div class="lp-sticky-price"><small th:text="#{product.sticky.price}"></small><strong data-selected-price th:text="${quote != null ? @bn.money(quote.packagePrice() + quote.extras()) : ''}"></strong></div><a class="lp-btn" href="#order"><th:block th:text="#{product.sticky.cta}"></th:block> <span aria-hidden="true">↓</span></a></div>
 </nav>
 </th:block>
 </body>

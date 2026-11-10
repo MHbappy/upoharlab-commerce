@@ -262,15 +262,19 @@
     form.addEventListener("focusin", firstTouch);
   }
 
-  // Keep the mobile CTA while browsing, but never over the form or keyboard.
-  var sticky = $("lp-sticky"), order = $("order");
+  // Keep an order button in reach while browsing, but never over the form or keyboard.
+  // On wide screens it waits until the top order button has scrolled away, so the two never
+  // show together.
+  var sticky = $("lp-sticky"), order = $("order"), topCta = document.querySelector(".lp-hook .lp-btn");
   if (sticky && order) {
     document.body.classList.add("has-order-bar");
     var scheduled = false;
     function refreshSticky() {
       scheduled = false;
       var editing = document.activeElement && document.activeElement.matches("input,textarea,select");
-      sticky.hidden = window.innerWidth > 760 || editing || order.getBoundingClientRect().top < window.innerHeight;
+      var wide = window.innerWidth > 760;
+      var topCtaVisible = topCta && topCta.getBoundingClientRect().bottom > 0;
+      sticky.hidden = editing || order.getBoundingClientRect().top < window.innerHeight || (wide && topCtaVisible);
     }
     function scheduleSticky() {
       if (!scheduled) { scheduled = true; window.requestAnimationFrame(refreshSticky); }
