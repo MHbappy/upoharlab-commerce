@@ -21,7 +21,8 @@ public record LandingConfig(
     @Valid Delivery delivery,
     @Valid Preview preview,
     Sections sections,
-    @Size(max = 4) List<@Size(max = 300) String> moreUrgencyLines) {
+    @Size(max = 4) List<@Size(max = 300) String> moreUrgencyLines,
+    @Valid Wording wording) {
 
   private static final String IMAGE = "(?:[0-9a-f-]{36}\\.jpg)?";
   private static final String COLOR = "(?:#[0-9a-fA-F]{6})?";
@@ -40,6 +41,7 @@ public record LandingConfig(
     delivery = delivery == null ? new Delivery(null, null) : delivery;
     preview = preview == null ? new Preview(null, null, null, null) : preview;
     sections = sections == null ? new Sections(null, null, null, null, null, null, null, null) : sections;
+    wording = wording == null ? new Wording(null, null, null, null, null) : wording;
   }
 
   /**
@@ -47,7 +49,7 @@ public record LandingConfig(
    * done, so orders use its finished parts and plain defaults for the rest; the setup stays stored.
    */
   public LandingConfig forOrdering() {
-    if (sections.preview()) return this;
+    if (showsPreview()) return this;
     List<Design> designs =
         preview.designs().stream()
             .filter(LandingConfig::finished)
@@ -57,7 +59,25 @@ public record LandingConfig(
     int maxChars = preview.maxChars() == null ? DEFAULT_MAX_CHARS : preview.maxChars();
     return new LandingConfig(
         enabled, hero, benefits, socialProof, packages, urgencyLine, options, upsells, advanceAmount,
-        delivery, new Preview(designs, fonts, preview.defaultText(), maxChars), sections, moreUrgencyLines);
+        delivery, new Preview(designs, fonts, preview.defaultText(), maxChars), sections, moreUrgencyLines,
+        wording);
+  }
+
+  /** The live preview and the font and design choices appear only for products with customer text. */
+  public boolean showsPreview() {
+    return sections.preview() && wording.textMode() != TextMode.NONE;
+  }
+
+  /**
+   * Whether an order needs a design the customer approves before it is made: only when the
+   * product takes customer text and the customer wrote some.
+   */
+  public boolean needsDesign(String customerText) {
+    return switch (wording.textMode()) {
+      case REQUIRED -> true;
+      case OPTIONAL -> customerText != null && !customerText.isBlank();
+      case NONE -> false;
+    };
   }
 
   /** The first urgency line, then the rest. */
@@ -187,6 +207,35 @@ public record LandingConfig(
       designs = list(designs);
       fonts = list(fonts);
     }
+  }
+
+  /**
+   * This product's own words for the customer's text, for example "কী প্রিন্ট হবে" on a mug.
+   * Anything left blank uses the site-wide wording from Admin → Site text.
+   */
+  public record Wording(
+      @Size(max = 100) String textLabel,
+      @Size(max = 150) String textPlaceholder,
+      @Size(max = 300) String textHelp,
+      @Size(max = 150) String previewTitle,
+      TextMode textMode) {
+    public Wording {
+      textMode = textMode == null ? TextMode.REQUIRED : textMode;
+    }
+
+    public Wording(String textLabel, String textPlaceholder, String textHelp, String previewTitle) {
+      this(textLabel, textPlaceholder, textHelp, previewTitle, null);
+    }
+  }
+
+  /**
+   * Whether customers write their own text on this product: always (a name plate), if they like
+   * (a mug that also looks good plain), or never (a ready-made item, so no text box or preview).
+   */
+  public enum TextMode {
+    REQUIRED,
+    OPTIONAL,
+    NONE
   }
 
   /** Which parts of the page customers see. Anything not stored yet is shown. */

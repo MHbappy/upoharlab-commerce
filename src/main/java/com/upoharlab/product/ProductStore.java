@@ -46,6 +46,35 @@ public class ProductStore {
     public String orderPath() {
       return "/order/" + details.getSlug();
     }
+
+    /**
+     * The picture shown in listings: the first gallery photo, otherwise the landing page's main
+     * image, so a product sold only through its landing page never shows an empty card.
+     */
+    public String cardImage() {
+      if (!photos.isEmpty()) return photos.get(0).filename();
+      String hero = landing == null || landing.hero() == null ? null : landing.hero().heroImage();
+      return hero == null || hero.isBlank() ? null : hero;
+    }
+
+    public String cardImageAlt() {
+      return photos.isEmpty() ? details.getTitle() : photos.get(0).alt();
+    }
+
+    /** Whole-percent discount for the card badge, or null without a real discount. */
+    public Integer cardDiscountPercent() {
+      Integer old = cardOldPrice();
+      if (old == null) return null;
+      int percent = (int) Math.round((old - details.getPrice()) * 100.0 / old);
+      return percent >= 1 ? percent : null;
+    }
+
+    /** The landing page's crossed-out price, only when it is really above the listed price. */
+    public Integer cardOldPrice() {
+      Integer old = landing == null || landing.hero() == null ? null : landing.hero().oldPrice();
+      Integer price = details.getPrice();
+      return old != null && price != null && old > price ? old : null;
+    }
   }
 
   public List<Page> list(boolean admin) {

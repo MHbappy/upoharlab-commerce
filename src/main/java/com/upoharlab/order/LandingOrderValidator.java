@@ -18,7 +18,10 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 
-/** The rules that depend on a product's configuration. Bean Validation covers required fields. */
+/**
+ * The rules that depend on a product's configuration. Bean Validation covers required fields.
+ * Error codes are site-text keys, so customers see the wording from Admin → Site text.
+ */
 @Component
 public class LandingOrderValidator {
   private static final ZoneId BUSINESS_ZONE = ZoneId.of("Asia/Dhaka");
@@ -54,23 +57,27 @@ public class LandingOrderValidator {
 
   /** Returns the cleaned input, or null when there are errors. */
   public Input validate(LandingOrderForm form, LandingConfig c, Errors errors) {
-    String text = OrderText.text(form.getEngraving(), false);
-    String confirm = OrderText.text(form.getConfirmEngraving(), false);
+    LandingConfig.TextMode mode = c.wording().textMode();
+    // A product without customer text ignores anything sent in the text fields.
+    String text = mode == LandingConfig.TextMode.NONE ? "" : OrderText.text(form.getEngraving(), false);
+    String confirm = mode == LandingConfig.TextMode.NONE ? "" : OrderText.text(form.getConfirmEngraving(), false);
+    if (mode == LandingConfig.TextMode.REQUIRED && text.isEmpty())
+      errors.rejectValue("engraving", "order.error.text");
     if (!text.isEmpty()
         && !confirm.isEmpty()
         && !text.equals(confirm))
-      errors.rejectValue("confirmEngraving", "mismatch", "দুটি লেখা মিলছে না। আবার দেখে লিখুন।");
+      errors.rejectValue("confirmEngraving", "order.error.text.mismatch");
     if (OrderText.length(text) > c.preview().maxChars())
       tooLong(errors, "engraving", c.preview().maxChars());
     if (!LandingFonts.allowed(form.getFont()) || !c.preview().fonts().contains(form.getFont()))
-      errors.rejectValue("font", "invalid", "একটি ফন্ট বেছে নিন।");
+      errors.rejectValue("font", "order.error.font");
     Integer design = index(form.getDesign(), c.preview().designs().size());
-    if (design == null) errors.rejectValue("design", "invalid", "একটি ডিজাইন বেছে নিন।");
+    if (design == null) errors.rejectValue("design", "order.error.design");
     if (index(form.getPackageIndex(), c.packages().size()) == null)
-      errors.rejectValue("packageIndex", "invalid", "একটি প্যাকেজ বেছে নিন।");
-    if (options(form, c) == null) errors.rejectValue("options", "invalid", "সব অপশন বেছে নিন।");
+      errors.rejectValue("packageIndex", "order.error.package");
+    if (options(form, c) == null) errors.rejectValue("options", "order.error.options");
     if (upsells(form, c) == null)
-      errors.rejectValue("upsells", "invalid", "অতিরিক্ত পণ্যের তালিকাটি আবার দেখুন।");
+      errors.rejectValue("upsells", "order.error.extras");
     LocalDate neededBy = neededBy(form.getNeededBy(), errors);
     String name = OrderText.text(form.getName(), false);
     if (OrderText.length(name) > OrderText.MAX_NAME)
@@ -108,7 +115,7 @@ public class LandingOrderValidator {
     try {
       return PhoneNormalizer.normalize(raw);
     } catch (IllegalArgumentException ex) {
-      errors.rejectValue("phone", "invalid", ex.getMessage());
+      errors.rejectValue("phone", "order.error.phone");
       return null;
     }
   }
@@ -122,7 +129,7 @@ public class LandingOrderValidator {
     } catch (DateTimeParseException ex) {
       // reported below
     }
-    errors.rejectValue("neededBy", "invalid", "আজকের পরের একটি সঠিক তারিখ দিন, অথবা খালি রাখুন।");
+    errors.rejectValue("neededBy", "order.error.date");
     return null;
   }
 
@@ -164,6 +171,6 @@ public class LandingOrderValidator {
 
   private static void tooLong(Errors errors, String field, int max) {
     errors.rejectValue(
-        field, "length", "সর্বোচ্চ " + BnDigits.toBangla(Integer.toString(max)) + " অক্ষর লেখা যাবে।");
+        field, "order.error.length", new Object[] {BnDigits.toBangla(Integer.toString(max))}, null);
   }
 }

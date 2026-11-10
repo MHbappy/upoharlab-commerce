@@ -154,6 +154,27 @@ the database account. A missing first-boot credential causes a clear startup fai
   reply hours and shop pause notice. All required business details must be valid before
   enabling the order-taking setting. Unknown optional values may stay empty.
 
+## Site text (all customer-facing wording)
+
+Every word customers see — menu, home page, product page, order form, error messages, tracking
+statuses, policy pages and the WhatsApp messages the admin sends — can be changed in **Admin → Site
+text**, grouped by page with a search box. Empty a box to go back to the default; a few optional texts
+(such as the returns notice) can be emptied to hide them. `{0}`-style placeholders are filled in by the
+page, for example with a price, and a broken placeholder is refused before anything is saved.
+
+Defaults live in `src/main/resources/site-text.properties`; edits are stored in the `site_text` table
+and apply immediately. Templates use them as `#{key}`. To add a text, add a key to that file and use it;
+a test fails if a page, script or message refers to a key that does not exist.
+
+In each product's landing page section, **Customer's own text** sets whether customers write something
+on that product: *Yes, always* (the original flow), *If they like* (the box is optional), or *No* (a
+ready-made product: no text box, live preview, font or design choice). The same section takes the
+product's own words for the text field and preview, for example "কী প্রিন্ট হবে" on a mug.
+
+Only orders with customer text have a design step. An order without text — from a *No* product, or an
+*If they like* product left blank — skips "Design sent" and approval: the admin confirms it straight
+from New once any advance is recorded, and the customer sees wording that promises no design.
+
 ## Ordering
 
 The order form appears on active products once **Accepting new orders** is enabled in Settings.

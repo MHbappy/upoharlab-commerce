@@ -151,6 +151,23 @@
 </div>
 </fieldset>
 
+<fieldset class="edit-section" id="lp-wording">
+<legend>Customer's own text</legend>
+<fieldset class="field text-mode">
+<legend class="field-label">Does the customer write something on this product?</legend>
+<label class="check-row"><input type="radio" name="wording.textMode" value="REQUIRED" th:checked="${landingForm.wording.textMode == 'REQUIRED'}"> <span><strong>Yes, always</strong> — a name or message is part of the product. You send a design for approval before making it.</span></label>
+<label class="check-row"><input type="radio" name="wording.textMode" value="OPTIONAL" th:checked="${landingForm.wording.textMode == 'OPTIONAL'}"> <span><strong>If they like</strong> — the text box is optional. Orders with text get a design to approve; orders without go straight to confirmation.</span></label>
+<label class="check-row"><input type="radio" name="wording.textMode" value="NONE" th:checked="${landingForm.wording.textMode == 'NONE'}"> <span><strong>No</strong> — a ready-made product. No text box, live preview, font or design choice, and no design step.</span></label>
+</fieldset>
+<p class="field-help">What the customer types, in this product's words — for example "কী প্রিন্ট হবে" for a mug or "কার্ডে কী লেখা থাকবে" for a card. Leave a box empty to use the site-wide wording from <a th:href="@{/admin/texts}">Site text</a>.</p>
+<div class="grid-2">
+<div class="field"><label for="wording-label">Text field label</label><input id="wording-label" type="text" name="wording.textLabel" maxlength="100" th:value="${landingForm.wording.textLabel}" th:placeholder="#{product.text.label}"></div>
+<div class="field"><label for="wording-placeholder">Hint inside the box</label><input id="wording-placeholder" type="text" name="wording.textPlaceholder" maxlength="150" th:value="${landingForm.wording.textPlaceholder}" th:placeholder="#{product.text.placeholder}"></div>
+</div>
+<div class="field"><label for="wording-help">Help under the box</label><input id="wording-help" type="text" name="wording.textHelp" maxlength="300" th:value="${landingForm.wording.textHelp}" th:placeholder="#{product.text.help}"></div>
+<div class="field"><label for="wording-preview">Preview heading</label><input id="wording-preview" type="text" name="wording.previewTitle" maxlength="150" th:value="${landingForm.wording.previewTitle}" th:placeholder="#{product.preview.title}"></div>
+</fieldset>
+
 <fieldset class="edit-section" id="lp-preview">
 <legend>Live name preview</legend>
 <th:block th:replace="~{admin/landing-editor :: sectionSwitch('preview', ${landingForm.sections.preview}, 'Hidden: customers still type their text in the order form, without the live preview. Your setup is kept.')}"></th:block>

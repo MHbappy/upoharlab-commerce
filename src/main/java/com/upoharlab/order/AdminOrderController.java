@@ -1,5 +1,6 @@
 package com.upoharlab.order;
 
+import com.upoharlab.text.SiteTexts;
 import com.upoharlab.order.AdminOrderService.Detail;
 import com.upoharlab.order.AdminOrderService.RuleException;
 import com.upoharlab.settings.SettingsService;
@@ -33,11 +34,15 @@ public class AdminOrderController {
   private final LandingOrderService landingOrders;
   private final PreviewSvgRenderer svg;
 
+  private final SiteTexts texts;
+
   public AdminOrderController(
       AdminOrderService orders,
       SettingsService settings,
       LandingOrderService landingOrders,
-      PreviewSvgRenderer svg) {
+      PreviewSvgRenderer svg,
+      SiteTexts texts) {
+    this.texts = texts;
     this.orders = orders;
     this.settings = settings;
     this.landingOrders = landingOrders;
@@ -113,33 +118,31 @@ public class AdminOrderController {
     Map<String, String> links = new LinkedHashMap<>();
     links.put("Open chat", base);
     OrderStatus status = OrderStatus.valueOf(order.status());
-    if (status == OrderStatus.NEW || status == OrderStatus.DESIGN_SENT)
+    if (order.needsDesign() && (status == OrderStatus.NEW || status == OrderStatus.DESIGN_SENT))
       links.put(
           "Design message",
           withText(
               base,
-              "আপনার অর্ডার "
-                  + order.code()
-                  + "-এর ডিজাইন পাঠালাম। ডিজাইন ও বানান দেখে সম্মতি জানান।"
+              texts.text("whatsapp.design", order.code())
                   + (order.advanceRequired() > 0
-                      ? " সম্মতির পরে ৳" + BnDigits.toBangla(String.valueOf(order.advanceRequired())) + " অগ্রিম লাগবে।"
+                      ? " " + texts.text("whatsapp.design.advance", BnDigits.money(order.advanceRequired()))
                       : "")));
     // Payment details go out only after approval, so nobody is asked to pay for an unseen design.
-    if (status == OrderStatus.DESIGN_SENT
-        && order.designApprovedAt() != null
-        && order.netPaid() < order.advanceRequired()) {
+    // Orders without a design are asked for the advance while still NEW.
+    boolean advanceTime =
+        order.needsDesign()
+            ? status == OrderStatus.DESIGN_SENT && order.designApprovedAt() != null
+            : status == OrderStatus.NEW;
+    if (advanceTime && order.netPaid() < order.advanceRequired()) {
       String bkash = values.getOrDefault("bkash_number", "");
+      String due = BnDigits.money(Math.toIntExact(order.advanceRequired() - order.netPaid()));
+      String key = (order.needsDesign() ? "whatsapp.advance" : "whatsapp.advance.plain")
+          + (bkash.isBlank() ? "" : ".bkash");
       links.put(
           "Advance message",
-          withText(
-              base,
-              "ডিজাইনে সম্মতির জন্য ধন্যবাদ। অর্ডার "
-                  + order.code()
-                  + " বানানো শুরু করতে ৳"
-                  + BnDigits.toBangla(String.valueOf(order.advanceRequired() - order.netPaid()))
-                  + " অগ্রিম পাঠান"
-                  + (bkash.isBlank() ? "।" : " bKash: " + bkash + "।")
-                  + " পাঠিয়ে ট্রানজেকশন নম্বরটি জানান।"));
+          withText(base, bkash.isBlank()
+              ? texts.text(key, order.code(), due)
+              : texts.text(key, order.code(), due, bkash)));
       if (bkash.isBlank()) links.put("Missing bKash", base);
     }
     if (order.courier() != null && status != OrderStatus.CANCELLED)
@@ -147,12 +150,8 @@ public class AdminOrderController {
           "Shipping message",
           withText(
               base,
-              "আপনার অর্ডার "
-                  + order.code()
-                  + " পাঠানো হয়েছে। কুরিয়ার: "
-                  + order.courier()
-                  + ", ট্র্যাকিং: "
-                  + order.trackingNo()));
+              texts.text("whatsapp.shipped", order.code(), order.courier(),
+                  order.trackingNo() == null ? "" : order.trackingNo())));
     return links;
   }
 

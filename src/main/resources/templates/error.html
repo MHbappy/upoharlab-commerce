@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('উপহার ল্যাব', null, null, null, true)}">
+<head th:replace="~{fragments/head :: head(null, null, null, null, true)}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}">
@@ -8,19 +8,19 @@
 <main id="main" class="container product-main reading-width">
 <th:block th:switch="${status}">
 <th:block th:case="404">
-<h1>পাতাটি পাওয়া যায়নি</h1>
-<p>ঠিকানাটি ভুল হতে পারে, অথবা পাতাটি এখন আর নেই।</p>
+<h1 th:text="#{error.404.title}"></h1>
+<p th:text="#{error.404.text}"></p>
 </th:block>
 <th:block th:case="403">
-<h1>পাতাটি পুরোনো হয়ে গেছে</h1>
-<p>অনেকক্ষণ পরে পাঠালে এমন হতে পারে। পাতাটি আবার খুলে চেষ্টা করুন।</p>
+<h1 th:text="#{error.403.title}"></h1>
+<p th:text="#{error.403.text}"></p>
 </th:block>
 <th:block th:case="*">
-<h1>কিছু একটা সমস্যা হয়েছে</h1>
-<p>একটু পরে আবার চেষ্টা করুন।</p>
+<h1 th:text="#{error.other.title}"></h1>
+<p th:text="#{error.other.text}"></p>
 </th:block>
 </th:block>
-<a class="button" th:href="@{/}">হোম পাতায় যান</a>
+<a class="button" th:href="@{/}" th:text="#{site.home}"></a>
 </main>
 <footer th:replace="~{fragments/footer :: footer}">
 </footer>

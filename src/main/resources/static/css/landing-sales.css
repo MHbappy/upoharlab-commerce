@@ -82,12 +82,13 @@
 .lp-sales .lp-section-heading>.lp-help{border-left:2px solid #d0ad8d;padding-left:16px;font-size:14px}
 .lp-sales .lp-order-grid{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;border:0;padding:0;margin:0}
 .lp-order-customization{border:1px solid #d4bfa7;border-radius:10px;background:#fbf6ef;margin-bottom:28px;min-width:0}
-.lp-order-customization>summary{position:relative;cursor:pointer;padding:18px 42px 18px 18px;font-weight:600;font-size:17px;list-style:none;line-height:1.7}
+/* app.css styles every summary as a spaced-out flex row; this one needs title + edit link, recap below. */
+.lp-order-customization>summary{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:0 12px;min-height:0;cursor:pointer;padding:18px 48px 18px 18px;font-weight:600;font-size:17px;list-style:none;line-height:1.7}
 .lp-order-customization>summary::-webkit-details-marker{display:none}
 .lp-order-customization>summary::after{content:"+";position:absolute;right:18px;top:16px;font:24px/1.5 sans-serif;color:var(--primary)}
 .lp-order-customization[open]>summary::after{content:"−"}
-.lp-recap-text{display:block;color:var(--muted);font-size:14px;font-weight:400;margin-top:4px;overflow-wrap:anywhere}
-.lp-edit-hint{display:block;color:var(--primary);font-size:13px;font-weight:500;margin-top:6px;text-decoration:underline;text-underline-offset:3px}
+.lp-recap-text{grid-column:1/-1;grid-row:2;color:var(--muted);font-size:14px;font-weight:400;margin-top:2px;overflow-wrap:anywhere}
+.lp-edit-hint{grid-column:2;grid-row:1;white-space:nowrap;color:var(--primary);font-size:13px;font-weight:500;text-decoration:underline;text-underline-offset:3px}
 .lp-sales .lp-order-customization>fieldset{padding:6px 18px 0}
 .lp-sales .lp-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .lp-sales .lp-order-main>.lp-step>legend{font-size:21px;margin-bottom:20px}
@@ -103,7 +104,11 @@
 .lp-sales .lp-summary .lp-payment{border-top:1px solid var(--border);padding-top:18px;margin-top:18px}
 .lp-sales .lp-actions{margin-top:24px}
 .lp-sales .lp-extra{border-color:#d4bfa7}
-.lp-sales .lp-extra summary{font-size:14px}
+.lp-sales .lp-extra summary{font-size:14px;justify-content:flex-start;gap:8px;padding-block:12px}
+.lp-sales .lp-extra summary::after{margin-left:auto}
+.lp-save{display:inline-block;align-self:center;padding:2px 10px;border-radius:999px;background:#e5f0e3;color:#2f5d34;font-size:13px;font-weight:600;line-height:1.6;white-space:nowrap}
+.lp-save[hidden]{display:none}
+.lp-total-note{font-size:14px;font-weight:400;color:var(--muted);white-space:nowrap}
 .lp-footer{padding:28px 0;background:var(--surface);border-top:1px solid var(--border);text-align:center}
 .lp-foot-brand{font-size:21px;font-weight:700;margin:0 0 10px}
 .lp-foot-links{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 24px;margin:0;font-size:14px}
@@ -156,8 +161,8 @@
  .lp-sales .lp-section-heading>.lp-help{margin-top:12px;border:0;padding:0}
  .lp-sales .lp-section-heading>.lp-help br{display:none}
  .lp-sales .lp-order-customization>fieldset{padding-inline:14px}
- .lp-sales .lp-compact>.lp-choice{flex-basis:100%}
- .lp-sales #font>.lp-choice{flex-basis:calc(50% - 10px)}
+ .lp-sales .lp-compact{grid-template-columns:1fr}
+ .lp-sales #font{grid-template-columns:repeat(2,minmax(0,1fr))}
  .lp-footer{padding-block:24px}
 }
 @media(max-width:360px){

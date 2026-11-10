@@ -23,7 +23,19 @@
 
 <section class="panel order-panel" aria-labelledby="next-title" th:unless="${order.status == 'DELIVERED' or order.status == 'CANCELLED'}">
 <h2 id="next-title">Next step</h2>
-<form th:if="${order.status == 'NEW'}" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
+<th:block th:if="${order.status == 'NEW' and !order.needsDesign}">
+<p>This order has no customer text, so there is no design to approve. Call or message the customer to confirm it.</p>
+<ul th:unless="${order.missingForConfirmation.isEmpty()}" class="missing-list">
+<li th:each="item : ${order.missingForConfirmation}" th:text="${item}"></li>
+</ul>
+<p class="wa-links" th:if="${whatsappLinks['Advance message'] != null}"><a th:href="${whatsappLinks['Advance message']}" target="_blank" rel="noopener noreferrer">Open advance message</a></p>
+<p class="error" th:if="${whatsappLinks['Missing bKash'] != null}">Add your bKash number in Settings so the advance message can include it.</p>
+<form th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post" th:if="${order.missingForConfirmation.isEmpty()}">
+<input type="hidden" name="to" value="CONFIRMED">
+<button class="button">Confirm order</button>
+</form>
+</th:block>
+<form th:if="${order.status == 'NEW' and order.needsDesign}" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
 <p>Send the design on WhatsApp, then record it here.</p>
 <p class="wa-links"><a th:href="${whatsappLinks['Design message']}" target="_blank" rel="noopener noreferrer">Open design message</a></p>
 <input type="hidden" name="to" value="DESIGN_SENT">
@@ -90,11 +102,13 @@
 <dt>Package</dt><dd th:text="${selection.packageName() + ' · ৳' + selection.packagePrice()}"></dd>
 <th:block th:each="o : ${selection.options()}"><dt th:text="${o.label()}"></dt><dd th:text="${o.value() + (o.price() > 0 ? ' (+৳' + o.price() + ')' : '')}"></dd></th:block>
 <th:block th:each="u : ${selection.upsells()}"><dt>Extra</dt><dd th:text="${u.label() + ' (+৳' + u.price() + ')'}"></dd></th:block>
+<th:block th:if="${order.needsDesign}">
 <dt>Font</dt><dd th:text="${selection.font()}"></dd>
 <dt>Design</dt><dd th:text="${selection.design().name()}"></dd>
 </th:block>
+</th:block>
 <th:block th:if="${neededBy != null}"><dt>Needed by</dt><dd th:text="${neededBy}"></dd></th:block>
-<dt>Engraving</dt><dd class="preserve-lines" th:text="${#strings.isEmpty(order.engraving) ? 'To be confirmed with the customer' : order.engraving}"></dd>
+<dt>Engraving</dt><dd class="preserve-lines" th:text="${#strings.isEmpty(order.engraving) ? (order.needsDesign ? 'To be confirmed with the customer' : 'None') : order.engraving}"></dd>
 <th:block th:if="${order.customerNote != null}">
 <dt>Customer's note</dt><dd class="preserve-lines" th:text="${order.customerNote}"></dd>
 </th:block>
@@ -106,7 +120,7 @@
 <dt>Delivered</dt><dd th:text="${@bn.time(order.deliveredAt)}"></dd>
 </th:block>
 </dl>
-<form class="form-width" th:if="${#strings.isEmpty(order.engraving) and order.designApprovedAt == null and (order.status == 'NEW' or order.status == 'DESIGN_SENT')}" th:action="@{/admin/orders/{c}/engraving(c=${order.code})}" method="post">
+<form class="form-width" th:if="${order.needsDesign and #strings.isEmpty(order.engraving) and order.designApprovedAt == null and (order.status == 'NEW' or order.status == 'DESIGN_SENT')}" th:action="@{/admin/orders/{c}/engraving(c=${order.code})}" method="post">
 <label for="agreed-engraving">Engraving agreed with the customer</label>
 <textarea id="agreed-engraving" name="engraving" maxlength="1000" rows="3" required></textarea>
 <button>Save engraving details</button>
@@ -140,7 +154,7 @@
 </section>
 </div>
 
-<section class="panel order-panel" aria-labelledby="preview-title" th:if="${selection != null}">
+<section class="panel order-panel" aria-labelledby="preview-title" th:if="${selection != null and order.needsDesign}">
 <h2 id="preview-title">Design preview</h2>
 <img class="order-preview" th:src="@{/admin/orders/{c}/preview.svg(c=${order.code})}" alt="Preview of the customer's text on the chosen design">
 <p><a class="button" th:href="@{/admin/orders/{c}/preview.svg(c=${order.code},download=true)}">Download SVG</a></p>

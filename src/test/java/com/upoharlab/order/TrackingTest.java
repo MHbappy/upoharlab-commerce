@@ -96,7 +96,7 @@ class TrackingTest {
     var page = track(new Browser(port), code, PHONE);
     assertThat(page.statusCode()).isEqualTo(200);
     assertThat(page.body())
-        .contains(code, "কুরিয়ারে পাঠানো হয়েছে", "Pathao", "PT-55")
+        .contains(code, text("track.status.shipped"), "Pathao", "PT-55")
         .doesNotContain("গোপন-", "গোপনREF", "৳230", "৳২৩০", "01712345678\"");
     assertThat(page.uri().toString()).endsWith("/track");
     assertThat(page.headers().firstValue("Cache-Control").orElse("")).contains("no-store");
@@ -108,13 +108,13 @@ class TrackingTest {
   void acceptsBanglaDigitsAndPhoneFormatsAndLowercaseCode() throws Exception {
     var browser = new Browser(port);
     String banglaCode = com.upoharlab.shared.BnDigits.toBangla(code).toLowerCase();
-    assertThat(track(browser, banglaCode, "+৮৮০ ১৭১২-৩৪৫৬৭৮").body()).contains("অর্ডার পেয়েছি");
+    assertThat(track(browser, banglaCode, "+৮৮০ ১৭১২-৩৪৫৬৭৮").body()).contains(text("track.status.new"));
   }
 
   @Test
   void lastFourDigitsAreNotEnough() throws Exception {
     var page = track(new Browser(port), code, "5678");
-    assertThat(page.body()).contains("কোনো অর্ডার পাওয়া যায়নি").doesNotContain("অর্ডার পেয়েছি");
+    assertThat(page.body()).contains(text("track.not.found")).doesNotContain(text("track.status.new"));
   }
 
   @Test
@@ -137,7 +137,7 @@ class TrackingTest {
       assertThat(track(browser, code, "01898765432").statusCode()).isEqualTo(200);
     var blocked = track(browser, code, PHONE);
     assertThat(blocked.statusCode()).isEqualTo(429);
-    assertThat(blocked.body()).doesNotContain("অর্ডার পেয়েছি");
+    assertThat(blocked.body()).doesNotContain(text("track.status.new"));
     assertThat(track(browser, "UL-000000-777", PHONE).statusCode()).isEqualTo(200);
   }
 
@@ -151,7 +151,12 @@ class TrackingTest {
   void malformedInputIsHandledQuietly() throws Exception {
     var browser = new Browser(port);
     for (String bad : new String[] {"", "x", "'; DROP TABLE orders; --", "UL-1"})
-      assertThat(track(browser, bad, "abc").body()).contains("কোনো অর্ডার পাওয়া যায়নি");
+      assertThat(track(browser, bad, "abc").body()).contains(text("track.not.found"));
     assertThat(orderCount(db)).isEqualTo(1);
+  }
+
+  /** The current default wording of a site text, so tests follow copy edits in site-text.properties. */
+  static String text(String key) {
+    return new com.upoharlab.text.SiteTextCatalog().get(key).defaultText();
   }
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>আপনার অর্ডার পেয়েছি — উপহার ল্যাব</title>
+<title th:text="#{thanks.title} + ' — ' + #{site.name}">উপহার ল্যাব</title>
 <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
 <link rel="stylesheet" th:href="@{/css/app.css}">
 <link rel="stylesheet" th:href="@{/css/landing.css}">
@@ -13,28 +13,28 @@
 <body class="lp">
 <header th:replace="~{fragments/header :: header}"></header>
 <main id="main" class="lp-section"><div class="lp-wrap lp-confirmation" th:with="s=${thanks.selection()},d=${thanks.selection().design()}">
-<h1>আপনার অর্ডার পেয়েছি</h1>
-<p>অর্ডার নম্বর: <strong class="lp-code" th:text="${order.code}"></strong></p>
-<div class="lp-stage">
-<svg role="img" aria-label="আপনার নামের প্রিভিউ" xmlns="http://www.w3.org/2000/svg" th:attr="viewBox=${'0 0 ' + d.imageWidth() + ' ' + d.imageHeight()}">
+<h1 th:text="#{thanks.title}"></h1>
+<p><th:block th:text="#{thanks.code}"></th:block> <strong class="lp-code" th:text="${order.code}"></strong></p>
+<div class="lp-stage" th:if="${thanks.needsDesign()}">
+<svg role="img" th:aria-label="#{product.preview.svg.label}" xmlns="http://www.w3.org/2000/svg" th:attr="viewBox=${'0 0 ' + d.imageWidth() + ' ' + d.imageHeight()}">
 <rect fill="#E6D3B8" width="100%" height="100%"/>
 <image th:if="${!#strings.isEmpty(d.baseImage())}" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" th:attr="href=@{/media/{n}(n=${d.baseImage()})}"/>
 <text text-anchor="middle" dominant-baseline="central" th:text="${s.text()}" th:attr="x=${d.textX()},y=${d.textY()},font-size=${s.fontSize()},fill=${d.color()},font-family=${s.font()}"></text>
 </svg>
 </div>
-<p class="lp-caption">এটি আনুমানিক প্রিভিউ।</p>
+<p class="lp-caption" th:if="${thanks.needsDesign()}" th:text="#{thanks.preview.note}"></p>
 <dl class="lp-recap">
-<dt>পণ্য</dt><dd th:text="${order.productTitle + ' · ' + s.packageName()}"></dd>
+<dt th:text="#{thanks.product}"></dt><dd th:text="${order.productTitle + ' · ' + s.packageName()}"></dd>
 <th:block th:each="o : ${s.options()}"><dt th:text="${o.label()}"></dt><dd th:text="${o.value()}"></dd></th:block>
-<th:block th:each="u : ${s.upsells()}"><dt>অতিরিক্ত</dt><dd th:text="${u.label()}"></dd></th:block>
-<dt class="lp-total">মোট</dt><dd class="lp-total" th:text="${@bn.money(thanks.total())}"></dd>
-<dt>অগ্রিম</dt><dd th:text="${@bn.money(thanks.advance())}"></dd>
-<dt>হাতে পেয়ে দেবেন</dt><dd th:text="${@bn.money(thanks.balance())}"></dd>
+<th:block th:each="u : ${s.upsells()}"><dt th:text="#{product.summary.extras}"></dt><dd th:text="${u.label()}"></dd></th:block>
+<dt class="lp-total" th:text="#{product.summary.total}"></dt><dd class="lp-total" th:text="${@bn.money(thanks.total())}"></dd>
+<dt th:text="#{thanks.advance}"></dt><dd th:text="${@bn.money(thanks.advance())}"></dd>
+<dt th:text="#{thanks.balance}"></dt><dd th:text="${@bn.money(thanks.balance())}"></dd>
 </dl>
-<p class="lp-notice">আমরা যোগাযোগ করে আপনার লেখা ও ডিজাইন নিশ্চিত করব।</p>
-<p th:if="${thanks.advance() > 0}">এখন কোনো টাকা পাঠাবেন না। ডিজাইন পছন্দ হলে অগ্রিম কীভাবে পাঠাবেন, তা WhatsApp-এ জানিয়ে দেব।</p>
-<a class="lp-btn" th:if="${whatsappWithCode != null}" th:href="${whatsappWithCode}">WhatsApp-এ যোগাযোগ করুন</a>
-<p><a th:href="@{/track}">অর্ডার ট্র্যাক করুন</a></p>
+<p class="lp-notice" th:text="${#messages.msg(thanks.needsDesign() ? 'thanks.next' : 'thanks.next.plain')}"></p>
+<p th:if="${thanks.advance() > 0}" th:text="${#messages.msg(thanks.needsDesign() ? 'thanks.advance.note' : 'thanks.advance.note.plain')}"></p>
+<a class="lp-btn" th:if="${whatsappWithCode != null}" th:href="${whatsappWithCode}" th:text="#{site.whatsapp}"></a>
+<p><a th:href="@{/track}" th:text="#{thanks.track}"></a></p>
 </div></main>
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 <script th:if="${@pixel.enabled()}" th:src="@{/js/pixel.js}" defer th:with="pixelId=${@pixel.id()}" th:attr="data-pixel=${pixelId},data-purchase=${order.code},data-value=${thanks.total()}"></script>

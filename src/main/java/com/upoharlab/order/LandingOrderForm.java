@@ -7,7 +7,7 @@ import java.util.List;
 
 /** Raw browser values, kept as typed for redisplay. Holds choices, never prices. */
 public class LandingOrderForm {
-  @NotBlank(message = "কী খোদাই হবে তা লিখুন।")
+  // Required or not depends on the product; LandingOrderValidator checks it.
   private String engraving;
 
   // Accepted for older forms; the current page uses one engraving field and a live preview.
@@ -21,17 +21,17 @@ public class LandingOrderForm {
   private String neededBy;
   private String fontSize;
 
-  @NotBlank(message = "আপনার নাম লিখুন।")
+  @NotBlank(message = "{order.error.name}")
   private String name;
 
-  @NotBlank(message = "মোবাইল নম্বর লিখুন।")
+  @NotBlank(message = "{order.error.phone.required}")
   private String phone;
 
-  @NotBlank(message = "ঢাকার ভেতরে না বাইরে, একটি বেছে নিন।")
-  @Pattern(regexp = "INSIDE|OUTSIDE", message = "ঢাকার ভেতরে না বাইরে, একটি বেছে নিন।")
+  @NotBlank(message = "{order.error.area}")
+  @Pattern(regexp = "INSIDE|OUTSIDE", message = "{order.error.area}")
   private String area;
 
-  @NotBlank(message = "পুরো ঠিকানা লিখুন।")
+  @NotBlank(message = "{order.error.address}")
   private String address;
 
   private String note;

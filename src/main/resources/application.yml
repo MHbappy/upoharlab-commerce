@@ -58,6 +58,7 @@ server:
         http-only: true
         same-site: lax
         secure: false
+  port: 1234
 app:
   business-zone: Asia/Dhaka
   uploads-directory: ${UPLOADS_DIRECTORY:./uploads}

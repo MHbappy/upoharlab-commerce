@@ -29,7 +29,8 @@ import org.springframework.web.server.ResponseStatusException;
 /** The one-page order site at /order/{slug}, rendered for any product from its configuration. */
 @Controller
 public class LandingOrderController {
-  static final String REVIEW_MESSAGE = "মোট হিসাব দেখে আবার অর্ডার পাঠান।";
+  // Notices are site-text keys, so the owner can reword them in Admin → Site text.
+  static final String REVIEW_MESSAGE = "order.msg.review";
   private static final String NO_STORE = "no-store";
 
   private final ProductStore products;
@@ -114,7 +115,7 @@ public class LandingOrderController {
     synchronized (token) {
       if (token.orderCode != null) return confirmation(token.orderCode);
       if (form.getWebsite() != null && !form.getWebsite().isEmpty())
-        return render(m, product, form, token, true, "অর্ডারটি পাঠানো যায়নি। WhatsApp-এ যোগাযোগ করুন।");
+        return render(m, product, form, token, true, "order.msg.blocked");
       beans.validate(form, errors);
       Input input = validator.validate(form, config, errors);
       if (!pages.orderable(product, settings.all()) || errors.hasErrors())
@@ -125,7 +126,7 @@ public class LandingOrderController {
           || !limiter.allow("phone:" + input.phone(), ordersPerHour)) {
         res.setStatus(429);
         return render(
-            m, product, form, token, true, "এই মুহূর্তে অনেক অর্ডার এসেছে। একটু পরে আবার চেষ্টা করুন, অথবা WhatsApp-এ জানান।");
+            m, product, form, token, true, "order.msg.busy");
       }
       PlaceResult result;
       try {

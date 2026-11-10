@@ -182,6 +182,7 @@ public class ProductEditor {
         c.options(), c.upsells(), c.advanceAmount(), c.delivery(),
         new LandingConfig.Preview(designs, p.fonts(), p.defaultText(), p.maxChars()),
         c.sections(),
-        c.moreUrgencyLines());
+        c.moreUrgencyLines(),
+        c.wording());
   }
 }

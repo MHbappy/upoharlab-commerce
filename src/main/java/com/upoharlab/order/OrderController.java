@@ -17,8 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 /** The thank-you page, and redirects that keep links to the former product pages working. */
 @Controller
 public class OrderController {
-  static final String EXPIRED_MESSAGE =
-      "পাতাটি অনেকক্ষণ খোলা থাকায় আপনার তথ্য পাঠানো যায়নি। অনুগ্রহ করে আবার লিখে অর্ডার পাঠান।";
+  static final String EXPIRED_MESSAGE = "order.msg.expired";
 
   private final ProductStore products;
   private final SettingsService settings;

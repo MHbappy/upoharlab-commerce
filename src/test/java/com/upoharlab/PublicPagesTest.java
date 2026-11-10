@@ -53,8 +53,8 @@ class PublicPagesTest {
 
   private static final String[][] PAGES = {
     {"/", "উপহার ল্যাব"},
-    {"/bulk", "বেশি পরিমাণে অর্ডার"},
-    {"/faq", "সাধারণ প্রশ্ন"},
+    {"/bulk", text("bulk.title")},
+    {"/faq", text("faq.title")},
     {"/about", "আমাদের কথা"},
     {"/policies/delivery", "ডেলিভারি"},
     {"/policies/returns", "ফেরত ও বাতিল"},
@@ -93,7 +93,7 @@ class PublicPagesTest {
     assertThat(returns).contains("এখনো এখানে লেখা হয়নি");
     assertThat(returns).doesNotContain("ফ্রি রিমেক", "গ্যারান্টি", "১০০%");
     var bulk = get("/bulk").body();
-    assertThat(bulk).contains("যোগাযোগের তথ্য শিগগিরই").doesNotContain("wa.me", "tel:");
+    assertThat(bulk).contains(text("bulk.no.contact")).doesNotContain("wa.me", "tel:");
     assertThat(get("/about").body()).doesNotContain("wa.me", "tel:", "mailto:");
     assertThat(get("/policies/delivery").body())
         .as("no note about estimates while no courier times are set")
@@ -154,5 +154,10 @@ class PublicPagesTest {
     assertThat(icon.find()).as("hashed icon link").isTrue();
     assertThat(get(icon.group(1)).statusCode()).isEqualTo(200);
     assertThat(home.body()).as("order script loads only where it is used").doesNotContain("/js/order");
+  }
+
+  /** The current default wording of a site text, so tests follow copy edits in site-text.properties. */
+  static String text(String key) {
+    return new com.upoharlab.text.SiteTextCatalog().get(key).defaultText();
   }
 }

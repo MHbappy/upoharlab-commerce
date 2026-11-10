@@ -8,6 +8,13 @@
   var bn = function (v) { return String(v).replace(/[0-9]/g, function (d) { return BN[+d]; }); };
   var money = function (v) { return "৳" + bn(v); };
   var $ = function (id) { return document.getElementById(id); };
+  // Wording comes from Admin → Site text; {0} is filled in here. Fallbacks keep the page usable.
+  var textSource = $("landing-text");
+  var texts = textSource ? JSON.parse(textSource.textContent) : {};
+  var T = function (key, value) {
+    var text = texts[key] || "";
+    return value === undefined ? text : text.replace("{0}", value);
+  };
   var form = $("lp-form");
   var field = function (name) { return form ? form.elements[name] : null; };
 
@@ -59,11 +66,11 @@
     if (input && from !== input) input.value = value;
     if (engraving && from !== engraving) engraving.value = value;
     // Sample text belongs only in the illustration, never in the submitted order.
-    if (textEl) textEl.textContent = value || config.preview.defaultText || "আপনার নাম";
+    if (textEl) textEl.textContent = value || config.preview.defaultText || T("product.text.sample");
     if ($("lp-example")) $("lp-example").hidden = !!value;
     document.querySelectorAll("[data-character-count]").forEach(function (counter) { counter.textContent = bn(Array.from(value).length); });
     document.querySelectorAll("[data-font-sample] > span").forEach(function (sample) {
-      sample.textContent = value || "আপনার নাম";
+      sample.textContent = value || T("product.text.sample");
     });
     updateSelectionRecap();
     fitWhenReady();
@@ -118,7 +125,7 @@
   if (input) input.addEventListener("input", function () { setText(input.value, input); });
   document.querySelectorAll("[data-font]").forEach(function (button) {
     button.style.fontFamily = '"' + button.dataset.font + '", sans-serif';
-    button.textContent = "আপনার নাম";
+    button.textContent = T("product.text.sample");
     button.addEventListener("click", function () { setFont(button.dataset.font); });
   });
   document.querySelectorAll("[data-design]").forEach(function (button) {
@@ -139,7 +146,10 @@
     var recap = $("lp-selection-text");
     if (!recap || !form) return;
     var pack = config.packages[+checked("packageIndex")];
-    recap.textContent = [(engraving && engraving.value.trim()) || "লেখা যোগ করুন", pack && pack.name].filter(Boolean).join(" · ");
+    var written = engraving && engraving.value.trim();
+    // Only a product that requires text nags about missing text.
+    var textPart = written || (engraving && config.textMode === "REQUIRED" ? T("product.recap.empty") : "");
+    recap.textContent = [textPart, pack && pack.name].filter(Boolean).join(" · ");
   }
 
   // Choices made in the sales sections stay selected in the final order form.
@@ -152,7 +162,7 @@
       card.classList.toggle("lp-card-chosen", selected);
       var link = card.querySelector("[data-pick-package]");
       if (link) {
-        link.textContent = selected ? "এটিই নেব ✓" : "এটিই নেব →";
+        link.textContent = selected ? T("product.package.picked") : T("product.package.pick");
         if (selected) link.setAttribute("aria-current", "true"); else link.removeAttribute("aria-current");
       }
     });
@@ -197,12 +207,22 @@
     var delivery = area === "INSIDE" ? config.delivery.insideDhakaCharge
       : area === "OUTSIDE" ? config.delivery.outsideDhakaCharge : null;
     var set = function (name, text) { var el = form.querySelector('[data-line="' + name + '"]'); if (el) el.textContent = text; };
-    var waiting = "এলাকা বাছলে দেখাবে";
+    var waiting = T("product.summary.delivery.waiting");
     set("package", money(pack.price));
     set("extras", money(extras));
     set("delivery", delivery === null ? waiting : money(delivery));
     var total = delivery === null ? null : pack.price + extras + delivery;
-    set("total", total === null ? "—" : money(total));
+    var totalEl = form.querySelector('[data-line="total"]');
+    if (totalEl) {
+      // Before an area is chosen, show what is known so far rather than an empty dash.
+      totalEl.textContent = money(total === null ? pack.price + extras : total);
+      if (total === null) {
+        var note = document.createElement("small");
+        note.className = "lp-total-note";
+        note.textContent = " " + T("product.summary.plus.delivery");
+        totalEl.appendChild(note);
+      }
+    }
     field("shownTotal").value = total === null ? "" : String(total);
     var advance = total === null ? config.advanceAmount : Math.min(config.advanceAmount, total);
     document.querySelectorAll("[data-selected-price]").forEach(function (el) { el.textContent = money(pack.price + extras); });
@@ -210,11 +230,16 @@
       el.hidden = !pack.oldPrice || extras !== 0;
       el.textContent = pack.oldPrice ? money(pack.oldPrice) : "";
     });
+    var saving = pack.oldPrice && extras === 0 ? pack.oldPrice - pack.price : 0;
+    document.querySelectorAll("[data-saving]").forEach(function (el) {
+      el.hidden = saving <= 0;
+      el.textContent = saving > 0 ? T("product.saving", money(saving)) : "";
+    });
     document.querySelectorAll("[data-package-name]").forEach(function (el) { el.textContent = pack.name; });
     document.querySelectorAll("[data-payment-note]").forEach(function (el) {
       el.textContent = advance > 0
-        ? "ডিজাইনে সম্মতির পরে " + money(advance) + " অগ্রিম। বাকি টাকা হাতে পেয়ে।"
-        : "কোনো অগ্রিম নেই। পুরো টাকা হাতে পেয়ে দেবেন।";
+        ? T(config.textMode === "NONE" ? "product.advance.note.plain" : "product.advance.note", money(advance))
+        : T("product.advance.none");
     });
   }
 
@@ -309,10 +334,10 @@
   var share = $("lp-share");
   if (share && svg) {
     var label = share.textContent;
-    var message = "দেখো তো এই নামের ডিজাইনটা কেমন লাগছে? " + location.origin + location.pathname;
+    var message = T("product.share.message") + " " + location.origin + location.pathname;
     share.addEventListener("click", function () {
       share.disabled = true;
-      share.textContent = "ছবি তৈরি হচ্ছে…";
+      share.textContent = T("product.share.making");
       renderPng().then(function (blob) {
         var picture = new File([blob], "upohar-preview.png", { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files: [picture] })) {

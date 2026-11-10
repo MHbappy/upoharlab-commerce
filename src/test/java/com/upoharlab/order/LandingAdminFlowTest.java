@@ -151,7 +151,7 @@ class LandingAdminFlowTest {
     assertThat(products.get(id).photos()).as("landing images stay out of the gallery").hasSize(1);
     assertThat(products.get(id).landing().preview().designs().get(0).imageWidth()).isEqualTo(600);
     String html = new Browser(port).get("/order/admin-mug").body();
-    assertThat(html).contains("নিজের নামের মগ", "অর্ডার পাঠান", "সবচেয়ে জনপ্রিয়");
+    assertThat(html).contains("নিজের নামের মগ", text("product.submit"), text("product.packages.popular"));
   }
 
   @Test
@@ -347,5 +347,10 @@ class LandingAdminFlowTest {
     assertThat(download.headers().firstValue("content-disposition").orElseThrow()).contains("attachment");
     assertThat(download.body()).contains(">ক্ষেত্র<").doesNotContain("<image");
     assertThat(download.headers().firstValue("x-content-type-options").orElseThrow()).isEqualTo("nosniff");
+  }
+
+  /** The current default wording of a site text, so tests follow copy edits in site-text.properties. */
+  static String text(String key) {
+    return new com.upoharlab.text.SiteTextCatalog().get(key).defaultText();
   }
 }

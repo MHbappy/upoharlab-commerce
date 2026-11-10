@@ -14,7 +14,8 @@ public enum OrderStatus {
   /** The only moves the server allows; extra conditions are checked in AdminOrderService. */
   public Set<OrderStatus> next() {
     return switch (this) {
-      case NEW -> Set.of(DESIGN_SENT, CANCELLED);
+      // Straight to CONFIRMED only for orders without a design; AdminOrderService checks that.
+      case NEW -> Set.of(DESIGN_SENT, CONFIRMED, CANCELLED);
       case DESIGN_SENT -> Set.of(CONFIRMED, CANCELLED);
       case CONFIRMED -> Set.of(MAKING, CANCELLED);
       case MAKING -> Set.of(SHIPPED, CANCELLED);

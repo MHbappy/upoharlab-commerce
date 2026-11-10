@@ -6,36 +6,36 @@
 <div class="lp-wrap lp-hook-grid">
 <img class="lp-hero" th:if="${hero.allImages().size() == 1}" th:src="@{/media/{n}(n=${hero.heroImage()})}" th:alt="${hero.headline()}" fetchpriority="high" decoding="async" width="1200" height="900">
 <div class="lp-hero-box" th:if="${hero.allImages().size() > 1}">
-<div class="lp-gallery lp-hero-strip" id="lp-hero-strip" role="group" aria-label="পণ্যের ছবি" tabindex="0">
+<div class="lp-gallery lp-hero-strip" id="lp-hero-strip" role="group" th:aria-label="#{product.gallery.label}" tabindex="0">
 <img class="lp-hero" th:each="image, i : ${hero.allImages()}" th:src="@{/media/{n}(n=${image})}" th:alt="${hero.headline()}" th:attr="fetchpriority=${i.first ? 'high' : null},loading=${i.first ? null : 'lazy'}" decoding="async" width="1200" height="900">
 </div>
-<div class="lp-gallery-thumbs lp-hero-thumbs" role="group" aria-label="ছবি বাছুন" data-js-only hidden>
-<button type="button" class="lp-gallery-thumb lp-hero-thumb" th:each="image, i : ${hero.allImages()}" th:with="photoLabel=${'ছবি ' + @bn.digits(i.count)}" th:attr="aria-label=${photoLabel}"><img th:src="@{/media/{n}(n=${'thumb-' + image})}" alt="" loading="lazy" width="72" height="54"></button>
+<div class="lp-gallery-thumbs lp-hero-thumbs" role="group" th:aria-label="#{product.gallery.pick}" data-js-only hidden>
+<button type="button" class="lp-gallery-thumb lp-hero-thumb" th:each="image, i : ${hero.allImages()}" th:with="photoLabel=${#messages.msg('product.photo.n', @bn.digits(i.count))}" th:attr="aria-label=${photoLabel}"><img th:src="@{/media/{n}(n=${'thumb-' + image})}" alt="" loading="lazy" width="72" height="54"></button>
 </div>
 </div>
 <div class="lp-hook-copy">
 <h1 th:text="${hero.headline()}"></h1>
 <p class="lp-sub" th:if="${!#strings.isEmpty(hero.subHeadline())}" th:text="${hero.subHeadline()}"></p>
 <div class="lp-offer" th:if="${quote != null or hero.offerPrice() != null}">
-<p class="lp-offer-label">আপনার বেছে নেওয়া উপহার</p>
-<p class="lp-price"><strong data-selected-price th:text="${@bn.money(quote != null ? quote.packagePrice() + quote.extras() : hero.offerPrice())}"></strong><s data-old-price th:hidden="${selectedOldPrice == null}" th:text="${selectedOldPrice != null ? @bn.money(selectedOldPrice) : ''}"></s></p>
-<p class="lp-help"><span data-package-name th:text="${selectedPackageName}"></span> · ডেলিভারি চার্জ আলাদা</p>
-<p class="lp-payment" th:if="${config.advanceAmount() != null}" data-payment-note th:text="${config.advanceAmount() > 0 ? 'ডিজাইনে সম্মতির পরে ' + @bn.money(quote != null and quote.advance() != null ? quote.advance() : config.advanceAmount()) + ' অগ্রিম। বাকি টাকা হাতে পেয়ে।' : 'কোনো অগ্রিম নেই। পুরো টাকা হাতে পেয়ে দেবেন।'}"></p>
+<p class="lp-offer-label" th:text="#{product.offer.label}"></p>
+<p class="lp-price"><strong data-selected-price th:text="${@bn.money(quote != null ? quote.packagePrice() + quote.extras() : hero.offerPrice())}"></strong><s data-old-price th:hidden="${selectedOldPrice == null}" th:text="${selectedOldPrice != null ? @bn.money(selectedOldPrice) : ''}"></s><span class="lp-save" data-saving th:with="saving=${selectedOldPrice != null and quote != null ? selectedOldPrice - quote.packagePrice() : 0}" th:hidden="${saving <= 0}" th:text="${saving > 0 ? #messages.msg('product.saving', @bn.money(saving)) : ''}"></span></p>
+<p class="lp-help"><span data-package-name th:text="${selectedPackageName}"></span> · <th:block th:text="#{product.offer.delivery}"></th:block></p>
+<p class="lp-payment" th:if="${config.advanceAmount() != null}" data-payment-note th:text="${config.advanceAmount() > 0 ? #messages.msg(plain ? 'product.advance.note.plain' : 'product.advance.note', @bn.money(quote != null and quote.advance() != null ? quote.advance() : config.advanceAmount())) : #messages.msg('product.advance.none')}"></p>
 </div>
-<a class="lp-btn" href="#order" th:if="${showOrder and orderable}">আমার নামে বানাতে চাই <span aria-hidden="true">↓</span></a>
-<p class="lp-hero-reassurance">✓ আগে ডিজাইন দেখুন &nbsp; ✓ সম্মতির পরে বানানো</p>
+<a class="lp-btn" href="#order" th:if="${showOrder and orderable}"><th:block th:text="#{product.hero.cta}"></th:block> <span aria-hidden="true">↓</span></a>
+<p class="lp-hero-reassurance">✓ <th:block th:text="${#messages.msg(plain ? 'product.hero.plain1' : 'product.hero.reassure1')}"></th:block> &nbsp; ✓ <th:block th:text="${#messages.msg(plain ? 'product.hero.plain2' : 'product.hero.reassure2')}"></th:block></p>
 </div>
 </div>
 </section>
 
 <section th:fragment="preview" id="preview" class="lp-section lp-preview" th:if="${activeDesign != null}" aria-labelledby="preview-title">
 <div class="lp-wrap">
-<p class="lp-kicker">বানানোর আগে দেখে নিন</p>
-<h2 id="preview-title">আপনার নাম লিখে দেখুন</h2>
+<p class="lp-kicker" th:text="#{product.preview.kicker}"></p>
+<h2 id="preview-title" th:text="${previewTitle}"></h2>
 <div class="lp-preview-grid">
 <div class="lp-preview-art">
 <div class="lp-stage">
-<svg id="lp-svg" role="img" aria-label="নামের প্রিভিউ" xmlns="http://www.w3.org/2000/svg" th:attr="viewBox=${'0 0 ' + activeDesign.imageWidth() + ' ' + activeDesign.imageHeight()}">
+<svg id="lp-svg" role="img" th:aria-label="#{product.preview.svg.label}" xmlns="http://www.w3.org/2000/svg" th:attr="viewBox=${'0 0 ' + activeDesign.imageWidth() + ' ' + activeDesign.imageHeight()}">
 <defs><filter id="lp-shadow" x="-10%" y="-30%" width="120%" height="160%"><feDropShadow id="lp-shadow-drop" dx="1" dy="2" stdDeviation="2" flood-opacity="0.7" th:attr="flood-color=${#strings.isEmpty(activeDesign.shadow()) ? '#FFFFFF' : activeDesign.shadow()}"/></filter></defs>
 <g id="lp-art">
 <rect id="lp-blank" fill="#E6D3B8" width="100%" height="100%"/>
@@ -44,18 +44,18 @@
 </g>
 </svg>
 </div>
-<p id="lp-example" class="lp-help" th:hidden="${!#strings.isEmpty(orderForm.engraving)}">এখন নমুনা লেখা দেখছেন। আপনার নাম লিখলে প্রিভিউ বদলে যাবে।</p>
-<p class="lp-caption">এটি আনুমানিক প্রিভিউ। বানানোর আগে চূড়ান্ত ডিজাইন WhatsApp-এ পাঠিয়ে আপনার অনুমোদন নেওয়া হবে।</p>
+<p id="lp-example" class="lp-help" th:hidden="${!#strings.isEmpty(orderForm.engraving)}" th:text="#{product.preview.sample}"></p>
+<p class="lp-caption" th:text="#{product.preview.caption}"></p>
 </div>
 <div class="lp-controls-col">
 <div class="lp-controls" data-js-only hidden>
-<label for="lp-input">আপনার নাম / লেখা</label>
-<input id="lp-input" type="text" autocomplete="off" placeholder="আপনার নাম বা পছন্দের লেখা" th:value="${orderForm.engraving}" th:attr="maxlength=${config.preview().maxChars()}">
-<p class="lp-counter" aria-live="polite"><span data-character-count></span> / <span th:text="${@bn.digits(config.preview().maxChars())}"></span> অক্ষর</p>
-<p class="lp-warn" id="lp-too-wide" hidden>লেখাটি একটু বড়। ছোট করলে ভালো দেখাবে।</p>
+<label for="lp-input" th:text="${textLabel}"></label>
+<input id="lp-input" type="text" autocomplete="off" th:placeholder="${textPlaceholder}" th:value="${orderForm.engraving}" th:attr="maxlength=${config.preview().maxChars()}">
+<p class="lp-counter" aria-live="polite"><span data-character-count></span> / <span th:text="${@bn.digits(config.preview().maxChars())}"></span> <th:block th:text="#{product.text.chars}"></th:block></p>
+<p class="lp-warn" id="lp-too-wide" hidden th:text="#{product.text.too.wide}"></p>
 <div class="lp-group" th:if="${config.preview().designs().size() > 1}">
-<p class="lp-group-label">ডিজাইন</p>
-<div class="lp-thumbs" role="group" aria-label="ডিজাইন">
+<p class="lp-group-label" th:text="#{product.design.label}"></p>
+<div class="lp-thumbs" role="group" th:aria-label="#{product.design.label}">
 <button type="button" class="lp-thumb" th:each="d, i : ${config.preview().designs()}" th:attr="data-design=${i.index},aria-label=${d.name()}">
 <img th:if="${!#strings.isEmpty(d.baseImage())}" th:src="@{/media/{n}(n=${'thumb-' + d.baseImage()})}" alt="" loading="lazy" width="96" height="72">
 <span th:text="${d.name()}"></span>
@@ -63,9 +63,9 @@
 </div>
 </div>
 <div class="lp-group" th:if="${config.preview().fonts().size() > 1}">
-<p class="lp-group-label">লেখার ধরন</p>
-<div class="lp-choices" role="group" aria-label="ফন্ট">
-<button type="button" class="lp-chip lp-font-chip" th:each="f, i : ${config.preview().fonts()}" th:with="fontLabel=${'ফন্ট ' + @bn.digits(i.count)}" th:attr="data-font=${f},aria-label=${fontLabel}" th:text="${fontLabel}"></button>
+<p class="lp-group-label" th:text="#{product.font.label}"></p>
+<div class="lp-choices" role="group" th:aria-label="#{product.font.label}">
+<button type="button" class="lp-chip lp-font-chip" th:each="f, i : ${config.preview().fonts()}" th:with="fontLabel=${#messages.msg('product.font.n', @bn.digits(i.count))}" th:attr="data-font=${f},aria-label=${fontLabel}" th:text="${fontLabel}"></button>
 </div>
 </div>
 <div class="lp-group" th:each="o, oi : ${config.options()}">
@@ -75,8 +75,8 @@
 </div>
 </div>
 </div>
-<a class="lp-btn" href="#order" th:if="${showOrder and orderable}">এই ডিজাইনটাই অর্ডার করুন</a>
-<button type="button" class="lp-btn lp-btn-soft" id="lp-share" data-js-only hidden>WhatsApp-এ পরিবারকে দেখান</button>
+<a class="lp-btn" href="#order" th:if="${showOrder and orderable}" th:text="#{product.preview.order}"></a>
+<button type="button" class="lp-btn lp-btn-soft" id="lp-share" data-js-only hidden th:text="#{product.share.button}"></button>
 </div>
 </div>
 </div>
@@ -84,7 +84,7 @@
 
 <section th:fragment="benefits" class="lp-section" th:if="${config.sections().benefits() and !config.benefits().isEmpty()}" aria-labelledby="why-title">
 <div class="lp-wrap">
-<h2 id="why-title">কেন এটি নেবেন</h2>
+<h2 id="why-title" th:text="#{product.benefits.title}"></h2>
 <ul class="lp-benefits"><li th:each="b : ${config.benefits()}" th:text="${b}"></li></ul>
 </div>
 </section>
@@ -92,40 +92,40 @@
 <th:block th:fragment="productInfo" th:with="d=${product.details},photos=${product.photos},showGallery=${config.sections().gallery() and !product.photos.isEmpty()},showDetails=${config.sections().details()},hasMaking=${product.details.makingDaysMin != null and product.details.makingDaysMax != null}">
 <section class="lp-section lp-info" aria-labelledby="info-title" th:if="${showGallery or (showDetails and (!#strings.isEmpty(d.shortDescription) or !#strings.isEmpty(d.description) or !#strings.isEmpty(d.includes) or !#strings.isEmpty(d.size) or !#strings.isEmpty(d.material) or !#strings.isEmpty(d.engravingHelp) or !#strings.isEmpty(d.care) or d.indoorOnly or hasMaking or deliveryInside != null or deliveryOutside != null))}">
 <div class="lp-wrap">
-<h2 id="info-title">পণ্যের বিস্তারিত</h2>
+<h2 id="info-title" th:text="#{product.details.title}"></h2>
 <div class="lp-info-grid" th:classappend="${showGallery and showDetails ? 'lp-info-two' : ''}">
 <div class="lp-gallery-box" th:if="${showGallery}">
-<div class="lp-gallery" id="lp-gallery" role="group" aria-label="পণ্যের ছবি" th:attr="tabindex=${photos.size() > 1 ? 0 : null}">
+<div class="lp-gallery" id="lp-gallery" role="group" th:aria-label="#{product.gallery.label}" th:attr="tabindex=${photos.size() > 1 ? 0 : null}">
 <img th:each="photo, i : ${photos}" th:src="@{/media/{n}(n=${photo.filename()})}" th:alt="${photo.alt()}" loading="lazy" decoding="async" width="1200" height="900">
 </div>
-<div class="lp-gallery-thumbs" role="group" aria-label="ছবি বাছুন" data-js-only hidden th:if="${photos.size() > 1}">
-<button type="button" class="lp-gallery-thumb" th:each="photo, i : ${photos}" th:with="photoLabel=${'ছবি ' + @bn.digits(i.count)}" th:attr="data-photo=${i.index},aria-label=${photoLabel}"><img th:src="@{/media/{n}(n=${'thumb-' + photo.filename()})}" alt="" loading="lazy" width="72" height="54"></button>
+<div class="lp-gallery-thumbs" role="group" th:aria-label="#{product.gallery.pick}" data-js-only hidden th:if="${photos.size() > 1}">
+<button type="button" class="lp-gallery-thumb" th:each="photo, i : ${photos}" th:with="photoLabel=${#messages.msg('product.photo.n', @bn.digits(i.count))}" th:attr="data-photo=${i.index},aria-label=${photoLabel}"><img th:src="@{/media/{n}(n=${'thumb-' + photo.filename()})}" alt="" loading="lazy" width="72" height="54"></button>
 </div>
 </div>
 <div class="lp-info-text" th:if="${showDetails}">
 <p class="lp-lead lp-pre" th:if="${!#strings.isEmpty(d.shortDescription)}" th:text="${d.shortDescription}"></p>
 <p class="lp-pre" th:if="${!#strings.isEmpty(d.description)}" th:text="${d.description}"></p>
-<p class="lp-indoor" th:if="${d.indoorOnly}">শুধু ঘরের ভেতরে ব্যবহারের জন্য। রোদ-বৃষ্টিতে রাখবেন না।</p>
+<p class="lp-indoor" th:if="${d.indoorOnly}" th:text="#{product.details.indoor}"></p>
 <dl class="lp-specs">
-<div class="lp-spec" th:if="${!#strings.isEmpty(d.size)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8h20v8H2zM6 8v3M10 8v4M14 8v3M18 8v4"/></svg>মাপ</dt><dd class="lp-pre" th:text="${d.size}"></dd></div>
-<div class="lp-spec" th:if="${!#strings.isEmpty(d.material)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5"/></svg>উপাদান</dt><dd class="lp-pre" th:text="${d.material}"></dd></div>
-<div class="lp-spec" th:if="${hasMaking}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg>বানাতে সময়</dt><dd th:text="${@bn.digits(d.makingDaysMin) + '–' + @bn.digits(d.makingDaysMax) + ' দিন, সম্মতি ও প্রযোজ্য অগ্রিমের পরে'}"></dd></div>
-<div class="lp-spec" th:if="${deliveryInside != null or deliveryOutside != null}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h12v10H2zM14 10h4l4 3v3h-8M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>ডেলিভারি</dt><dd><span class="lp-line" th:if="${deliveryInside != null}" th:text="${'ঢাকায় ' + deliveryInside + ' দিন'}"></span><span class="lp-line" th:if="${deliveryOutside != null}" th:text="${'ঢাকার বাইরে ' + deliveryOutside + ' দিন'}"></span></dd></div>
-<div class="lp-spec lp-spec-wide" th:if="${!#strings.isEmpty(d.includes)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8S10 3 7.5 3a2.5 2.5 0 0 0 0 5zM12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5z"/></svg>কী পাবেন</dt><dd class="lp-pre" th:text="${d.includes}"></dd></div>
-<div class="lp-spec lp-spec-wide" th:if="${!#strings.isEmpty(d.engravingHelp)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 1-5L16 4l4 4L9 19z"/></svg>কী লেখা যাবে</dt><dd class="lp-pre" th:text="${d.engravingHelp}"></dd></div>
+<div class="lp-spec" th:if="${!#strings.isEmpty(d.size)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8h20v8H2zM6 8v3M10 8v4M14 8v3M18 8v4"/></svg><th:block th:text="#{product.details.size}"></th:block></dt><dd class="lp-pre" th:text="${d.size}"></dd></div>
+<div class="lp-spec" th:if="${!#strings.isEmpty(d.material)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5"/></svg><th:block th:text="#{product.details.material}"></th:block></dt><dd class="lp-pre" th:text="${d.material}"></dd></div>
+<div class="lp-spec" th:if="${hasMaking}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2"/></svg><th:block th:text="#{product.details.making}"></th:block></dt><dd th:text="#{product.details.making.value(${@bn.digits(d.makingDaysMin)}, ${@bn.digits(d.makingDaysMax)})}"></dd></div>
+<div class="lp-spec" th:if="${deliveryInside != null or deliveryOutside != null}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h12v10H2zM14 10h4l4 3v3h-8M7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg><th:block th:text="#{product.details.delivery}"></th:block></dt><dd><span class="lp-line" th:if="${deliveryInside != null}" th:text="#{product.details.delivery.inside(${deliveryInside})}"></span><span class="lp-line" th:if="${deliveryOutside != null}" th:text="#{product.details.delivery.outside(${deliveryOutside})}"></span></dd></div>
+<div class="lp-spec lp-spec-wide" th:if="${!#strings.isEmpty(d.includes)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8S10 3 7.5 3a2.5 2.5 0 0 0 0 5zM12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5z"/></svg><th:block th:text="#{product.details.includes}"></th:block></dt><dd class="lp-pre" th:text="${d.includes}"></dd></div>
+<div class="lp-spec lp-spec-wide" th:if="${!#strings.isEmpty(d.engravingHelp)}"><dt><svg class="lp-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 1-5L16 4l4 4L9 19z"/></svg><th:block th:text="#{product.details.writing}"></th:block></dt><dd class="lp-pre" th:text="${d.engravingHelp}"></dd></div>
 </dl>
-<p class="lp-care lp-pre" th:if="${!#strings.isEmpty(d.care)}"><strong>যত্ন: </strong><span th:text="${d.care}"></span></p>
+<p class="lp-care lp-pre" th:if="${!#strings.isEmpty(d.care)}"><strong th:text="#{product.details.care} + ' '"></strong><span th:text="${d.care}"></span></p>
 </div>
 </div>
 </div>
 </section>
 </th:block>
 
-<section th:fragment="proof" class="lp-section lp-proof" th:with="p=${config.socialProof()}" th:if="${config.sections().socialProof() and (!config.socialProof().customerImages().isEmpty() or !config.socialProof().allReviews().isEmpty() or config.socialProof().countNumber() != null)}" aria-label="ক্রেতাদের কথা">
+<section th:fragment="proof" class="lp-section lp-proof" th:with="p=${config.socialProof()}" th:if="${config.sections().socialProof() and (!config.socialProof().customerImages().isEmpty() or !config.socialProof().allReviews().isEmpty() or config.socialProof().countNumber() != null)}" th:aria-label="#{product.proof.title}">
 <div class="lp-wrap">
-<p class="lp-kicker">যাঁদের জন্য বানিয়েছি</p><h2>ক্রেতাদের কথা</h2>
+<p class="lp-kicker" th:text="#{product.proof.kicker}"></p><h2 th:text="#{product.proof.title}"></h2>
 <div class="lp-photos" th:if="${!p.customerImages().isEmpty()}">
-<img th:each="i : ${p.customerImages()}" th:src="@{/media/{n}(n=${'thumb-' + i})}" alt="ক্রেতার পাঠানো ছবি" loading="lazy" decoding="async" width="300" height="300">
+<img th:each="i : ${p.customerImages()}" th:src="@{/media/{n}(n=${'thumb-' + i})}" th:alt="#{product.proof.photo.alt}" loading="lazy" decoding="async" width="300" height="300">
 </div>
 <div class="lp-reviews" th:if="${!p.allReviews().isEmpty()}">
 <blockquote th:each="r : ${p.allReviews()}">
@@ -133,22 +133,22 @@
 <footer th:text="${r.name() + (#strings.isEmpty(r.area()) ? '' : ', ' + r.area())}"></footer>
 </blockquote>
 </div>
-<p class="lp-count-line" th:if="${p.countNumber() != null}" th:text="${@bn.digits(p.countNumber()) + '+ জন ' + p.proofLine()}"></p>
+<p class="lp-count-line" th:if="${p.countNumber() != null}" th:text="#{product.proof.count(${@bn.digits(p.countNumber())}, ${p.proofLine()})}"></p>
 </div>
 </section>
 
 <section th:fragment="pricing" id="packages" class="lp-section lp-packages" th:if="${config.sections().packages() and !config.packages().isEmpty()}" aria-labelledby="pricing-title">
 <div class="lp-wrap">
-<p class="lp-kicker">আপনার জন্য কোনটি?</p>
-<h2 id="pricing-title">আপনার প্যাকেজ বেছে নিন</h2>
-<p class="lp-section-intro">যা দরকার সেটিই বাছুন। নিচে ডেলিভারিসহ পুরো হিসাব দেখতে পাবেন।</p>
+<p class="lp-kicker" th:text="#{product.packages.kicker}"></p>
+<h2 id="pricing-title" th:text="#{product.packages.title}"></h2>
+<p class="lp-section-intro" th:text="#{product.packages.intro}"></p>
 <div class="lp-cards">
 <article class="lp-card" th:each="t, i : ${config.packages()}" th:classappend="${t.isPopular() ? 'lp-card-popular' : ''}" th:attr="data-card=${i.index}">
-<p class="lp-badge" th:if="${t.isPopular() and config.packages().size() > 1}">সবচেয়ে জনপ্রিয়</p>
+<p class="lp-badge" th:if="${t.isPopular() and config.packages().size() > 1}" th:text="#{product.packages.popular}"></p>
 <h3 th:text="${t.name()}"></h3>
 <p class="lp-card-desc" th:text="${t.description()}"></p>
-<p class="lp-price" th:if="${t.price() != null}"><strong th:text="${@bn.money(t.price())}"></strong> <s th:if="${t.oldPrice() != null}" th:text="${@bn.money(t.oldPrice())}"></s></p>
-<a class="lp-btn" href="#order" th:if="${showOrder and orderable}" th:attr="data-pick-package=${i.index}">এটিই নেব <span aria-hidden="true">→</span></a>
+<p class="lp-price" th:if="${t.price() != null}"><strong th:text="${@bn.money(t.price())}"></strong> <s th:if="${t.oldPrice() != null}" th:text="${@bn.money(t.oldPrice())}"></s> <span class="lp-save" th:if="${t.price() != null and t.oldPrice() != null and t.oldPrice() > t.price()}" th:text="#{product.saving(${@bn.money(t.oldPrice() - t.price())})}"></span></p>
+<a class="lp-btn" href="#order" th:if="${showOrder and orderable}" th:attr="data-pick-package=${i.index}" th:text="#{product.package.pick}"></a>
 </article>
 </div>
 <p class="lp-urgency" th:each="line : ${config.allUrgencyLines()}" th:text="${line}"></p>
@@ -158,16 +158,16 @@
 <th:block th:fragment="pageEnd">
 <footer class="lp-footer" th:with="phone=${settings['phone']}">
 <div class="lp-wrap">
-<p class="lp-foot-brand">উপহার ল্যাব</p>
+<p class="lp-foot-brand" th:text="#{site.name}"></p>
 <p class="lp-foot-links">
-<a th:if="${!#strings.isEmpty(phone)}" th:href="${'tel:' + phone}" th:text="${'কল করুন: ' + @bn.digits(phone)}"></a>
+<a th:if="${!#strings.isEmpty(phone)}" th:href="${'tel:' + phone}" th:text="#{product.footer.call(${@bn.digits(phone)})}"></a>
 <a th:if="${whatsapp != null}" th:href="${whatsapp}">WhatsApp</a>
 </p>
-<p class="lp-foot-links"><a th:href="@{/policies/delivery}">ডেলিভারি</a> <a th:href="@{/policies/returns}">ফেরত ও বাতিল</a> <a th:href="@{/policies/privacy}">গোপনীয়তা</a></p>
+<p class="lp-foot-links"><a th:href="@{/policies/delivery}" th:text="#{footer.delivery}"></a> <a th:href="@{/policies/returns}" th:text="#{footer.returns}"></a> <a th:href="@{/policies/privacy}" th:text="#{footer.privacy}"></a></p>
 </div>
 </footer>
-<nav class="lp-sticky" id="lp-sticky" aria-label="অর্ডার" data-js-only hidden th:if="${showOrder and orderable}">
-<div class="lp-sticky-inner"><div class="lp-sticky-price"><small>বাছাই করা প্যাকেজ ও অপশন</small><strong data-selected-price th:text="${quote != null ? @bn.money(quote.packagePrice() + quote.extras()) : ''}"></strong></div><a class="lp-btn" href="#order">অর্ডার করুন <span aria-hidden="true">↓</span></a></div>
+<nav class="lp-sticky" id="lp-sticky" th:aria-label="#{product.sticky.cta}" data-js-only hidden th:if="${showOrder and orderable}">
+<div class="lp-sticky-inner"><div class="lp-sticky-price"><small th:text="#{product.sticky.price}"></small><strong data-selected-price th:text="${quote != null ? @bn.money(quote.packagePrice() + quote.extras()) : ''}"></strong></div><a class="lp-btn" href="#order"><th:block th:text="#{product.sticky.cta}"></th:block> <span aria-hidden="true">↓</span></a></div>
 </nav>
 </th:block>
 </body>

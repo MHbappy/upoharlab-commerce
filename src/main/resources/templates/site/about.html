@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('আমাদের কথা — উপহার ল্যাব', 'উপহার ল্যাব নাম খোদাই করা চাবির রিং ও নেমপ্লেট বানায়।', '/about', null, false)}">
+<head th:replace="~{fragments/head :: head(#{about.meta.title}, #{about.meta.description}, '/about', null, false)}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}">
 </header>
 <main id="main" class="container product-main reading-width">
-<h1>আমাদের কথা</h1>
-<p class="lead">উপহার ল্যাব নাম খোদাই করা চাবির রিং আর বাসা ও অফিসের নেমপ্লেট বানায়।</p>
-<p>প্রতিটি অর্ডার বানানোর আগে WhatsApp-এ ডিজাইন দেখাই। আপনি ডিজাইন ও বানান দেখে সম্মতি দিলে তবেই বানানো শুরু হয়।</p>
+<h1 th:text="#{about.title}"></h1>
+<p class="lead" th:text="#{about.lead}"></p>
+<p class="preserve-lines" th:text="#{about.text}"></p>
 <th:block th:if="${whatsapp != null or !#strings.isEmpty(settings['phone']) or !#strings.isEmpty(settings['business_email'])}">
-<h2>যোগাযোগ</h2>
+<h2 th:text="#{about.contact}"></h2>
 <ul>
 <li th:if="${whatsapp != null}"><a th:href="${whatsapp}">WhatsApp</a></li>
 <li th:if="${!#strings.isEmpty(settings['phone'])}"><a th:href="${'tel:' + settings['phone']}" th:text="${settings['phone']}"></a></li>

@@ -79,7 +79,8 @@ public class AdminOrderService {
       boolean canEditContact,
       boolean canCancel,
       List<Payment> payments,
-      List<Event> history) {}
+      List<Event> history,
+      boolean needsDesign) {}
 
   private record Locked(
       long id,
@@ -88,7 +89,8 @@ public class AdminOrderService {
       int advanceRequired,
       boolean approved,
       String courier,
-      String trackingNo) {}
+      String trackingNo,
+      boolean needsDesign) {}
 
   private final JdbcTemplate db;
 
@@ -239,18 +241,20 @@ public class AdminOrderService {
               instant(r, "created_at"),
               net,
               status == OrderStatus.CANCELLED ? null : Long.valueOf(total - net),
-              missingForConfirmation(approved != null, advance, net),
+              missingForConfirmation(r.getBoolean("needs_design"), approved != null, advance, net),
               status.beforeShipping(),
               status.beforeShipping(),
               payments,
-              history);
+              history,
+              r.getBoolean("needs_design"));
         },
         id);
   }
 
-  private static List<String> missingForConfirmation(boolean approved, int advance, long paid) {
+  private static List<String> missingForConfirmation(
+      boolean needsDesign, boolean approved, int advance, long paid) {
     List<String> missing = new ArrayList<>();
-    if (!approved) missing.add("Customer design approval has not been recorded.");
+    if (needsDesign && !approved) missing.add("Customer design approval has not been recorded.");
     if (paid < advance)
       missing.add("The ৳" + advance + " advance has not been recorded in full (received ৳" + paid + ").");
     return missing;
@@ -265,8 +269,8 @@ public class AdminOrderService {
   private Locked lock(String code) {
     return db
         .query(
-            "SELECT id, status, total, advance_required, design_approved_at, courier, tracking_no"
-                + " FROM orders WHERE code=? FOR UPDATE",
+            "SELECT id, status, total, advance_required, design_approved_at, courier, tracking_no,"
+                + " needs_design FROM orders WHERE code=? FOR UPDATE",
             (r, n) ->
                 new Locked(
                     r.getLong("id"),
@@ -275,7 +279,8 @@ public class AdminOrderService {
                     r.getInt("advance_required"),
                     r.getTimestamp("design_approved_at") != null,
                     r.getString("courier"),
-                    r.getString("tracking_no")),
+                    r.getString("tracking_no"),
+                    r.getBoolean("needs_design")),
             code)
         .stream()
         .findFirst()
@@ -315,12 +320,16 @@ public class AdminOrderService {
     Locked order = lock(code);
     if (!order.status().next().contains(to))
       throw new RuleException("An order cannot move from " + order.status() + " to " + to + ".");
+    if (order.status() == OrderStatus.NEW && to == OrderStatus.CONFIRMED && order.needsDesign())
+      throw new RuleException("Send the design and record the customer's approval first.");
+    if (to == OrderStatus.DESIGN_SENT && !order.needsDesign())
+      throw new RuleException("This order has no customer text, so there is no design to send.");
     String note = null;
     switch (to) {
       case CONFIRMED, MAKING -> {
         List<String> missing =
             missingForConfirmation(
-                order.approved(), order.advanceRequired(), netPaid(order.id()));
+                order.needsDesign(), order.approved(), order.advanceRequired(), netPaid(order.id()));
         if (!missing.isEmpty()) throw new RuleException(String.join(" ", missing));
       }
       case SHIPPED -> saveCourier(order.id(), courier, tracking);

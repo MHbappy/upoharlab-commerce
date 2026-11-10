@@ -70,7 +70,7 @@ public final class LandingValidator {
     else if (c.packages().isEmpty() && c.hero().offerPrice() == null)
       p.add("Landing page: add a package price or an offer price; the shop list shows it.");
     if (show.order()) orderSetup(c, p);
-    if (show.preview()) preview(c, p);
+    if (c.showsPreview()) preview(c, p);
     if (show.socialProof()) proof(c, p);
     return p;
   }

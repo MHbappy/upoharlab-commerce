@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org"><body>
 <header th:fragment="header" class="site-header shop-header">
-<a class="skip-link" href="#main">মূল বিষয়বস্তুতে যান</a>
-
+<a class="skip-link" href="#main" th:text="#{site.skip}">মূল অংশে যান</a>
 <div class="container header-inner">
-<a class="brand" th:href="@{/}" aria-label="উপহার ল্যাব — হোম"><span class="brand-mark" aria-hidden="true">উ</span><span class="brand-wordmark">উপহার ল্যাব<small>একটু আপন করে দেওয়া</small></span></a>
-<nav aria-label="প্রধান নেভিগেশন"><a th:href="@{/#products}">উপহারগুলো</a><a th:href="@{/faq}">সাহায্য</a><a class="nav-track" th:href="@{/track}">অর্ডার ট্র্যাক <span aria-hidden="true">↗</span></a></nav>
+<a class="brand" th:href="@{/}" th:attr="aria-label=#{site.name}"><span class="brand-mark" aria-hidden="true" th:text="#{site.mark}"></span><span class="brand-wordmark"><th:block th:text="#{site.name}"></th:block><small th:text="#{site.tagline}"></small></span></a>
+<nav th:attr="aria-label=#{nav.label}"><a th:href="@{/#products}" th:text="#{nav.products}"></a><a th:href="@{/faq}" th:text="#{nav.help}"></a><a class="nav-track" th:href="@{/track}"><th:block th:text="#{nav.track}"></th:block> <span aria-hidden="true">↗</span></a></nav>
 </div></header></body></html>

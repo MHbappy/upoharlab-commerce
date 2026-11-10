@@ -21,7 +21,8 @@ public class TrackingService {
       Instant deliveredAt,
       String courier,
       String trackingNo,
-      boolean advanceDue) {}
+      boolean advanceDue,
+      boolean needsDesign) {}
 
   private final JdbcTemplate db;
 
@@ -48,7 +49,7 @@ public class TrackingService {
             "SELECT code, status, created_at, design_approved_at, delivered_at, courier,"
                 + " tracking_no, advance_required > (SELECT coalesce(sum(CASE WHEN p.kind='PAYMENT'"
                 + " THEN p.amount ELSE -p.amount END),0) FROM payment p WHERE p.order_id=orders.id)"
-                + " AS advance_due FROM orders WHERE code=? AND phone=?",
+                + " AS advance_due, needs_design FROM orders WHERE code=? AND phone=?",
             (r, n) ->
                 new Status(
                     r.getString("code"),
@@ -58,7 +59,8 @@ public class TrackingService {
                     instant(r.getTimestamp("delivered_at")),
                     r.getString("courier"),
                     r.getString("tracking_no"),
-                    r.getBoolean("advance_due")),
+                    r.getBoolean("advance_due"),
+                    r.getBoolean("needs_design")),
             code,
             phone)
         .stream()

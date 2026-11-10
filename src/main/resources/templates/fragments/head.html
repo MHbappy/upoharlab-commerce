@@ -3,12 +3,12 @@
 <head th:fragment="head(title, description, path, image, private)">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title th:text="${title}">উপহার ল্যাব</title>
+<title th:text="${title == null ? #messages.msg('site.name') : title + ' — ' + #messages.msg('site.name')}">উপহার ল্যাব</title>
 <meta name="description" th:if="${description != null and !#strings.isEmpty(description)}" th:content="${description}">
 <meta name="robots" content="noindex" th:if="${private}">
 <th:block th:unless="${private}" th:with="canonical=${@seo.url(path)}">
 <link rel="canonical" th:if="${canonical != null}" th:href="${canonical}">
-<meta property="og:site_name" content="উপহার ল্যাব">
+<meta property="og:site_name" th:content="#{site.name}">
 <meta property="og:type" content="website">
 <meta property="og:title" th:content="${title}">
 <meta property="og:description" th:if="${description != null and !#strings.isEmpty(description)}" th:content="${description}">

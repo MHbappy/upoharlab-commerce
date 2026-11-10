@@ -2,6 +2,7 @@ package com.upoharlab.order;
 
 import com.upoharlab.settings.SettingsService;
 import com.upoharlab.shared.RateLimiter;
+import com.upoharlab.text.SiteTexts;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Clock;
@@ -17,20 +18,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class TrackingController {
+  /** Site-text keys for what customers see at each step. */
   private static final Map<String, String> LABELS =
       Map.of(
-          "NEW", "অর্ডার পেয়েছি। ডিজাইন পাঠানো হবে।",
-          "DESIGN_SENT", "ডিজাইন পাঠানো হয়েছে। আপনার সম্মতির অপেক্ষায়।",
-          "CONFIRMED", "অর্ডার নিশ্চিত হয়েছে। বানানো শুরু হবে।",
-          "MAKING", "বানানো হচ্ছে।",
-          "SHIPPED", "কুরিয়ারে পাঠানো হয়েছে।",
-          "DELIVERED", "পৌঁছে গেছে।",
-          "CANCELLED", "অর্ডারটি বাতিল হয়েছে।");
+          "NEW", "track.status.new",
+          "DESIGN_SENT", "track.status.design.sent",
+          "CONFIRMED", "track.status.confirmed",
+          "MAKING", "track.status.making",
+          "SHIPPED", "track.status.shipped",
+          "DELIVERED", "track.status.delivered",
+          "CANCELLED", "track.status.cancelled");
 
-  private static final String APPROVED =
-      "ডিজাইনে আপনার সম্মতি পেয়েছি। বানানোর প্রস্তুতি চলছে।";
-  private static final String APPROVED_AWAITING_ADVANCE =
-      "ডিজাইনে আপনার সম্মতি পেয়েছি। অগ্রিম পেলে বানানো শুরু হবে।";
+  private static final String APPROVED = "track.status.approved.paid";
+  private static final String APPROVED_AWAITING_ADVANCE = "track.status.approved.waiting";
+
+  private final SiteTexts texts;
 
   private final TrackingService tracking;
   private final SettingsService settings;
@@ -42,10 +44,12 @@ public class TrackingController {
   public TrackingController(
       TrackingService tracking,
       SettingsService settings,
+      SiteTexts texts,
       Clock clock,
       @Value("${app.tracking.max-per-ip}") int maxPerIp,
       @Value("${app.tracking.max-failures-per-code}") int maxFailuresPerCode) {
     this.tracking = tracking;
+    this.texts = texts;
     this.settings = settings;
     this.attemptsByIp = new RateLimiter(clock, Duration.ofMinutes(15), 10000);
     this.failuresByCode = new RateLimiter(clock, Duration.ofHours(1), 10000);
@@ -94,10 +98,12 @@ public class TrackingController {
   }
 
   /** Approval is recorded separately; the owner confirms the order before production. */
-  private static String label(TrackingService.Status order) {
+  private String label(TrackingService.Status order) {
+    if ("NEW".equals(order.status()) && !order.needsDesign())
+      return texts.text("track.status.new.plain");
     if (!"DESIGN_SENT".equals(order.status()) || order.approvedAt() == null)
-      return LABELS.get(order.status());
-    return order.advanceDue() ? APPROVED_AWAITING_ADVANCE : APPROVED;
+      return texts.text(LABELS.get(order.status()));
+    return texts.text(order.advanceDue() ? APPROVED_AWAITING_ADVANCE : APPROVED);
   }
 
   private void contact(Model m) {

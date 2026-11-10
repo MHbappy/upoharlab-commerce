@@ -25,8 +25,15 @@ public class HomeController {
 
   @GetMapping("/")
   public String home(Model m) {
-    m.addAttribute("products", products.list(false));
-    m.addAttribute("settings", settings.all());
+    var list = products.list(false);
+    var values = settings.all();
+    // Per product: making days plus delivery days, or null while making days are missing.
+    java.util.Map<Long, ArrivalEstimate.Range> arrival = new java.util.HashMap<>();
+    list.forEach(p -> arrival.put(p.id(),
+        ArrivalEstimate.of(p.details().getMakingDaysMin(), p.details().getMakingDaysMax())));
+    m.addAttribute("products", list);
+    m.addAttribute("arrival", arrival);
+    m.addAttribute("settings", values);
     m.addAttribute("whatsapp", settings.whatsapp(settings.all()));
     return "site/home";
   }

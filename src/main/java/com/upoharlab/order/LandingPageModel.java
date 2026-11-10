@@ -9,6 +9,7 @@ import com.upoharlab.landing.LandingPricing.Selection;
 import com.upoharlab.product.ProductStore;
 import com.upoharlab.settings.SettingsService;
 import com.upoharlab.shared.BnDigits;
+import com.upoharlab.text.SiteTexts;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,11 +22,22 @@ import org.springframework.ui.Model;
 public class LandingPageModel {
   private final SettingsService settings;
   private final LandingOrderValidator validator;
+  private final SiteTexts texts;
 
-  public LandingPageModel(SettingsService settings, LandingOrderValidator validator) {
+  public LandingPageModel(SettingsService settings, LandingOrderValidator validator, SiteTexts texts) {
     this.settings = settings;
     this.validator = validator;
+    this.texts = texts;
   }
+
+  /** Texts the page script writes on screen; {0} is filled in by the script. */
+  private static final List<String> SCRIPT_TEXTS =
+      List.of(
+          "product.text.sample", "product.recap.empty", "product.package.pick",
+          "product.package.picked", "product.summary.delivery.waiting", "product.summary.plus.delivery",
+          "product.saving", "product.advance.note", "product.advance.note.plain", "product.advance.none",
+          "product.share.message",
+          "product.share.making");
 
   /** Starting choices: the popular package, first of everything else, and a blank engraving field. */
   public LandingOrderForm defaults(LandingConfig c) {
@@ -55,7 +67,15 @@ public class LandingPageModel {
         && "true".equals(values.get("accepting_orders"));
   }
 
-  /** Returns the shown total as text, empty while the delivery area is still unknown. */
+  /** This product's own word for something, or the site-wide wording when it has none. */
+  private String word(String own, String key) {
+    return own == null || own.isBlank() ? texts.text(key) : own.strip();
+  }
+
+  /**
+   * Returns the shown total as text, empty while the delivery area is still unknown.
+   * {@code messageKey} names a site text shown above the form, or is null.
+   */
   public String fill(
       Model m,
       ProductStore.Page product,
@@ -63,7 +83,7 @@ public class LandingPageModel {
       String submitToken,
       boolean submitted,
       boolean preview,
-      String message) {
+      String messageKey) {
     LandingConfig c = product.orderLanding();
     Map<String, String> values = settings.all();
     boolean orderable = !preview && orderable(product, values);
@@ -79,8 +99,17 @@ public class LandingPageModel {
     m.addAttribute("preview", preview);
     m.addAttribute("orderable", orderable);
     m.addAttribute("showForm", orderable || submitted || preview);
-    m.addAttribute("orderMessage", message);
-    m.addAttribute("reviewNeeded", LandingOrderController.REVIEW_MESSAGE.equals(message));
+    m.addAttribute("orderMessage", messageKey == null ? null : texts.text(messageKey));
+    m.addAttribute("reviewNeeded", LandingOrderController.REVIEW_MESSAGE.equals(messageKey));
+    var w = c.wording();
+    m.addAttribute("textLabel", word(w.textLabel(), "product.text.label"));
+    m.addAttribute("textPlaceholder", word(w.textPlaceholder(), "product.text.placeholder"));
+    m.addAttribute("textHelp", word(w.textHelp(), "product.text.help"));
+    m.addAttribute("previewTitle", word(w.previewTitle(), "product.preview.title"));
+    Map<String, String> scriptTexts = new LinkedHashMap<>();
+    SCRIPT_TEXTS.forEach(key -> scriptTexts.put(key, texts.raw(key)));
+    scriptTexts.put("product.text.placeholder", (String) m.getAttribute("textPlaceholder"));
+    m.addAttribute("textsJson", LandingConfigCodec.forScriptBlock(scriptTexts));
     m.addAttribute("orderForm", form);
     m.addAttribute("submitToken", submitToken);
     m.addAttribute("quote", quote);
@@ -88,7 +117,10 @@ public class LandingPageModel {
         ? c.packages().get(selection.packageIndex()).oldPrice() : null);
     m.addAttribute("selectedPackageName", selection == null ? null : c.packages().get(selection.packageIndex()).name());
     m.addAttribute("shownTotal", shownTotal);
-    m.addAttribute("activeDesign", c.sections().preview() ? activeDesign(c, form) : null);
+    m.addAttribute("activeDesign", c.showsPreview() ? activeDesign(c, form) : null);
+    // NONE: no text box, and wording that does not promise a design to approve.
+    m.addAttribute("textMode", c.wording().textMode().name());
+    m.addAttribute("plain", c.wording().textMode() == LandingConfig.TextMode.NONE);
     m.addAttribute("showOrder", c.sections().order());
     m.addAttribute("deliveryInside", courierDays(values, "inside"));
     m.addAttribute("deliveryOutside", courierDays(values, "outside"));
@@ -125,6 +157,7 @@ public class LandingPageModel {
     view.put("advanceAmount", c.advanceAmount());
     view.put("delivery", c.delivery());
     view.put("preview", c.preview());
+    view.put("textMode", c.wording().textMode());
     view.put("fontFiles", LandingFonts.FILES);
     view.put("submitted", submitted);
     return view;

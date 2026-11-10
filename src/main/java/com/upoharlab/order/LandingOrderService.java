@@ -20,7 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class LandingOrderService {
   /** A landing order as shown on its thank-you page. */
-  public record Thanks(LandingSelection selection, int total, int advance, int balance) {}
+  public record Thanks(
+      LandingSelection selection, int total, int advance, int balance, boolean needsDesign) {}
 
   private final JdbcTemplate db;
   private final OrderCodeGenerator codes;
@@ -67,8 +68,8 @@ public class LandingOrderService {
             "INSERT INTO orders (code, submit_token, product_id, product_title_snapshot, quantity,"
                 + " engraving_text, customer_name, phone, area, address, note,"
                 + " unit_price_snapshot, extras_snapshot, delivery_charge_snapshot, total,"
-                + " advance_required, status, landing_selection, needed_by)"
-                + " VALUES (?,?,?,?,1,?,?,?,?,?,?,?,?,?,?,?,'NEW',CAST(? AS jsonb),?) RETURNING id",
+                + " advance_required, status, landing_selection, needed_by, needs_design)"
+                + " VALUES (?,?,?,?,1,?,?,?,?,?,?,?,?,?,?,?,'NEW',CAST(? AS jsonb),?,?) RETURNING id",
             Long.class,
             code,
             submitToken,
@@ -86,7 +87,8 @@ public class LandingOrderService {
             quote.total(),
             quote.advance(),
             LandingConfigCodec.write(snapshot(config, input)),
-            input.neededBy());
+            input.neededBy(),
+            config.needsDesign(input.text()));
     db.update(
         "INSERT INTO order_event (order_id, event_type, to_status, actor)"
             + " VALUES (?, 'CREATED', 'NEW', 'customer')",
@@ -144,14 +146,15 @@ public class LandingOrderService {
   public Optional<Thanks> thanks(String code) {
     return db
         .query(
-            "SELECT landing_selection, total, advance_required FROM orders"
+            "SELECT landing_selection, total, advance_required, needs_design FROM orders"
                 + " WHERE code=? AND landing_selection IS NOT NULL",
             (r, n) ->
                 new Thanks(
                     LandingConfigCodec.readAs(r.getString(1), LandingSelection.class),
                     r.getInt(2),
                     r.getInt(3),
-                    r.getInt(2) - r.getInt(3)),
+                    r.getInt(2) - r.getInt(3),
+                    r.getBoolean(4)),
             code)
         .stream()
         .findFirst();

@@ -71,9 +71,10 @@
 .lp-recommended{align-self:flex-start;font-size:12px;font-weight:600;padding:1px 8px;border-radius:4px;background:#e7ecdf;color:var(--primary)}
 .lp-input-help{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
 .lp-input-help>span{white-space:nowrap}
-.lp-compact{display:flex;flex-wrap:wrap;gap:10px}
-.lp-compact>.lp-label,.lp-compact>.lp-error{flex-basis:100%;margin-bottom:0}
-.lp-compact>.lp-choice{flex:1 1 calc(50% - 10px)}
+/* Choice cards sit on a fixed two-column grid, so an odd last card keeps the same size. */
+.lp-compact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lp-compact>.lp-label,.lp-compact>.lp-error{grid-column:1/-1;margin-bottom:0}
+.lp .lp-choice>img{width:40px;height:40px;flex:none;object-fit:cover;border-radius:4px}
 .lp-font-sample{display:flex;flex-direction:column;font-size:20px;gap:2px}
 .lp-font-sample small{font:12px/1.5 sans-serif;color:var(--muted)}
 .lp-field#upsells{display:grid;gap:8px}
@@ -89,9 +90,9 @@
 .lp-order-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:32px;border-top:1px solid #d5ddcf;padding-top:32px;margin-top:12px;align-items:start}
 .lp-order-side{position:sticky;top:24px;padding:24px;background:#fff;border:1px solid var(--border);border-radius:14px}
 .lp-order-side h3{font-size:21px;display:flex;align-items:center;gap:8px;margin-bottom:20px}
-.lp-summary dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 16px;margin:0}
+.lp-summary dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 0;margin:0}
 .lp-summary dt{font-weight:400;min-width:0;font-size:15px}
-.lp-summary dd{margin:0;text-align:right;font-weight:600;font-size:16px;max-width:180px}
+.lp-summary dd{margin:0;padding-left:16px;text-align:right;font-weight:600;font-size:16px;max-width:196px}
 .lp-summary dt.lp-total,.lp-summary dd.lp-total{border-top:1px solid var(--border);padding-top:14px;font-size:23px;font-weight:600}
 .lp-summary-package{display:block;font-size:13px;color:var(--muted)}
 .lp-actions{margin-top:22px}

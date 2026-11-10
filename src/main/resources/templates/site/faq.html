@@ -1,28 +1,28 @@
 <!DOCTYPE html>
 <html lang="bn" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('সাধারণ প্রশ্ন — উপহার ল্যাব', 'খোদাই, ডিজাইনে সম্মতি, ক্যাশ অন ডেলিভারি নিয়ে সাধারণ প্রশ্নের উত্তর।', '/faq', null, false)}">
+<head th:replace="~{fragments/head :: head(#{faq.meta.title}, #{faq.meta.description}, '/faq', null, false)}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}">
 </header>
 <main id="main" class="container product-main reading-width">
-<p class="eyebrow">জেনে নিন, নিশ্চিন্ত থাকুন</p>
-<h1>সাধারণ প্রশ্ন</h1>
-<p class="lead">উপহার বাছা থেকে হাতে পাওয়া—আপনার প্রশ্নের উত্তর।</p>
-<h2>খোদাই ও ডিজাইন</h2>
-<details><summary>কী লেখা খোদাই করা যাবে?</summary><p>পণ্যের পাতায় সেই পণ্যের জন্য কী লেখা যাবে তা দেওয়া আছে। আপনার লেখা অর্ডার ফর্মে লিখে দিন। একাধিক পণ্যে আলাদা লেখা হলে প্রতি লাইনে আলাদা করে লিখুন।</p></details>
-<details><summary>বানানোর আগে ডিজাইন দেখতে পাব?</summary><p>হ্যাঁ। বানানোর আগে WhatsApp-এ ডিজাইন পাঠাব। ডিজাইন ও বানান নিশ্চিত করে সম্মতি দিলে তবেই বানানো শুরু হবে।</p></details>
-<details><summary>নামের বানান ভুল লিখে ফেললে?</summary><p>ডিজাইন দেখার সময়ই আমাদের জানান। সম্মতি দেওয়ার আগে বানান ভালো করে মিলিয়ে নিন।</p></details>
-<h2>দাম ও টাকা</h2>
-<details><summary>কখন টাকা দিতে হবে?</summary><p>অর্ডার পাঠানোর সময় কোনো টাকা দিতে হবে না। কিছু পণ্যে ডিজাইনে সম্মতির পরে অল্প অগ্রিম লাগে, পণ্যের পাতায় তা লেখা থাকে। বাকি টাকা পণ্য হাতে পেয়ে দেবেন।</p></details>
-<details><summary>মোট দামে কী কী থাকে?</summary><p>পণ্যের দাম আর ডেলিভারি চার্জ। অর্ডার পাঠানোর আগেই ফর্মে মোট হিসাব দেখতে পাবেন।</p></details>
-<h2>ডেলিভারি</h2>
+<p class="eyebrow" th:text="#{faq.eyebrow}"></p>
+<h1 th:text="#{faq.title}"></h1>
+<p class="lead" th:text="#{faq.lead}"></p>
+<h2 th:text="#{faq.design.title}"></h2>
+<details th:each="n : ${ {1, 2, 3} }"><summary th:text="${#messages.msg('faq.design.q' + n)}"></summary><p th:text="${#messages.msg('faq.design.a' + n)}"></p></details>
+<h2 th:text="#{faq.money.title}"></h2>
+<details th:each="n : ${ {1, 2} }"><summary th:text="${#messages.msg('faq.money.q' + n)}"></summary><p th:text="${#messages.msg('faq.money.a' + n)}"></p></details>
+<h2 th:text="#{faq.delivery.title}"></h2>
 <th:block th:if="${!#strings.isEmpty(settings['delivery_inside']) and !#strings.isEmpty(settings['delivery_outside'])}">
-<details><summary>ডেলিভারি চার্জ কত?</summary><p th:text="${'ঢাকার ভেতরে ৳' + @bn.digits(settings['delivery_inside']) + ', ঢাকার বাইরে ৳' + @bn.digits(settings['delivery_outside']) + '।'}"></p></details>
+<details><summary th:text="#{faq.delivery.charge.q}"></summary><p th:text="#{faq.delivery.charge.a(${'৳' + @bn.digits(settings['delivery_inside'])}, ${'৳' + @bn.digits(settings['delivery_outside'])})}"></p></details>
 </th:block>
-<details><summary>কবে পাব?</summary><p>ডিজাইনে সম্মতির পরে বানানো শুরু হয়। বানাতে কত দিন লাগবে তা পণ্যের পাতায় আছে, তারপর কুরিয়ারের সময় যোগ হবে। <a th:href="@{/policies/delivery}">ডেলিভারির তথ্য দেখুন</a>।</p></details>
-<details><summary>অর্ডারের অবস্থা কীভাবে দেখব?</summary><p><a th:href="@{/track}">অর্ডার ট্র্যাক</a> পাতায় অর্ডার কোড আর ফোন নম্বর দিন।</p></details>
-<p class="faq-contact" th:if="${whatsapp != null}"><a class="button" th:href="${whatsapp}">আরও জানতে WhatsApp করুন</a></p>
+<details><summary th:text="#{faq.delivery.when.q}"></summary><p><th:block th:text="#{faq.delivery.when.a}"></th:block> <a th:href="@{/policies/delivery}" th:text="#{faq.delivery.when.link}"></a></p></details>
+<details><summary th:text="#{faq.delivery.area.q}"></summary><p th:text="#{faq.delivery.area.a}"></p></details>
+<details><summary th:text="#{faq.track.q}"></summary><p><th:block th:text="#{faq.track.a}"></th:block> <a th:href="@{/track}" th:text="#{faq.track.link}"></a></p></details>
+<h2 th:text="#{faq.other.title}"></h2>
+<details th:each="n : ${ {1, 2, 3} }"><summary th:text="${#messages.msg('faq.other.q' + n)}"></summary><p th:text="${#messages.msg('faq.other.a' + n)}"></p></details>
+<p class="faq-contact" th:if="${whatsapp != null}"><a class="button" th:href="${whatsapp}" th:text="#{faq.whatsapp}"></a></p>
 </main>
 <footer th:replace="~{fragments/footer :: footer}">
 </footer>

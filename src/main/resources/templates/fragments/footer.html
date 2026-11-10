@@ -4,25 +4,25 @@
 <footer th:fragment="footer" class="site-footer" th:with="contact=${@settingsService.publicContact()}">
 <div class="container footer-inner">
 <div>
-<p class="footer-brand">উপহার ল্যাব<span aria-hidden="true"> ✳</span></p>
-<p>ছোট্ট উপহার। মনে রাখার মতো গল্প।</p>
+<p class="footer-brand"><th:block th:text="#{site.name}"></th:block><span aria-hidden="true"> ✳</span></p>
+<p th:text="#{footer.line}"></p>
 <p class="footer-contact" th:if="${!contact.isEmpty()}">
 <a th:if="${contact['whatsappLink'] != null}" th:href="${contact['whatsappLink']}">WhatsApp</a>
 <a th:if="${contact['phone'] != null}" th:href="${'tel:' + contact['phone']}" th:text="${contact['phone']}"></a>
 <a th:if="${contact['email'] != null}" th:href="${'mailto:' + contact['email']}" th:text="${contact['email']}"></a>
 </p>
 </div>
-<nav aria-label="তথ্য ও নীতিমালা" class="footer-links">
-<a th:href="@{/track}">অর্ডার ট্র্যাক</a>
-<a th:href="@{/faq}">সাধারণ প্রশ্ন</a>
-<a th:href="@{/bulk}">বেশি পরিমাণে অর্ডার</a>
-<a th:href="@{/about}">আমাদের কথা</a>
-<a th:href="@{/policies/delivery}">ডেলিভারি</a>
-<a th:href="@{/policies/returns}">ফেরত ও বাতিল</a>
-<a th:href="@{/policies/privacy}">গোপনীয়তা</a>
+<nav th:attr="aria-label=#{footer.nav.label}" class="footer-links">
+<a th:href="@{/track}" th:text="#{footer.track}"></a>
+<a th:href="@{/faq}" th:text="#{footer.faq}"></a>
+<a th:href="@{/bulk}" th:text="#{footer.bulk}"></a>
+<a th:href="@{/about}" th:text="#{footer.about}"></a>
+<a th:href="@{/policies/delivery}" th:text="#{footer.delivery}"></a>
+<a th:href="@{/policies/returns}" th:text="#{footer.returns}"></a>
+<a th:href="@{/policies/privacy}" th:text="#{footer.privacy}"></a>
 </nav>
 </div>
-<div class="container footer-bottom"><span>যত্নে খোদাই, ভালোবেসে দেওয়া।</span><span>উপহার ল্যাব · বাংলাদেশ</span></div>
+<div class="container footer-bottom"><span th:text="#{footer.bottom}"></span><span th:text="#{site.name} + ' · ' + #{footer.country}"></span></div>
 </footer>
 </body>
 </html>

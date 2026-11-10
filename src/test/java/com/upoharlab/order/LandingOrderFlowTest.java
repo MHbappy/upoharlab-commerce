@@ -98,16 +98,38 @@ class LandingOrderFlowTest {
   @Test
   void rendersFromConfigurationWithSafelyEmbeddedJson() throws Exception {
     String html = new Browser(port).get(PAGE).body();
-    assertThat(html).contains("আমার নামে বানাতে চাই", "সবচেয়ে জনপ্রিয়", "id=\"landing-config\"");
+    assertThat(html).contains(text("product.hero.cta"), "সবচেয়ে জনপ্রিয়", "id=\"landing-config\"");
     assertThat(html).doesNotContain("</script><b>");
     assertThat(html).contains("\\u003c/script\\u003e");
+  }
+
+  @org.springframework.beans.factory.annotation.Autowired com.upoharlab.text.SiteTexts texts;
+
+  @Test
+  void productWordingAndEditedMessagesReachTheCustomer() throws Exception {
+    db.update("UPDATE product SET landing_config=jsonb_set(landing_config,'{wording}',"
+        + "'{\"textLabel\":\"মগে কী প্রিন্ট হবে?\",\"previewTitle\":\"মগে নিজের নাম দেখুন\"}'::jsonb) WHERE id=?",
+        productId);
+    texts.save(Map.of("order.error.text", "লেখাটা দিতে ভুলবেন না।", "product.hero.cta", "এখনই নিন"));
+    try {
+      String html = new Browser(port).get(PAGE).body();
+      assertThat(html).contains("মগে কী প্রিন্ট হবে?", "মগে নিজের নাম দেখুন", "এখনই নিন")
+          .doesNotContain(text("product.text.label"), text("product.preview.title"))
+          .contains(text("product.text.placeholder"));
+      Map<String, String> fields = valid(Integer.toString(TOTAL));
+      fields.put("engraving", "");
+      fields.put("confirmEngraving", "");
+      assertThat(post(new Browser(port), fields, "submit").body()).contains("লেখাটা দিতে ভুলবেন না।");
+    } finally {
+      texts.resetAll();
+    }
   }
 
   @Test
   void salesSectionsLeadToTheFinalOrderForm() throws Exception {
     db.update("UPDATE product SET description_bn='পণ্যের বিবরণ', "
         + "landing_config=jsonb_set(landing_config,'{socialProof}',"
-        + "'{\"reviews\":[{\"name\":\"ক্রেতা\",\"text\":\"পছন্দ হয়েছে\"}]}'::jsonb) WHERE id=?", productId);
+        + "'{\"moreReviews\":[{\"name\":\"ক্রেতা\",\"text\":\"পছন্দ হয়েছে\"}]}'::jsonb) WHERE id=?", productId);
     String html = new Browser(port).get(PAGE).body();
     int previous = -1;
     for (String section : List.of("class=\"lp-hook\"", "id=\"preview\"", "id=\"why-title\"",
@@ -132,7 +154,7 @@ class LandingOrderFlowTest {
     fields.put("confirmEngraving", "");
     var missing = post(browser, fields, "submit");
     assertThat(missing.statusCode()).isEqualTo(200);
-    assertThat(missing.body()).contains("কী খোদাই হবে তা লিখুন।");
+    assertThat(missing.body()).contains(text("order.error.text"));
     assertThat(orderCount(db)).isZero();
     fields.put("engraving", "নিজের লেখা");
     fields.remove("confirmEngraving");
@@ -218,8 +240,8 @@ class LandingOrderFlowTest {
     String page = new Browser(port).get(PAGE).body();
 
     assertThat(page)
-        .contains("পণ্যের বিস্তারিত", "প্রথম ছবি", "দ্বিতীয় ছবি", "lp-gallery-thumb")
-        .contains("বড় বিবরণ", "মুছে রাখুন", "শুধু ঘরের ভেতরে", "ঢাকায় ১–২ দিন");
+        .contains(text("product.details.title"), "প্রথম ছবি", "দ্বিতীয় ছবি", "lp-gallery-thumb")
+        .contains("বড় বিবরণ", "মুছে রাখুন", text("product.details.indoor"), "ঢাকায় ১–২ দিন");
   }
 
   @Test
@@ -267,7 +289,7 @@ class LandingOrderFlowTest {
   @Test
   void aWrongShownTotalAsksForReviewInsteadOfSaving() throws Exception {
     var res = post(new Browser(port), valid("1"), "submit");
-    assertThat(res.body()).contains(LandingOrderController.REVIEW_MESSAGE);
+    assertThat(res.body()).contains(text(LandingOrderController.REVIEW_MESSAGE));
     assertThat(orderCount(db)).isZero();
   }
 
@@ -276,14 +298,14 @@ class LandingOrderFlowTest {
     Map<String, String> f = valid(Integer.toString(TOTAL));
     f.put("confirmEngraving", "অন্য");
     var res = post(new Browser(port), f, "submit");
-    assertThat(res.body()).contains("দুটি লেখা মিলছে না", "value=\"ক্ষেত্র\"");
+    assertThat(res.body()).contains(text("order.error.text.mismatch"), "value=\"ক্ষেত্র\"");
     assertThat(orderCount(db)).isZero();
   }
 
   @Test
   void requiredFieldsShowBanglaErrors() throws Exception {
     var res = post(new Browser(port), Map.of("packageIndex", "0", "opt0", "0", "font", "Galada"), "submit");
-    assertThat(res.body()).contains("আপনার নাম লিখুন।", "পুরো ঠিকানা লিখুন।");
+    assertThat(res.body()).contains(text("order.error.name"), text("order.error.address"));
     assertThat(orderCount(db)).isZero();
   }
 
@@ -318,7 +340,7 @@ class LandingOrderFlowTest {
     Map<String, String> f = valid(Integer.toString(TOTAL));
     f.put("action", "submit");
     f.put("submitToken", b.submitToken);
-    assertThat(b.post(PAGE, f).body()).contains(LandingOrderController.REVIEW_MESSAGE);
+    assertThat(b.post(PAGE, f).body()).contains(text(LandingOrderController.REVIEW_MESSAGE));
     assertThat(orderCount(db)).isZero();
   }
 
@@ -328,7 +350,7 @@ class LandingOrderFlowTest {
     var res = post(b, valid(Integer.toString(TOTAL)), "submit");
     String location = res.headers().firstValue("location").orElseThrow();
     String html = b.get(location.substring(location.indexOf("/order/"))).body();
-    assertThat(html).contains(saved().get("code").toString(), "আমরা যোগাযোগ করে আপনার লেখা ও ডিজাইন নিশ্চিত করব।", "ক্ষেত্র");
+    assertThat(html).contains(saved().get("code").toString(), text("thanks.next"), "ক্ষেত্র");
   }
 
   @Test
@@ -407,5 +429,70 @@ class LandingOrderFlowTest {
     assertThat(admin.detail(code).missingForConfirmation()).isEmpty();
     admin.changeStatus(code, "CONFIRMED", null, null, null, "test-owner");
     assertThat(admin.detail(code).status()).isEqualTo("CONFIRMED");
+  }
+
+  private void textMode(String mode) {
+    db.update("UPDATE product SET landing_config=jsonb_set(landing_config,'{wording}',"
+        + "coalesce(landing_config->'wording','{}'::jsonb) || jsonb_build_object('textMode', ?::text)) WHERE id=?",
+        mode, productId);
+  }
+
+  @Test
+  void aProductWithoutCustomerTextSkipsTheTextBoxAndTheDesignStep() throws Exception {
+    textMode("NONE");
+    Browser b = new Browser(port);
+    String page = b.get(PAGE).body();
+    assertThat(page).doesNotContain("id=\"engraving\"", "id=\"preview\"", "id=\"lp-input\"", "id=\"font\"")
+        .contains(text("product.hero.plain1"), text("product.recap.hint.plain"));
+    Map<String, String> fields = valid(Integer.toString(TOTAL));
+    fields.put("engraving", "পাঠানো হলেও রাখা হবে না");
+    var res = post(b, fields, "submit");
+    assertThat(res.statusCode()).isEqualTo(302);
+    var order = saved();
+    assertThat(order.get("engraving_text")).isEqualTo("");
+    assertThat(order.get("needs_design")).isEqualTo(false);
+    String code = order.get("code").toString();
+
+    String location = res.headers().firstValue("location").orElseThrow();
+    String thanks = b.get(location.substring(location.indexOf("/order/"))).body();
+    assertThat(thanks).contains(text("thanks.next.plain")).doesNotContain("<svg", text("thanks.next"));
+    assertThat(tracking.find(code, "01712345678")).get().extracting(TrackingService.Status::needsDesign).isEqualTo(false);
+
+    assertThatThrownBy(() -> admin.changeStatus(code, "DESIGN_SENT", null, null, null, "test-owner"))
+        .hasMessageContaining("no design");
+    assertThat(admin.detail(code).missingForConfirmation()).singleElement().asString().contains("advance");
+    admin.recordMoney(code, "PAYMENT", "BKASH", "100", "TX9", "test-owner");
+    admin.changeStatus(code, "CONFIRMED", null, null, null, "test-owner");
+    assertThat(admin.detail(code).status()).isEqualTo("CONFIRMED");
+  }
+
+  @Test
+  void optionalTextNeedsADesignOnlyWhenTheCustomerWritesSome() throws Exception {
+    textMode("OPTIONAL");
+    String page = new Browser(port).get(PAGE).body();
+    assertThat(page).contains("id=\"engraving\"", "id=\"preview\"", text("product.optional"));
+    Map<String, String> blank = valid(Integer.toString(TOTAL));
+    blank.put("engraving", "");
+    blank.put("confirmEngraving", "");
+    assertThat(post(new Browser(port), blank, "submit").statusCode()).isEqualTo(302);
+    assertThat(saved().get("needs_design")).isEqualTo(false);
+    db.update("DELETE FROM order_event");
+    db.update("DELETE FROM orders");
+    assertThat(post(new Browser(port), valid(Integer.toString(TOTAL)), "submit").statusCode()).isEqualTo(302);
+    assertThat(saved().get("needs_design")).isEqualTo(true);
+  }
+
+  @Test
+  void anOrderWithADesignCannotSkipApproval() throws Exception {
+    post(new Browser(port), valid(Integer.toString(TOTAL)), "submit");
+    String code = saved().get("code").toString();
+    admin.recordMoney(code, "PAYMENT", "BKASH", "100", "TX8", "test-owner");
+    assertThatThrownBy(() -> admin.changeStatus(code, "CONFIRMED", null, null, null, "test-owner"))
+        .hasMessageContaining("approval");
+  }
+
+  /** The current default wording of a site text, so tests follow copy edits in site-text.properties. */
+  static String text(String key) {
+    return new com.upoharlab.text.SiteTextCatalog().get(key).defaultText();
   }
 }

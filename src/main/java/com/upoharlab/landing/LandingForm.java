@@ -27,6 +27,12 @@ public class LandingForm {
   public DeliveryRow delivery = new DeliveryRow();
   public PreviewRow preview = new PreviewRow();
   public SectionsRow sections = new SectionsRow();
+  public WordingRow wording = new WordingRow();
+
+  public static class WordingRow {
+    public String textLabel, textPlaceholder, textHelp, previewTitle;
+    public String textMode = "REQUIRED";
+  }
 
   public static class SectionsRow {
     public boolean hero = true, preview = true, benefits = true, gallery = true, details = true,
@@ -195,6 +201,11 @@ public class LandingForm {
     preview.fonts.addAll(c.preview().fonts());
     preview.defaultText = c.preview().defaultText();
     preview.maxChars = c.preview().maxChars();
+    wording.textLabel = c.wording().textLabel();
+    wording.textPlaceholder = c.wording().textPlaceholder();
+    wording.textHelp = c.wording().textHelp();
+    wording.previewTitle = c.wording().previewTitle();
+    wording.textMode = c.wording().textMode().name();
     for (var d : c.preview().designs()) {
       DesignRow row = new DesignRow();
       row.name = d.name();
@@ -308,7 +319,18 @@ public class LandingForm {
         new LandingConfig.Sections(
             sections.hero, sections.preview, sections.benefits, sections.gallery, sections.details,
             sections.socialProof, sections.packages, sections.order),
-        urgency.isEmpty() ? List.of() : urgency.subList(1, urgency.size()));
+        urgency.isEmpty() ? List.of() : urgency.subList(1, urgency.size()),
+        new LandingConfig.Wording(
+            orNull(wording.textLabel), orNull(wording.textPlaceholder), orNull(wording.textHelp),
+            orNull(wording.previewTitle), textMode(wording.textMode)));
+  }
+
+  private static LandingConfig.TextMode textMode(String raw) {
+    try {
+      return raw == null || raw.isBlank() ? null : LandingConfig.TextMode.valueOf(raw);
+    } catch (IllegalArgumentException ex) {
+      return null;
+    }
   }
 
   private static OptionType type(String raw) {
@@ -327,6 +349,11 @@ public class LandingForm {
       List<LandingConfig.Review> reviews, String text, String name, String area) {
     if (!blank(text) || !blank(name) || !blank(area))
       reviews.add(new LandingConfig.Review(clean(text), clean(name), clean(area)));
+  }
+
+  /** Blank wording means "use the site-wide text", stored as absent rather than empty. */
+  private static String orNull(String value) {
+    return value == null || value.isBlank() ? null : value.strip();
   }
 
   private static String clean(String value) {

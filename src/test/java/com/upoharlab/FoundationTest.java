@@ -90,7 +90,7 @@ class FoundationTest {
             HttpResponse.BodyHandlers.ofString());
     assertThat(home.statusCode()).isEqualTo(200);
     assertThat(home.body())
-        .contains("lang=\"bn\"", "আপনার প্রিয়জনের নাম", "অনলাইনে অর্ডার নেওয়া শুরু হয়নি")
+        .contains("lang=\"bn\"", text("home.lead"), "অনলাইনে অর্ডার নেওয়া শুরু হয়নি")
         .doesNotContain("৳৩৯৯", "th:replace");
     var admin =
         client.send(
@@ -187,8 +187,8 @@ class FoundationTest {
                 HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/")).build(),
                 HttpResponse.BodyHandlers.ofString());
     assertThat(home.body())
-        .as("card shows the facts, and the home page says ordering is closed")
-        .contains("পরীক্ষার পণ্য", "Description", "৳৫০০", "শুধু ঘরের ভেতরের জন্য")
+        .as("card shows name and price, and the home page says ordering is closed")
+        .contains("পরীক্ষার পণ্য", "৳৫০০")
         .contains("এখনো অনলাইনে অর্ডার নেওয়া শুরু হয়নি");
     f.setStatus("PAUSED");
     products.save(
@@ -378,5 +378,9 @@ class FoundationTest {
                         "photo", "large.png", "image/png", content),
                     "Photo"))
         .withMessageContaining("20 megapixels");
+  }
+
+  static String text(String key) {
+    return new com.upoharlab.text.SiteTextCatalog().get(key).defaultText();
   }
 }
