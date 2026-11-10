@@ -22,7 +22,8 @@
 </div>
 <div class="product-grid">
 <article class="panel" th:each="p : ${products}">
-<img th:if="${!p.photos.isEmpty()}" th:src="@{/media/{name}(name=${'thumb-' + p.photos[0].filename})}" th:alt="${p.photos[0].alt}" loading="lazy">
+<img th:if="${p.cardImage() != null}" th:src="@{/media/{name}(name=${'thumb-' + p.cardImage()})}" th:alt="${p.cardImageAlt()}" loading="lazy">
+<span class="admin-no-photo" th:if="${p.cardImage() == null}">No photo yet</span>
 <p><span class="status-pill" th:text="${p.details.status == 'ACTIVE' ? 'Active' : (p.details.status == 'PAUSED' ? 'Paused' : 'Draft')}"></span></p>
 <h2 th:text="${p.details.title}">
 </h2>

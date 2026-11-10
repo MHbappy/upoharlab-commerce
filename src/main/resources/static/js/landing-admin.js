@@ -21,6 +21,7 @@
     row.querySelectorAll("input[type=radio]").forEach(function (el) { el.checked = false; });
     row.querySelectorAll("select").forEach(function (el) { el.selectedIndex = 0; });
     row.querySelectorAll("[data-slot-thumb]").forEach(function (el) { el.hidden = true; el.removeAttribute("src"); });
+    row.querySelectorAll("[data-slot-empty]").forEach(function (el) { el.hidden = false; });
     row.querySelectorAll("[data-swatch]").forEach(function (el) { el.value = "#2b211c"; });
     // Lets a design row put away its image and text box.
     row.querySelectorAll("[data-stage]").forEach(function (stage) {
@@ -166,6 +167,8 @@
     var thumb = event.target.parentNode.querySelector("[data-slot-thumb]");
     var picked = event.target.files[0];
     thumb.hidden = !picked;
+    var empty = event.target.parentNode.querySelector("[data-slot-empty]");
+    if (empty) empty.hidden = !!picked;
     if (picked) thumb.src = URL.createObjectURL(picked); else thumb.removeAttribute("src");
   });
 

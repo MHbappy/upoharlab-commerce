@@ -128,12 +128,16 @@
 <p class="error" th:if="${#fields.hasErrors('care')}" th:errors="*{care}">
 </p>
 </div>
-<p class="field-help">Making days appear on the page as "বানাতে সময়". Delivery time comes from Settings.</p>
+<p class="field-help">Making days appear on the product page as "বানাতে সময়". The shop list adds 2 days for delivery, e.g. making 2–3 shows "৪–৫ দিনে হাতে পাবেন".</p>
 <div class="field">
 <label class="check-row" for="indoorOnly"><input type="checkbox" id="indoorOnly" th:field="*{indoorOnly}"> Indoor use only</label>
 <p class="field-help">Shows the indoor-only warning to customers. It stays on once saved.</p>
 <p class="error" th:if="${#fields.hasErrors('indoorOnly')}" th:errors="*{indoorOnly}">
 </p>
+</div>
+<div class="field">
+<label class="check-row" for="featured"><input type="checkbox" id="featured" th:field="*{featured}"> Feature on the home page</label>
+<p class="field-help">Shows this product large at the top of the home page. Only one product at a time; ticking this one un-features the other. With none ticked, the first product in display order is shown.</p>
 </div>
 </fieldset>
 <fieldset class="edit-section product-photo-picker" id="sec-photos">
@@ -142,7 +146,7 @@
 <p class="field-help">JPEG or PNG, each up to 5 MB and 20 megapixels. A product can have up to 12 photos. The first is shown first in the gallery under Product details on the customer page.</p>
 <label for="photos" th:if="${photoRoom > 0}" th:text="${productId == null ? 'Add photos' : 'Add more photos (optional)'}"></label>
 <div data-repeat="photos" th:if="${photoRoom > 0}" th:attr="data-max=${photoRoom}" th:with="startRows=${photoRoom < 4 ? photoRoom : 4}">
-<div class="benefit-row photo-row-new" data-row th:each="n : ${#numbers.sequence(1, startRows)}"><img class="image-slot-thumb" data-slot-thumb alt="" width="56" height="56" hidden><input th:id="${n == 1 ? 'photos' : null}" name="photos" type="file" accept="image/jpeg,image/png" aria-label="Product photo" data-photo-file aria-describedby="photo-help"><button type="button" class="small-button" data-remove-row hidden>Remove</button></div>
+<div class="benefit-row photo-row-new" data-row th:each="n : ${#numbers.sequence(1, startRows)}"><span class="photo-slot-empty" data-slot-empty aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2h6l2 2h3v12H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>Photo preview</span><img class="image-slot-thumb" data-slot-thumb alt="" width="56" height="56" hidden><input th:id="${n == 1 ? 'photos' : null}" name="photos" type="file" accept="image/jpeg,image/png" aria-label="Product photo" data-photo-file aria-describedby="photo-help"><button type="button" class="small-button" data-remove-row hidden>Remove</button></div>
 <button type="button" class="small-button" data-add-row hidden>+ Add photo</button>
 </div>
 <p class="field-help" th:unless="${photoRoom > 0}">This product has the maximum 12 photos. Remove one below to add another.</p>
@@ -161,8 +165,6 @@
 <option value="DRAFT">Save privately — finish later</option>
 <option value="PAUSED" th:if="${productId != null}">Paused — visible, ordering stopped</option>
 </select>
-<label class="check-row feature-row" for="featured"><input type="checkbox" id="featured" th:field="*{featured}"> Feature on the home page</label>
-<p class="field-help">Shows this product large at the top of the home page, with its price, offer and an order button. Only one product can be featured; ticking this one un-features the other. It appears only while the product is published and has a photo. With none ticked, the first product in display order is shown.</p>
 <p class="section-count" data-section-count aria-live="polite"></p>
 <div class="product-submit"><button class="button" th:text="${productId == null ? 'Add product' : 'Save product'}">Add product</button><a th:href="@{/admin/products}">Cancel</a></div>
 </div>

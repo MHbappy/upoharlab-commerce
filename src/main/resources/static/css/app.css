@@ -678,3 +678,8 @@ body:has(.admin-main){background:#f4f6f3;font-family:system-ui,"Noto Sans Bengal
 .texts-save{position:sticky;bottom:0;display:flex;align-items:center;gap:16px;padding:14px 0;background:var(--bg);border-top:1px solid var(--border);z-index:1}
 .texts-save .button{margin:0}
 .texts-reset{margin-top:24px}
+/* Admin: an empty photo slot shows where the picture will appear. */
+.photo-slot-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:120px;border-radius:8px;background:var(--secondary);color:var(--muted);font-size:13px}
+.photo-slot-empty[hidden]{display:none}
+.photo-slot-empty svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.admin-no-photo{display:grid;place-items:center;aspect-ratio:4/3;border-radius:8px;background:var(--secondary);color:var(--muted);font-size:13px}
