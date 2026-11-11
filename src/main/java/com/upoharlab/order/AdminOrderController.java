@@ -5,6 +5,7 @@ import com.upoharlab.order.AdminOrderService.Detail;
 import com.upoharlab.order.AdminOrderService.RuleException;
 import com.upoharlab.settings.SettingsService;
 import com.upoharlab.shared.BnDigits;
+import jakarta.servlet.http.HttpSession;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.LinkedHashMap;
@@ -35,14 +36,17 @@ public class AdminOrderController {
   private final PreviewSvgRenderer svg;
 
   private final SiteTexts texts;
+  private final OrderBoard board;
 
   public AdminOrderController(
       AdminOrderService orders,
       SettingsService settings,
       LandingOrderService landingOrders,
       PreviewSvgRenderer svg,
-      SiteTexts texts) {
+      SiteTexts texts,
+      OrderBoard board) {
     this.texts = texts;
+    this.board = board;
     this.orders = orders;
     this.settings = settings;
     this.landingOrders = landingOrders;
@@ -66,47 +70,12 @@ public class AdminOrderController {
     return response.body(svg.render(selection, !download));
   }
 
-  @GetMapping({"", "/"})
-  String dashboard(Model m) {
-    m.addAttribute("counts", orders.counts());
-    m.addAttribute("recent", orders.recent(10));
-    return "admin/dashboard";
-  }
-
-  @GetMapping("/orders")
-  String list(@RequestParam(required = false) String status, Model m) {
-    return results(status, null, 0, m);
-  }
-
-  /** POST, so a searched phone number never appears in a URL, including across pages. */
-  @PostMapping("/orders/search")
-  String search(
-      @RequestParam(required = false) String status,
-      @RequestParam(required = false) String q,
-      @RequestParam(defaultValue = "0") String page,
-      Model m) {
-    int requested;
-    try {
-      requested = Integer.parseInt(page);
-    } catch (NumberFormatException ex) {
-      requested = 0;
-    }
-    return results(status, q, requested, m);
-  }
-
-  private String results(String status, String q, int page, Model m) {
-    m.addAttribute("results", orders.search(status, q, page));
-    m.addAttribute("selectedStatus", status);
-    m.addAttribute("q", q);
-    m.addAttribute("statuses", OrderStatus.values());
-    m.addAttribute("searching", (q != null && !q.isBlank()) || (status != null && !status.isBlank()));
-    return "admin/orders";
-  }
-
   @GetMapping("/orders/{code}")
-  String detail(@PathVariable String code, Model m) {
+  String detail(@PathVariable String code, HttpSession session, Model m) {
     Detail order = orders.detail(code);
     m.addAttribute("order", order);
+    m.addAttribute("backToList", AdminOrderBoardController.backToList(session));
+    m.addAttribute("customerHistory", board.customerHistory(order.phone(), order.code()));
     m.addAttribute("selection", landingOrders.selection(code).orElse(null));
     m.addAttribute("neededBy", landingOrders.neededBy(code).orElse(null));
     m.addAttribute("whatsappLinks", whatsappLinks(order, settings.all()));
@@ -145,7 +114,7 @@ public class AdminOrderController {
               : texts.text(key, order.code(), due, bkash)));
       if (bkash.isBlank()) links.put("Missing bKash", base);
     }
-    if (order.courier() != null && status != OrderStatus.CANCELLED)
+    if (order.courier() != null && (status == OrderStatus.SHIPPED || status == OrderStatus.DELIVERED))
       links.put(
           "Shipping message",
           withText(
@@ -173,6 +142,34 @@ public class AdminOrderController {
         flash,
         "Order updated.",
         () -> orders.changeStatus(code, to, reason, courier, tracking, admin.getName()));
+  }
+
+  @PostMapping("/orders/{code}/advance/waive")
+  String waiveAdvance(
+      @PathVariable String code,
+      @RequestParam(required = false) String reason,
+      Principal admin,
+      RedirectAttributes flash) {
+    return act(code, flash, "Advance removed. You can continue.", () -> orders.waiveAdvance(code, reason, admin.getName()));
+  }
+
+  @PostMapping("/orders/{code}/undo")
+  String undo(
+      @PathVariable String code,
+      @RequestParam(required = false) String reason,
+      Principal admin,
+      RedirectAttributes flash) {
+    return act(code, flash, "Last step undone.", () -> orders.undoLastStatus(code, reason, admin.getName()));
+  }
+
+  @PostMapping("/orders/{code}/money/{payment}/void")
+  String voidMoney(
+      @PathVariable String code,
+      @PathVariable long payment,
+      @RequestParam(required = false) String reason,
+      Principal admin,
+      RedirectAttributes flash) {
+    return act(code, flash, "Record voided.", () -> orders.voidMoney(code, payment, reason, admin.getName()));
   }
 
   @PostMapping("/orders/{code}/approve")

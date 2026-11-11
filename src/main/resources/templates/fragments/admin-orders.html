@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="table(rows)" class="table-wrap">
+<div th:fragment="table(rows, selectable)" class="table-wrap">
 <table class="admin-table orders-table">
 <thead>
 <tr>
+<th scope="col" th:if="${selectable}"><span class="visually-hidden">Select</span></th>
 <th scope="col">Order</th>
 <th scope="col">Placed</th>
 <th scope="col">Product</th>
 <th scope="col">Customer</th>
 <th scope="col">Phone</th>
 <th scope="col">Total</th>
+<th scope="col">Paid</th>
+<th scope="col">Due</th>
+<th scope="col">Needed by</th>
 <th scope="col">Status</th>
 </tr>
 </thead>
 <tbody>
 <tr th:each="o : ${rows}">
+<td data-label="Select" th:if="${selectable}"><input class="order-tick" type="checkbox" name="codes" th:value="${o.code}" th:aria-label="${'Select ' + o.code}"></td>
 <td class="order-code-cell"><a th:href="@{/admin/orders/{code}(code=${o.code})}" th:text="${o.code}"></a></td>
 <td data-label="Placed" th:text="${@bn.time(o.createdAt)}"></td>
 <td data-label="Product" th:text="${o.productTitle + ' × ' + o.quantity}"></td>
 <td data-label="Customer" th:text="${o.customerName}"></td>
 <td data-label="Phone" th:text="${o.maskedPhone}"></td>
 <td data-label="Total" th:text="${'৳' + o.total}"></td>
+<td data-label="Paid" th:text="${'৳' + o.paid}"></td>
+<td data-label="Due" th:text="${o.due() == null ? '–' : '৳' + o.due()}"></td>
+<td data-label="Needed by" th:text="${o.neededBy == null ? '–' : o.neededBy}"></td>
 <td data-label="Status"><span class="status-pill" th:classappend="${'status-' + o.status}" th:text="${@bn.status(o.status)}"></span></td>
 </tr>
 </tbody>

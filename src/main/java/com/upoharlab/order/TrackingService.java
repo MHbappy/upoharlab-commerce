@@ -48,7 +48,7 @@ public class TrackingService {
         .query(
             "SELECT code, status, created_at, design_approved_at, delivered_at, courier,"
                 + " tracking_no, advance_required > (SELECT coalesce(sum(CASE WHEN p.kind='PAYMENT'"
-                + " THEN p.amount ELSE -p.amount END),0) FROM payment p WHERE p.order_id=orders.id)"
+                + " THEN p.amount ELSE -p.amount END),0) FROM payment p WHERE p.order_id=orders.id AND p.voided_at IS NULL)"
                 + " AS advance_due, needs_design FROM orders WHERE code=? AND phone=?",
             (r, n) ->
                 new Status(

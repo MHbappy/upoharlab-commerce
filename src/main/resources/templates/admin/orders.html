@@ -7,15 +7,25 @@
 <title>Orders · Upohar Lab</title>
 <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
 <link rel="stylesheet" th:href="@{/css/app.css}">
+<script th:src="@{/js/orders-admin.js}" defer></script>
 </head>
 <body>
 <header th:replace="~{fragments/admin :: header}">
 </header>
 <main class="container admin-main">
+<p class="notice" role="status" th:if="${message}" th:text="${message}"></p>
+<p class="error" role="alert" th:if="${error}" th:text="${error}"></p>
+<div class="section-heading">
 <h1>Orders</h1>
-<form class="filter-form" th:action="@{/admin/orders/search}" method="post">
+<a class="button" th:href="@{/admin/orders/new}">+ Add order</a>
+</div>
+<nav class="order-tabs" aria-label="Orders by status">
+<a th:href="@{/admin/orders}" th:classappend="${#strings.isEmpty(selectedStatus) ? 'is-current' : ''}">All</a>
+<a th:each="s : ${statuses}" th:href="@{/admin/orders(status=${s.name()})}" th:classappend="${s.name() == selectedStatus ? 'is-current' : ''}"><th:block th:text="${s.label()}"></th:block> <span th:text="${stages[s.name()]}"></span></a>
+</nav>
+<form class="filter-form orders-filter" th:action="@{/admin/orders/search}" method="post">
 <div>
-<label for="q">Order code or phone</label>
+<label for="q">Code, phone, name or courier</label>
 <input id="q" name="q" th:value="${q}" maxlength="40" autocomplete="off">
 </div>
 <div>
@@ -25,20 +35,51 @@
 <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.label()}" th:selected="${s.name() == selectedStatus}"></option>
 </select>
 </div>
+<div>
+<label for="queue">Work to do</label>
+<select id="queue" name="queue">
+<option value="">Any</option>
+<option th:each="w : ${queues}" th:value="${w.name()}" th:text="${w.label()}" th:selected="${w.name() == selectedQueue}"></option>
+</select>
+</div>
+<div>
+<label for="from">Placed from</label>
+<input id="from" name="from" type="date" th:value="${from}">
+</div>
+<div>
+<label for="to">Placed to</label>
+<input id="to" name="to" type="date" th:value="${to}">
+</div>
+<div>
+<label for="sort">Sort</label>
+<select id="sort" name="sort">
+<option value="">Newest first</option>
+<option value="oldest" th:selected="${sort == 'oldest'}">Oldest first</option>
+<option value="needed" th:selected="${sort == 'needed'}">Needed by date</option>
+</select>
+</div>
 <button class="button">Search</button>
 </form>
 <p th:if="${searching}"><a th:href="@{/admin/orders}">Clear search and show all orders</a></p>
+<div class="section-heading">
 <p th:text="${results.totalRows + (results.totalRows == 1 ? ' order' : ' orders')}"></p>
-<th:block th:if="${!results.rows.isEmpty()}">
-<div th:replace="~{fragments/admin-orders :: table(${results.rows})}"></div>
-</th:block>
-<form class="pagination" th:if="${results.totalPages > 1}" th:action="@{/admin/orders/search}" method="post">
-<input type="hidden" name="q" th:value="${q}">
-<input type="hidden" name="status" th:value="${selectedStatus}">
-<button name="page" th:value="${results.page - 1}" th:disabled="${results.page == 0}">Previous</button>
-<span th:text="${'Page ' + (results.page + 1) + ' of ' + results.totalPages}"></span>
-<button name="page" th:value="${results.page + 1}" th:disabled="${results.page + 1 >= results.totalPages}">Next</button>
+<a th:if="${results.totalRows > 0}" th:href="@{${exportUrl}}">Download CSV</a>
+</div>
+<form id="bulk-form" th:if="${!results.rows.isEmpty()}" th:action="@{/admin/orders/bulk}" method="post">
+<div class="bulk-bar">
+<label class="bulk-all" data-js-only hidden><input type="checkbox" id="select-all"> Select all</label>
+<button name="action" value="START_MAKING">Start making</button>
+<button name="action" value="MARK_DELIVERED">Mark delivered</button>
+<button name="action" value="COLLECT_BALANCE">Record full COD received</button>
+<button th:formaction="@{/admin/orders/slips}" formtarget="_blank">Print slips</button>
+</div>
+<div th:replace="~{fragments/admin-orders :: table(${results.rows}, true)}"></div>
 </form>
+<nav class="pagination" aria-label="Pages" th:if="${results.totalPages > 1}">
+<a th:if="${results.page > 0}" th:href="@{${prevUrl}}">Previous</a>
+<span th:text="${'Page ' + (results.page + 1) + ' of ' + results.totalPages}"></span>
+<a th:if="${results.page + 1 < results.totalPages}" th:href="@{${nextUrl}}">Next</a>
+</nav>
 </main>
 </body>
 </html>

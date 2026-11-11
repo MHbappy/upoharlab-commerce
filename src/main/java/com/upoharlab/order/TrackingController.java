@@ -27,7 +27,8 @@ public class TrackingController {
           "MAKING", "track.status.making",
           "SHIPPED", "track.status.shipped",
           "DELIVERED", "track.status.delivered",
-          "CANCELLED", "track.status.cancelled");
+          "CANCELLED", "track.status.cancelled",
+          "RETURNED", "track.status.returned");
 
   private static final String APPROVED = "track.status.approved.paid";
   private static final String APPROVED_AWAITING_ADVANCE = "track.status.approved.waiting";

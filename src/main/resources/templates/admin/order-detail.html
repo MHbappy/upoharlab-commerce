@@ -14,14 +14,14 @@
 <main class="container admin-main">
 <p class="notice" role="status" th:if="${message}" th:text="${message}"></p>
 <p class="error" role="alert" th:if="${error}" th:text="${error}"></p>
-<a th:href="@{/admin/orders}">← Orders</a>
+<a th:href="@{${backToList}}">← Orders</a>
 <div class="section-heading">
 <h1 th:text="${order.code}"></h1>
 <span class="status-pill" th:classappend="${'status-' + order.status}" th:text="${@bn.status(order.status)}"></span>
 </div>
-<p class="muted" th:text="${'Placed ' + @bn.time(order.createdAt)}"></p>
+<p class="muted"><th:block th:text="${'Placed ' + @bn.time(order.createdAt)}"></th:block> · <a th:href="@{/admin/orders/{c}/slip(c=${order.code})}" target="_blank">Print slip</a></p>
 
-<section class="panel order-panel" aria-labelledby="next-title" th:unless="${order.status == 'DELIVERED' or order.status == 'CANCELLED'}">
+<section class="panel order-panel" aria-labelledby="next-title" th:unless="${order.status == 'DELIVERED' or order.closed}">
 <h2 id="next-title">Next step</h2>
 <th:block th:if="${order.status == 'NEW' and !order.needsDesign}">
 <p>This order has no customer text, so there is no design to approve. Call or message the customer to confirm it.</p>
@@ -77,7 +77,7 @@
 <input type="hidden" name="to" value="DELIVERED">
 <p class="wa-links" th:if="${whatsappLinks['Shipping message'] != null}"><a th:href="${whatsappLinks['Shipping message']}" target="_blank" rel="noopener noreferrer">Open shipping message</a></p>
 <button class="button">Mark delivered</button>
-<p class="muted">Delivery cannot be undone, and it does not mark the balance as paid.</p>
+<p class="muted">Delivered does not mark the balance as paid.</p>
 </form>
 <details>
 <summary>Correct courier details</summary>
@@ -90,6 +90,32 @@
 </form>
 </details>
 </th:block>
+<div class="advance-step" th:if="${order.advanceBlocks}">
+<h3 th:text="${'Advance due: ৳' + (order.advanceRequired - order.netPaid)}"></h3>
+<form class="form-width" th:action="@{/admin/orders/{c}/money(c=${order.code})}" method="post">
+<input type="hidden" name="kind" value="PAYMENT">
+<p class="muted">Received it? Record it here and the next step opens.</p>
+<label for="advance-method">How it was paid</label>
+<select id="advance-method" name="method">
+<option value="BKASH" th:selected="${moneyMethod != 'CASH'}">bKash</option>
+<option value="CASH" th:selected="${moneyMethod == 'CASH'}">Cash</option>
+</select>
+<label for="advance-amount">Amount (whole taka)</label>
+<input id="advance-amount" name="amount" inputmode="numeric" required th:value="${moneyAmount != null ? moneyAmount : order.advanceRequired - order.netPaid}">
+<label for="advance-reference">Transaction reference (required for bKash)</label>
+<input id="advance-reference" name="reference" maxlength="100" autocomplete="off" th:value="${moneyReference}">
+<button class="button">Record advance</button>
+</form>
+<details>
+<summary>Continue without advance</summary>
+<form class="form-width" th:action="@{/admin/orders/{c}/advance/waive(c=${order.code})}" method="post">
+<p class="muted">The unpaid advance moves to cash on delivery. History keeps your reason.</p>
+<label for="waive-reason">Reason</label>
+<input id="waive-reason" name="reason" maxlength="400" required>
+<button>Continue without advance</button>
+</form>
+</details>
+</div>
 </section>
 
 <div class="order-columns">
@@ -136,8 +162,13 @@
 <dt>Address</dt><dd class="preserve-lines" th:text="${order.address}"></dd>
 </dl>
 <p class="wa-links">
-<a th:each="link : ${whatsappLinks}" th:href="${link.value}" th:text="${link.key}" target="_blank" rel="noopener noreferrer"></a>
+<a th:each="link : ${whatsappLinks}" th:unless="${link.key == 'Missing bKash'}" th:href="${link.value}" th:text="${link.key}" target="_blank" rel="noopener noreferrer"></a>
 </p>
+<th:block th:if="${customerHistory.others > 0}">
+<p class="notice notice-warning" th:if="${customerHistory.returned > 0}" th:text="${'This phone has ' + customerHistory.returned + ' returned parcel(s). Consider asking for an advance.'}"></p>
+<p class="muted" th:text="${'Other orders from this phone: ' + customerHistory.others + ' (' + customerHistory.delivered + ' delivered, ' + customerHistory.returned + ' returned, ' + customerHistory.cancelled + ' cancelled)'}"></p>
+<ul class="repeat-orders"><li th:each="h : ${customerHistory.recent}"><a th:href="@{/admin/orders/{c}(c=${h.code})}" th:text="${h.code}"></a> <span class="muted" th:text="${@bn.status(h.status)}"></span></li></ul>
+</th:block>
 <details th:if="${order.canEditContact}" th:open="${contactName != null}">
 <summary>Correct contact details</summary>
 <form class="form-width" th:action="@{/admin/orders/{c}/contact(c=${order.code})}" method="post">
@@ -169,38 +200,45 @@
 <dt>Delivery</dt><dd th:text="${'৳' + order.delivery}"></dd>
 <dt>Total</dt><dd th:text="${'৳' + order.total}"></dd>
 <dt>Payment method</dt><dd th:text="${order.advanceRequired > 0 ? 'Advance ৳' + order.advanceRequired + ', rest cash on delivery' : 'Cash on delivery · no advance'}"></dd>
-<dt th:text="${order.status == 'CANCELLED' ? 'Money still held' : 'Net paid'}"></dt><dd class="strong" th:text="${'৳' + order.netPaid}"></dd>
+<dt th:text="${order.closed ? 'Money still held' : 'Net paid'}"></dt><dd class="strong" th:text="${'৳' + order.netPaid}"></dd>
 <th:block th:if="${order.balance != null}">
 <dt>Remaining balance</dt><dd class="strong" th:text="${'৳' + order.balance}"></dd>
 </th:block>
 </dl>
-<p class="notice" th:if="${order.status == 'CANCELLED' and order.netPaid > 0}">Apply the agreed cancellation terms, refund outside the website, then record the verified refund here.</p>
-<th:block th:if="${order.status == 'DELIVERED' and order.balance > 0}" th:with="refunded=${!order.payments.?[kind == 'REFUND'].isEmpty()}">
+<p class="notice" th:if="${order.closed and order.netPaid > 0}">Apply the agreed cancellation terms, refund outside the website, then record the verified refund here.</p>
+<th:block th:if="${order.status == 'DELIVERED' and order.balance > 0}" th:with="refunded=${!order.payments.?[kind == 'REFUND' and voidedAt == null].isEmpty()}">
 <p class="notice notice-warning" th:unless="${refunded}">Delivered, but this money is still awaiting customer or courier settlement.</p>
 <p class="notice notice-warning" th:if="${refunded}">A refund is recorded on this order. The remaining balance is the total minus net paid, so it may include money you refunded on purpose rather than money still owed.</p>
 </th:block>
 <div class="table-wrap" th:unless="${order.payments.isEmpty()}">
 <table class="admin-table">
-<thead><tr><th scope="col">When</th><th scope="col">Type</th><th scope="col">Method</th><th scope="col">Amount</th><th scope="col">Reference</th><th scope="col">By</th></tr></thead>
+<thead><tr><th scope="col">When</th><th scope="col">Type</th><th scope="col">Method</th><th scope="col">Amount</th><th scope="col">Reference</th><th scope="col">By</th><th scope="col">Correction</th></tr></thead>
 <tbody>
-<tr th:each="p : ${order.payments}">
+<tr th:each="p : ${order.payments}" th:classappend="${p.voidedAt != null ? 'is-voided' : ''}">
 <td th:text="${@bn.time(p.at)}"></td>
-<td th:text="${p.kind}"></td>
+<td th:text="${p.kind + (p.voidedAt != null ? ' (voided)' : '')}"></td>
 <td th:text="${p.method}"></td>
 <td th:text="${'৳' + p.amount}"></td>
 <td th:text="${p.reference}"></td>
 <td th:text="${p.recordedBy}"></td>
+<td>
+<span class="muted" th:if="${p.voidedAt != null}" th:text="${p.voidReason}"></span>
+<form class="void-form" th:if="${p.voidedAt == null}" th:action="@{/admin/orders/{c}/money/{p}/void(c=${order.code},p=${p.id})}" method="post">
+<input name="reason" maxlength="500" required aria-label="Why this record is wrong" placeholder="Why is it wrong?">
+<button>Void</button>
+</form>
+</td>
 </tr>
 </tbody>
 </table>
 </div>
-<details th:unless="${order.status == 'CANCELLED' and order.netPaid == 0}" th:open="${moneyAmount != null or (order.status == 'DELIVERED' and order.balance > 0)}">
-<summary th:text="${order.status == 'CANCELLED' ? 'Record verified refund' : 'Record verified payment or refund'}"></summary>
+<details th:unless="${order.closed and order.netPaid == 0}" th:open="${moneyAmount != null or (order.status == 'DELIVERED' and order.balance > 0)}">
+<summary th:text="${order.closed ? 'Record verified refund' : 'Record verified payment or refund'}"></summary>
 <form class="form-width" th:action="@{/admin/orders/{c}/money(c=${order.code})}" method="post">
 <p class="muted">Record COD after verifying the actual courier settlement or cash received. Existing payment and refund records remain available.</p>
 <label for="money-kind">Type</label>
 <select id="money-kind" name="kind">
-<option value="PAYMENT" th:unless="${order.status == 'CANCELLED'}" th:selected="${moneyKind != 'REFUND'}">Payment received</option>
+<option value="PAYMENT" th:unless="${order.closed}" th:selected="${moneyKind != 'REFUND'}">Payment received</option>
 <option value="REFUND" th:selected="${moneyKind == 'REFUND'}">Refund sent</option>
 </select>
 <label for="money-method">Method</label>
@@ -211,8 +249,8 @@
 </select>
 <label for="money-amount">Amount (whole taka)</label>
 <p class="muted" th:if="${order.balance != null and order.balance > 0}" th:text="${'Remaining balance: ৳' + order.balance + '.'}"></p>
-<p class="muted" th:if="${order.status == 'CANCELLED'}" th:text="${'You can refund up to ৳' + order.netPaid + '.'}"></p>
-<p class="muted" th:if="${order.status != 'CANCELLED' and order.netPaid < order.advanceRequired}" th:text="${'Advance still due: ৳' + (order.advanceRequired - order.netPaid) + '.'}"></p>
+<p class="muted" th:if="${order.closed}" th:text="${'You can refund up to ৳' + order.netPaid + '.'}"></p>
+<p class="muted" th:if="${!order.closed and order.netPaid < order.advanceRequired}" th:text="${'Advance still due: ৳' + (order.advanceRequired - order.netPaid) + '.'}"></p>
 <input id="money-amount" name="amount" inputmode="numeric" required th:value="${moneyAmount}">
 <label for="money-reference">Transaction reference (required for bKash)</label>
 <input id="money-reference" name="reference" maxlength="100" autocomplete="off" th:value="${moneyReference}">
@@ -235,6 +273,8 @@
 <span th:case="'CONTACT_UPDATED'">Contact details corrected</span>
 <span th:case="'COURIER_UPDATED'">Courier details corrected</span>
 <span th:case="'NOTE'">Internal note</span>
+<span th:case="'STATUS_UNDONE'" th:text="${'Undone: ' + @bn.status(e.fromStatus) + ' → ' + @bn.status(e.toStatus)}"></span>
+<span th:case="'PAYMENT_VOIDED'">Money record voided</span>
 </strong>
 <span class="preserve-lines" th:if="${e.note != null}" th:text="${e.note}"></span>
 </li>
@@ -246,11 +286,32 @@
 </form>
 </section>
 
+<section class="panel order-panel" aria-labelledby="return-title" th:if="${order.canReturn}">
+<h2 id="return-title">Parcel came back</h2>
+<form class="form-width" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
+<input type="hidden" name="to" value="RETURNED">
+<p class="muted">Use this when the customer refused the parcel or sent it back. Any money you hold can then be refunded above.</p>
+<label for="return-reason">Reason</label>
+<input id="return-reason" name="reason" maxlength="500" required>
+<button>Mark returned</button>
+</form>
+</section>
+
+<section class="panel order-panel" aria-labelledby="undo-title" th:if="${order.undoTo != null}">
+<h2 id="undo-title">Undo last step</h2>
+<form class="form-width" th:action="@{/admin/orders/{c}/undo(c=${order.code})}" method="post">
+<p class="muted" th:text="${'Moves this order back to ' + @bn.status(order.undoTo) + '. Only the latest step can be undone, and history keeps both.'}"></p>
+<label for="undo-reason">Reason</label>
+<input id="undo-reason" name="reason" maxlength="500" required>
+<button>Undo last step</button>
+</form>
+</section>
+
 <section class="panel order-panel" aria-labelledby="cancel-title" th:if="${order.canCancel}">
 <h2 id="cancel-title">Cancel order</h2>
 <form class="form-width" th:action="@{/admin/orders/{c}/status(c=${order.code})}" method="post">
 <input type="hidden" name="to" value="CANCELLED">
-<p class="muted">Cancelling cannot be undone. For a change of product, quantity or engraving, cancel and take a new agreed order.</p>
+<p class="muted">For a change of product, quantity or engraving, cancel and take a new agreed order.</p>
 <label for="cancel-reason">Reason</label>
 <input id="cancel-reason" name="reason" maxlength="500" required>
 <button>Cancel this order</button>

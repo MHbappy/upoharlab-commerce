@@ -16,28 +16,36 @@
 </p>
 <p class="error" role="alert" th:if="${error}" th:text="${error}">
 </p>
-<div class="section-heading dashboard-heading"><div><p class="eyebrow">YOUR SHOP, AT A GLANCE</p><h1>Dashboard</h1><p class="muted">A little overview. A clear next step.</p></div><a class="button" th:href="@{/admin/products/new}">+ Add product</a></div>
-<div class="admin-links">
-<a class="panel" th:href="@{/admin/orders(status='NEW')}">
-<p class="stat" th:text="${counts.fresh}"></p>
-<p>New orders</p>
-</a>
-<a class="panel" th:href="@{/admin/orders(status='MAKING')}">
-<p class="stat" th:text="${counts.making}"></p>
-<p>Being made</p>
-</a>
-<a class="panel" th:href="@{/admin/orders(status='SHIPPED')}">
-<p class="stat" th:text="${counts.shipped}"></p>
-<p>Shipped, awaiting delivery</p>
+<div class="section-heading dashboard-heading"><div><p class="eyebrow">YOUR SHOP, AT A GLANCE</p><h1>Dashboard</h1><p class="muted">What needs you today, and where the money is.</p></div><div class="heading-actions"><a class="button" th:href="@{/admin/orders/new}">+ Add order</a><a class="button" th:href="@{/admin/products/new}">+ Add product</a></div></div>
+
+<h2>Needs your attention</h2>
+<div class="work-grid">
+<a class="work-tile" th:each="q : ${queues}" th:href="@{/admin/orders(queue=${q.key})}" th:classappend="${q.count > 0 ? 'has-work' : ''}">
+<strong th:text="${q.count}"></strong><span th:text="${q.label}"></span>
 </a>
 </div>
+
+<h2>Money</h2>
+<div class="work-grid">
+<div class="work-tile"><strong th:text="${'৳' + money.valueThisMonth}"></strong><span th:text="${money.ordersThisMonth + ' orders placed this month'}"></span></div>
+<div class="work-tile"><strong th:text="${'৳' + money.receivedThisMonth}"></strong><span>Received this month, after refunds</span></div>
+<div class="work-tile"><strong th:text="${'৳' + money.inTransit}"></strong><span>On parcels with the courier</span></div>
+<a class="work-tile" th:href="@{/admin/orders(queue='TO_COLLECT')}"><strong th:text="${'৳' + money.toCollect}"></strong><span>Delivered, still to collect</span></a>
+<a class="work-tile" th:href="@{/admin/orders(queue='TO_REFUND')}"><strong th:text="${'৳' + money.toRefund}"></strong><span>Held on cancelled or returned orders</span></a>
+</div>
+
+<h2>All stages</h2>
+<nav class="order-tabs" aria-label="Orders by status">
+<a th:each="s : ${statuses}" th:href="@{/admin/orders(status=${s.name()})}"><th:block th:text="${s.label()}"></th:block> <span th:text="${stages[s.name()]}"></span></a>
+</nav>
+
 <div class="section-heading">
 <h2>Recent orders</h2>
 <a th:href="@{/admin/orders}">All orders</a>
 </div>
 <p th:if="${recent.isEmpty()}">No orders yet.</p>
 <th:block th:unless="${recent.isEmpty()}">
-<div th:replace="~{fragments/admin-orders :: table(${recent})}"></div>
+<div th:replace="~{fragments/admin-orders :: table(${recent}, false)}"></div>
 </th:block>
 </main>
 </body>

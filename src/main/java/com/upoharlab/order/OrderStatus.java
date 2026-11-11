@@ -9,7 +9,8 @@ public enum OrderStatus {
   MAKING,
   SHIPPED,
   DELIVERED,
-  CANCELLED;
+  CANCELLED,
+  RETURNED;
 
   /** The only moves the server allows; extra conditions are checked in AdminOrderService. */
   public Set<OrderStatus> next() {
@@ -19,8 +20,9 @@ public enum OrderStatus {
       case DESIGN_SENT -> Set.of(CONFIRMED, CANCELLED);
       case CONFIRMED -> Set.of(MAKING, CANCELLED);
       case MAKING -> Set.of(SHIPPED, CANCELLED);
-      case SHIPPED -> Set.of(DELIVERED);
-      case DELIVERED, CANCELLED -> Set.of();
+      case SHIPPED -> Set.of(DELIVERED, RETURNED);
+      case DELIVERED -> Set.of(RETURNED);
+      case CANCELLED, RETURNED -> Set.of();
     };
   }
 
@@ -34,7 +36,13 @@ public enum OrderStatus {
       case SHIPPED -> "Shipped";
       case DELIVERED -> "Delivered";
       case CANCELLED -> "Cancelled";
+      case RETURNED -> "Returned";
     };
+  }
+
+  /** The order is over and owes nothing more; only held money may still be refunded. */
+  public boolean closed() {
+    return this == CANCELLED || this == RETURNED;
   }
 
   public boolean beforeShipping() {

@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 public class AdminOrderService {
-  static final int PAGE_SIZE = 25;
   private static final int MAX_AMOUNT = 100_000_000;
 
   /** A broken business rule, with a message written for the owner. */
@@ -32,22 +31,16 @@ public class AdminOrderService {
     }
   }
 
-  public record Counts(int fresh, int making, int shipped) {}
-
-  public record Row(
-      String code,
-      Instant createdAt,
-      String productTitle,
-      int quantity,
-      String customerName,
-      String maskedPhone,
-      int total,
-      String status) {}
-
-  public record Results(List<Row> rows, int page, int totalPages, int totalRows) {}
-
   public record Payment(
-      String kind, String method, int amount, String reference, String recordedBy, Instant at) {}
+      long id,
+      String kind,
+      String method,
+      int amount,
+      String reference,
+      String recordedBy,
+      Instant at,
+      Instant voidedAt,
+      String voidReason) {}
 
   public record Event(
       String type, String fromStatus, String toStatus, String note, String actor, Instant at) {}
@@ -80,7 +73,11 @@ public class AdminOrderService {
       boolean canCancel,
       List<Payment> payments,
       List<Event> history,
-      boolean needsDesign) {}
+      boolean needsDesign,
+      boolean closed,
+      boolean canReturn,
+      String undoTo,
+      boolean advanceBlocks) {}
 
   private record Locked(
       long id,
@@ -98,86 +95,6 @@ public class AdminOrderService {
     this.db = db;
   }
 
-  public Counts counts() {
-    return new Counts(count("NEW"), count("MAKING"), count("SHIPPED"));
-  }
-
-  private int count(String status) {
-    return db.queryForObject("SELECT count(*) FROM orders WHERE status=?", Integer.class, status);
-  }
-
-  public List<Row> recent(int limit) {
-    return db.query(
-        "SELECT * FROM orders ORDER BY created_at DESC, id DESC LIMIT ?",
-        (r, n) -> row(r),
-        limit);
-  }
-
-  /** Searches by part of an order code, or by a full or partial phone number. */
-  public Results search(String status, String rawQuery, int requestedPage) {
-    List<Object> args = new ArrayList<>();
-    StringBuilder where = new StringBuilder(" WHERE true");
-    if (validStatus(status)) {
-      where.append(" AND status=?");
-      args.add(status);
-    }
-    String query = Objects.toString(rawQuery, "").strip();
-    if (query.length() > 40) query = query.substring(0, 40);
-    if (!query.isEmpty()) {
-      where.append(" AND (code ILIKE ? ESCAPE '\\'");
-      args.add("%" + escapeLike(query) + "%");
-      String digits = phoneSearchDigits(query);
-      if (digits != null) {
-        where.append(" OR phone LIKE ?");
-        args.add("%" + digits + "%");
-      }
-      where.append(")");
-    }
-    int total =
-        db.queryForObject("SELECT count(*) FROM orders" + where, Integer.class, args.toArray());
-    int pages = Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
-    int page = Math.max(0, Math.min(requestedPage, pages - 1));
-    List<Object> pageArgs = new ArrayList<>(args);
-    pageArgs.add(PAGE_SIZE);
-    pageArgs.add(page * PAGE_SIZE);
-    List<Row> rows =
-        db.query(
-            "SELECT * FROM orders" + where + " ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
-            (r, n) -> row(r),
-            pageArgs.toArray());
-    return new Results(rows, page, pages, total);
-  }
-
-  private static boolean validStatus(String status) {
-    for (OrderStatus value : OrderStatus.values()) if (value.name().equals(status)) return true;
-    return false;
-  }
-
-  private static String escapeLike(String value) {
-    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
-  }
-
-  private static String phoneSearchDigits(String query) {
-    try {
-      return PhoneNormalizer.normalize(query);
-    } catch (IllegalArgumentException notAFullNumber) {
-      String digits = BnDigits.toLatin(query).replaceAll("[\\s-]", "");
-      return digits.matches("[0-9]{3,11}") ? digits : null;
-    }
-  }
-
-  private Row row(ResultSet r) throws SQLException {
-    return new Row(
-        r.getString("code"),
-        instant(r, "created_at"),
-        r.getString("product_title_snapshot"),
-        r.getInt("quantity"),
-        r.getString("customer_name"),
-        PhoneNormalizer.mask(r.getString("phone")),
-        r.getInt("total"),
-        r.getString("status"));
-  }
-
   private static Instant instant(ResultSet r, String column) throws SQLException {
     Timestamp value = r.getTimestamp(column);
     return value == null ? null : value.toInstant();
@@ -187,18 +104,26 @@ public class AdminOrderService {
   public Detail detail(String code) {
     long id = orderId(code);
     long net = netPaid(id);
+    OrderStatus undo =
+        undoTarget(
+            id,
+            OrderStatus.valueOf(
+                db.queryForObject("SELECT status FROM orders WHERE id=?", String.class, id)));
     List<Payment> payments =
         db.query(
             "SELECT p.*, a.username FROM payment p JOIN admin_user a ON a.id=p.recorded_by"
                 + " WHERE p.order_id=? ORDER BY p.recorded_at, p.id",
             (r, n) ->
                 new Payment(
+                    r.getLong("id"),
                     r.getString("kind"),
                     r.getString("method"),
                     r.getInt("amount"),
                     r.getString("transaction_ref"),
                     r.getString("username"),
-                    instant(r, "recorded_at")),
+                    instant(r, "recorded_at"),
+                    instant(r, "voided_at"),
+                    r.getString("void_reason")),
             id);
     List<Event> history =
         db.query(
@@ -240,15 +165,27 @@ public class AdminOrderService {
               instant(r, "delivered_at"),
               instant(r, "created_at"),
               net,
-              status == OrderStatus.CANCELLED ? null : Long.valueOf(total - net),
+              status.closed() ? null : Long.valueOf(total - net),
               missingForConfirmation(r.getBoolean("needs_design"), approved != null, advance, net),
               status.beforeShipping(),
               status.beforeShipping(),
               payments,
               history,
-              r.getBoolean("needs_design"));
+              r.getBoolean("needs_design"),
+              status.closed(),
+              status.next().contains(OrderStatus.RETURNED),
+              undo == null ? null : undo.name(),
+              advanceBlocks(status, r.getBoolean("needs_design"), approved != null, advance, net));
         },
         id);
+  }
+
+  /** True when the unpaid advance is the one thing holding the order back. */
+  private static boolean advanceBlocks(
+      OrderStatus status, boolean needsDesign, boolean approved, int advance, long paid) {
+    boolean early =
+        status == OrderStatus.NEW || status == OrderStatus.DESIGN_SENT || status == OrderStatus.CONFIRMED;
+    return early && paid < advance && (!needsDesign || approved);
   }
 
   private static List<String> missingForConfirmation(
@@ -290,7 +227,7 @@ public class AdminOrderService {
   private long netPaid(long orderId) {
     return db.queryForObject(
         "SELECT coalesce(sum(CASE WHEN kind='PAYMENT' THEN amount ELSE -amount END),0)"
-            + " FROM payment WHERE order_id=?",
+            + " FROM payment WHERE order_id=? AND voided_at IS NULL",
         Long.class,
         orderId);
   }
@@ -338,10 +275,47 @@ public class AdminOrderService {
       case CANCELLED -> {
         note = required(reason, 500, "Enter a reason for cancelling.");
       }
+      case RETURNED -> {
+        note = required(reason, 500, "Enter a reason for the return.");
+      }
       default -> {}
     }
     db.update("UPDATE orders SET status=?, updated_at=now() WHERE id=?", to.name(), order.id());
     event(order.id(), "STATUS_CHANGED", order.status(), to, note, actor);
+  }
+
+  /** The status before the latest step, or null when that step was itself an undo. */
+  private OrderStatus undoTarget(long orderId, OrderStatus current) {
+    return db
+        .query(
+            "SELECT event_type, from_status, to_status FROM order_event WHERE order_id=?"
+                + " AND event_type IN ('STATUS_CHANGED','STATUS_UNDONE') ORDER BY id DESC LIMIT 1",
+            (r, n) ->
+                "STATUS_CHANGED".equals(r.getString(1))
+                        && r.getString(2) != null
+                        && current.name().equals(r.getString(3))
+                    ? OrderStatus.valueOf(r.getString(2))
+                    : null,
+            orderId)
+        .stream()
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
+  }
+
+  /** Reverses one mistaken status click. History keeps both the step and its undo. */
+  @Transactional
+  public void undoLastStatus(String code, String reason, String actor) {
+    String note = required(reason, 500, "Enter why this step is being undone.");
+    Locked order = lock(code);
+    OrderStatus back = undoTarget(order.id(), order.status());
+    if (back == null) throw new RuleException("There is no status step to undo.");
+    if (order.status() == OrderStatus.DELIVERED)
+      db.update("UPDATE orders SET delivered_at=NULL WHERE id=?", order.id());
+    if (order.status() == OrderStatus.SHIPPED && back == OrderStatus.MAKING)
+      db.update("UPDATE orders SET courier=NULL, tracking_no=NULL WHERE id=?", order.id());
+    db.update("UPDATE orders SET status=?, updated_at=now() WHERE id=?", back.name(), order.id());
+    event(order.id(), "STATUS_UNDONE", order.status(), back, note, actor);
   }
 
   private void saveCourier(long orderId, String courier, String tracking) {
@@ -387,33 +361,112 @@ public class AdminOrderService {
       if (amount > net)
         throw new RuleException("A refund cannot exceed the ৳" + net + " currently held.");
     } else {
-      if (order.status() == OrderStatus.CANCELLED)
-        throw new RuleException("This order is cancelled, so it cannot take new payments.");
+      if (order.status().closed())
+        throw new RuleException(
+            "This order is " + order.status().label().toLowerCase(Locale.ROOT) + ", so it cannot take new payments.");
       if (net + amount > order.total())
         throw new RuleException(
             "This would overpay the order. Remaining balance is ৳" + (order.total() - net) + ".");
     }
     if (!reference.isEmpty()
         && db.queryForObject(
-                "SELECT count(*) FROM payment WHERE transaction_ref=?", Integer.class, reference)
+                "SELECT count(*) FROM payment WHERE transaction_ref=? AND voided_at IS NULL",
+                Integer.class,
+                reference)
             > 0) throw new RuleException("This transaction reference is already recorded.");
+    insertMoney(order.id(), kind, method, amount, reference.isEmpty() ? null : reference, actor);
+  }
+
+  private void insertMoney(
+      long orderId, String kind, String method, int amount, String reference, String actor) {
     Long adminId =
         db.queryForObject("SELECT id FROM admin_user WHERE username=?", Long.class, actor);
     db.update(
         "INSERT INTO payment (order_id, kind, method, amount, transaction_ref, recorded_by)"
             + " VALUES (?,?,?,?,?,?)",
-        order.id(),
+        orderId,
         kind,
         method,
         amount,
-        reference.isEmpty() ? null : reference,
+        reference,
         adminId);
     event(
-        order.id(),
-        refund ? "REFUND_RECORDED" : "PAYMENT_RECORDED",
+        orderId,
+        "REFUND".equals(kind) ? "REFUND_RECORDED" : "PAYMENT_RECORDED",
         null,
         null,
         "৳" + amount + " " + method,
+        actor);
+  }
+
+  /** The owner agrees to go ahead without the rest of the advance; it is collected on delivery. */
+  @Transactional
+  public void waiveAdvance(String code, String reason, String actor) {
+    String note = required(reason, 400, "Enter why the advance is not needed.");
+    Locked order = lock(code);
+    if (order.status() != OrderStatus.NEW
+        && order.status() != OrderStatus.DESIGN_SENT
+        && order.status() != OrderStatus.CONFIRMED)
+      throw new RuleException("The advance can only be changed before making starts.");
+    long net = netPaid(order.id());
+    if (net >= order.advanceRequired()) throw new RuleException("The advance is already recorded.");
+    db.update(
+        "UPDATE orders SET advance_required=?, updated_at=now() WHERE id=?",
+        Math.toIntExact(Math.max(net, 0)),
+        order.id());
+    event(
+        order.id(),
+        "NOTE",
+        null,
+        null,
+        "Advance reduced from ৳" + order.advanceRequired() + " to ৳" + Math.max(net, 0) + ": " + note,
+        actor);
+  }
+
+  /** Records the courier's settlement of a delivered order's whole remaining balance. */
+  @Transactional
+  public void collectBalance(String code, String actor) {
+    Locked order = lock(code);
+    if (order.status() != OrderStatus.DELIVERED)
+      throw new RuleException("Only a delivered order can be settled this way.");
+    long due = order.total() - netPaid(order.id());
+    if (due <= 0) throw new RuleException("Nothing is left to collect.");
+    insertMoney(order.id(), "PAYMENT", "COD", Math.toIntExact(due), null, actor);
+  }
+
+  /** Cancels a mistaken money record. It stays visible, but stops counting and frees its reference. */
+  @Transactional
+  public void voidMoney(String code, long paymentId, String reason, String actor) {
+    String note = required(reason, 500, "Enter why this record is wrong.");
+    Locked order = lock(code);
+    record Entry(String kind, String method, int amount) {}
+    Entry entry =
+        db.query(
+                "SELECT kind, method, amount FROM payment"
+                    + " WHERE id=? AND order_id=? AND voided_at IS NULL",
+                (r, n) -> new Entry(r.getString(1), r.getString(2), r.getInt(3)),
+                paymentId,
+                order.id())
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new RuleException("That record is missing or already voided."));
+    long net = netPaid(order.id());
+    long after = "PAYMENT".equals(entry.kind()) ? net - entry.amount() : net + entry.amount();
+    if (after < 0)
+      throw new RuleException("Void the refund first. It was paid out of this money.");
+    if (after > order.total())
+      throw new RuleException("Voiding this refund would overpay the order.");
+    db.update(
+        "UPDATE payment SET voided_at=now(), voided_by=?, void_reason=? WHERE id=?",
+        actor,
+        note,
+        paymentId);
+    event(
+        order.id(),
+        "PAYMENT_VOIDED",
+        null,
+        null,
+        "৳" + entry.amount() + " " + entry.method() + ": " + note,
         actor);
   }
 

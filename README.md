@@ -199,9 +199,12 @@ Set `FACEBOOK_PIXEL_ID` in `.env` to turn on ViewContent, InitiateCheckout and P
 
 Open **Orders** in the admin. Search by code or phone, then work an order through its steps:
 
-`NEW` → `DESIGN_SENT` → `CONFIRMED` → `MAKING` → `SHIPPED` → `DELIVERED`, or `CANCELLED` before shipping.
+`NEW` → `DESIGN_SENT` → `CONFIRMED` → `MAKING` → `SHIPPED` → `DELIVERED`, `CANCELLED` before shipping, or `RETURNED` from Shipped or Delivered when a parcel comes back.
 
-- **Confirming** needs customer design approval recorded (by phone or WhatsApp), but no payment. The full amount is collected on delivery. Existing payment and refund records are preserved when migrating to COD.
+The **Dashboard** lists what needs you (designs to send, advances to collect, delivered money to collect, money to refund) and the month's money. **Orders** filters by status, work queue and date, and searches code, phone, name or courier. Tick orders to start making, mark delivered, record full COD received or print packing slips. **Download CSV** exports the current list. **Add order** enters phone or Facebook orders.
+
+- **Corrections:** the latest status step can be undone with a reason. A wrong money record can be voided with a reason; it stays in the list, stops counting and frees its reference.
+- **Confirming** needs customer design approval recorded when the order has a design, and any advance recorded in full. The rest is collected on delivery.
 - **Payments:** check your bKash account or the actual settlement first, then record it. A customer's
   screenshot alone is not verification. Overpayments, excess refunds and repeated transaction
   references are rejected. Delivered does not mean paid, so record the balance when it arrives.

@@ -48,6 +48,7 @@ class AdminOrderTest {
   @Autowired JdbcTemplate db;
   @Autowired OrderService orders;
   @Autowired AdminOrderService admin;
+  @Autowired OrderBoard board;
   @LocalServerPort int port;
   long productId;
   int tokens;
@@ -514,8 +515,11 @@ class AdminOrderTest {
 
   private HttpResponse<String> search(Browser browser, String q, String status, int page)
       throws Exception {
-    return browser.post(
-        "/admin/orders/search", Map.of("q", q, "status", status, "page", String.valueOf(page)));
+    var redirect =
+        browser.post(
+            "/admin/orders/search", Map.of("q", q, "status", status, "page", String.valueOf(page)));
+    assertThat(location(redirect)).doesNotContain("0171");
+    return browser.get(location(redirect).replaceFirst("^https?://[^/]+", ""));
   }
 
   @Test
@@ -530,7 +534,7 @@ class AdminOrderTest {
       var found = search(browser, q, "", 0);
       assertThat(found.statusCode()).as(q).isEqualTo(200);
       assertThat(found.body()).as(q).contains(mine).doesNotContain(other);
-      assertThat(found.uri().toString()).as(q).endsWith("/admin/orders/search");
+      assertThat(found.uri().toString()).as(q).doesNotContain("0171").contains("search=1");
     }
     assertThat(search(browser, "%", "", 0).body()).doesNotContain(mine).doesNotContain(other);
     assertThat(search(browser, "_", "", 0).body()).doesNotContain(mine);
@@ -542,7 +546,7 @@ class AdminOrderTest {
   void filtersByStatusAndKeepsSearchAcrossPages() throws Exception {
     String sent = newOrder();
     move(sent, "DESIGN_SENT");
-    for (int i = 0; i < AdminOrderService.PAGE_SIZE + 2; i++) newOrder();
+    for (int i = 0; i < OrderBoard.PAGE_SIZE + 2; i++) newOrder();
     newOrder(new OrderInput(1, "x", "y", "01898765432", "INSIDE", "z", null));
 
     var browser = login();
@@ -553,7 +557,7 @@ class AdminOrderTest {
 
     var first = search(browser, "01712345678", "NEW", 0);
     assertThat(first.body())
-        .contains(AdminOrderService.PAGE_SIZE + 2 + " orders", "Page 1 of 2")
+        .contains(OrderBoard.PAGE_SIZE + 2 + " orders", "Page 1 of 2")
         .contains("name=\"q\" value=\"01712345678\"");
     var second = search(browser, "01712345678", "NEW", 1);
     assertThat(second.body())
@@ -683,10 +687,11 @@ class AdminOrderTest {
     orderAt("NEW");
     orderAt("MAKING");
     orderAt("SHIPPED");
-    var counts = admin.counts();
-    assertThat(counts.fresh()).isEqualTo(2);
-    assertThat(counts.making()).isEqualTo(1);
-    assertThat(counts.shipped()).isEqualTo(1);
+    var counts = board.stageCounts();
+    assertThat(counts.get("NEW")).isEqualTo(2);
+    assertThat(counts.get("MAKING")).isEqualTo(1);
+    assertThat(counts.get("SHIPPED")).isEqualTo(1);
+    assertThat(counts.get("CONFIRMED")).isZero();
     assertThat(login().get("/admin").statusCode()).isEqualTo(200);
   }
 }
