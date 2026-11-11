@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Add order · Upohar Lab</title>
+<link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+<link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/admin :: header}">
+</header>
+<main class="container admin-main">
+<p class="error" role="alert" th:if="${error}" th:text="${error}"></p>
+<a th:href="@{/admin/orders}">← Orders</a>
+<h1>Add order</h1>
+<p class="muted">For orders taken by phone, Facebook or in person. The order starts as New and follows the normal steps.</p>
+<p class="error" th:if="${products.isEmpty()}">Publish a product first. Draft products cannot take orders.</p>
+<form class="form-width panel order-panel" th:action="@{/admin/orders/new}" method="post" th:object="${form}">
+<label for="productId">Product</label>
+<select id="productId" name="productId" required>
+<option value="">Choose a product</option>
+<option th:each="p : ${products}" th:value="${p.id}" th:text="${p.title + (p.price == null ? '' : ' · ৳' + p.price)}" th:selected="${#strings.equals(p.id, form.productId)}"></option>
+</select>
+<label for="quantity">Quantity (1 to 10)</label>
+<input id="quantity" name="quantity" inputmode="numeric" required th:value="${form.quantity}">
+<label for="unitPrice">Unit price (blank uses the product price)</label>
+<input id="unitPrice" name="unitPrice" inputmode="numeric" th:value="${form.unitPrice}">
+<label for="extras">Options and extras, total taka</label>
+<input id="extras" name="extras" inputmode="numeric" th:value="${form.extras}">
+<label for="name">Customer name</label>
+<input id="name" name="name" maxlength="100" required th:value="${form.name}">
+<label for="phone">Phone</label>
+<input id="phone" name="phone" type="tel" required autocomplete="off" th:value="${form.phone}">
+<label for="area">Delivery area</label>
+<select id="area" name="area">
+<option value="INSIDE" th:selected="${form.area == 'INSIDE'}">Inside Dhaka</option>
+<option value="OUTSIDE" th:selected="${form.area == 'OUTSIDE'}">Outside Dhaka</option>
+</select>
+<label for="delivery">Delivery charge (blank uses Settings)</label>
+<input id="delivery" name="delivery" inputmode="numeric" th:value="${form.delivery}">
+<label for="address">Address</label>
+<textarea id="address" name="address" rows="3" maxlength="500" required th:text="${form.address}"></textarea>
+<label for="engraving">Engraving text (blank means no design step)</label>
+<textarea id="engraving" name="engraving" rows="3" maxlength="1000" th:text="${form.engraving}"></textarea>
+<label for="advance">Advance required (taka, blank for none)</label>
+<input id="advance" name="advance" inputmode="numeric" th:value="${form.advance}">
+<label for="neededBy">Needed by (optional)</label>
+<input id="neededBy" name="neededBy" type="date" th:value="${form.neededBy}">
+<label for="note">Customer's note (optional)</label>
+<textarea id="note" name="note" rows="2" maxlength="500" th:text="${form.note}"></textarea>
+<button class="button">Save order</button>
+</form>
+</main>
+</body>
+</html>

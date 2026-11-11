@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Packing slips · Upohar Lab</title>
+<link rel="stylesheet" th:href="@{/css/app.css}">
+<script th:src="@{/js/orders-admin.js}" defer></script>
+</head>
+<body class="slips-page">
+<p class="no-print"><button data-print class="button">Print</button></p>
+<article class="slip" th:each="o : ${slips}">
+<header><strong>Upohar Lab</strong><span th:if="${!#strings.isEmpty(shopPhone)}" th:text="${shopPhone}"></span></header>
+<h1 th:text="${o.code}"></h1>
+<dl class="facts">
+<dt>To</dt><dd th:text="${o.customerName}"></dd>
+<dt>Phone</dt><dd th:text="${o.phone}"></dd>
+<dt>Address</dt><dd class="preserve-lines" th:text="${o.address}"></dd>
+<dt>Area</dt><dd th:text="${o.area == 'INSIDE' ? 'Inside Dhaka' : 'Outside Dhaka'}"></dd>
+<dt>Item</dt><dd th:text="${o.productTitle + ' × ' + o.quantity}"></dd>
+<th:block th:if="${!#strings.isEmpty(o.engraving)}"><dt>Engraving</dt><dd class="preserve-lines" th:text="${o.engraving}"></dd></th:block>
+<dt>Collect</dt><dd class="slip-collect" th:text="${'৳' + (o.balance == null ? 0 : o.balance)}"></dd>
+</dl>
+</article>
+</body>
+</html>
