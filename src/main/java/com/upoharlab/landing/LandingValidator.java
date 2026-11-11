@@ -38,6 +38,10 @@ public final class LandingValidator {
         problems.add("Landing page: an image no longer belongs to this product. Choose it again.");
     for (String font : c.preview().fonts())
       if (!LandingFonts.allowed(font)) problems.add("Landing page: unknown font.");
+    String video = c.hero().videoUrl();
+    if (video != null && !video.isBlank() && c.hero().videoId() == null)
+      problems.add(
+          "Landing page: the video link is not a YouTube link. Paste the link from YouTube's Share button.");
     return problems;
   }
 

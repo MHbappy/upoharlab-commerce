@@ -18,6 +18,16 @@ class LandingValidatorTest {
   }
 
   @Test
+  void onlyYouTubeVideoLinksAreAccepted() {
+    LandingConfig vimeo = edit(n -> ((ObjectNode) n.get("hero")).put("videoUrl", "https://vimeo.com/123456789"));
+    assertThat(LandingValidator.basic(vimeo, Set.of(IMAGE))).anyMatch(p -> p.contains("not a YouTube link"));
+    LandingConfig youtube = edit(n -> ((ObjectNode) n.get("hero")).put("videoUrl", "https://youtu.be/dQw4w9WgXcQ"));
+    assertThat(LandingValidator.basic(youtube, Set.of(IMAGE))).isEmpty();
+    LandingConfig blank = edit(n -> ((ObjectNode) n.get("hero")).put("videoUrl", "  "));
+    assertThat(LandingValidator.basic(blank, Set.of(IMAGE))).isEmpty();
+  }
+
+  @Test
   void completeConfigurationPasses() {
     assertThat(LandingValidator.basic(complete(), Set.of(IMAGE))).isEmpty();
     assertThat(LandingValidator.publishable(complete())).isEmpty();

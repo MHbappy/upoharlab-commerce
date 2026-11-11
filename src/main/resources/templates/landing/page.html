@@ -20,6 +20,7 @@
 <link rel="stylesheet" th:href="@{/css/app.css}">
 <link rel="stylesheet" th:href="@{/css/landing.css}">
 <link rel="stylesheet" th:href="@{/css/landing-sales.css}">
+<link rel="stylesheet" th:href="@{/vendor/photoswipe-5.4.4/photoswipe.css}">
 </head>
 <body class="lp lp-sales">
 <a class="skip-link" href="#main" th:text="#{site.skip}"></a>
@@ -40,5 +41,6 @@
 <script th:if="${@pixel.enabled() and !preview}" th:src="@{/js/pixel.js}" defer th:with="pixelId=${@pixel.id()}" th:attr="data-pixel=${pixelId},data-product=${product.details.title},data-value=${config.hero().offerPrice()}"></script>
 <script type="application/json" id="landing-text" th:utext="${textsJson}"></script>
 <script th:src="@{/js/landing.js}" defer></script>
+<script type="module" th:src="@{/js/photo-viewer.js}"></script>
 </body>
 </html>

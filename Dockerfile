@@ -14,5 +14,5 @@ USER app
 ENV UPLOADS_DIRECTORY=/data/uploads
 # Heap follows the container memory limit. Adjust APP_MEMORY_LIMIT for your server.
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=60 -Duser.timezone=UTC"
-EXPOSE 8080
+EXPOSE 1234
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -19,7 +19,7 @@ case "$ACTION" in
     done
     psql_in scripts/demo/seed.sql
     echo
-    echo "Test data added. Shop: http://localhost:8080  Admin: http://localhost:8080/admin"
+    echo "Test data added. Shop: http://localhost:1234  Admin: http://localhost:1234/admin"
     ;;
   remove)
     psql_in scripts/demo/remove.sql

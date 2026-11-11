@@ -78,6 +78,7 @@ public class SecurityConfig {
                         "/",
                         "/css/**",
                         "/js/**",
+                        "/vendor/**",
                         "/fonts/**",
                         "/p/**",
                         "/order/**",
@@ -129,9 +130,11 @@ public class SecurityConfig {
                         c ->
                             c.policyDirectives(
                                 "default-src 'self'; font-src 'self'; style-src 'self'; img-src"
-                                    + " 'self' data: blob:"
+                                    + " 'self' data: blob: https://i.ytimg.com"
                                     + facebookImages
                                     + ";"
+                                    // Product videos: YouTube's privacy-enhanced player only.
+                                    + " frame-src https://www.youtube-nocookie.com;"
                                     + facebookScripts
                                     + " frame-ancestors 'none'; form-action 'self'; base-uri 'self'")))
         .build();

@@ -40,7 +40,7 @@ public class LandingForm {
   }
 
   public static class HeroRow {
-    public String headline, subHeadline, heroImage;
+    public String headline, subHeadline, heroImage, videoUrl;
     public Integer oldPrice, offerPrice;
     public List<String> moreImages = new ArrayList<>();
   }
@@ -150,6 +150,7 @@ public class LandingForm {
     hero.oldPrice = c.hero().oldPrice();
     hero.offerPrice = c.hero().offerPrice();
     hero.moreImages.addAll(c.hero().moreImages());
+    hero.videoUrl = c.hero().videoUrl();
     benefits.addAll(c.benefits());
     socialProof.customerImages.addAll(c.socialProof().customerImages());
     socialProof.reviewText = c.socialProof().reviewText();
@@ -302,7 +303,8 @@ public class LandingForm {
         new LandingConfig.Hero(
             clean(hero.headline), clean(hero.subHeadline),
             heroImages.isEmpty() ? "" : heroImages.get(0), hero.oldPrice, hero.offerPrice,
-            heroImages.isEmpty() ? List.of() : heroImages.subList(1, heroImages.size())),
+            heroImages.isEmpty() ? List.of() : heroImages.subList(1, heroImages.size()),
+            orNull(hero.videoUrl)),
         filled(benefits),
         new LandingConfig.SocialProof(
             filled(socialProof.customerImages), firstReview.text(), firstReview.name(),

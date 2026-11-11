@@ -106,6 +106,33 @@ class LandingOrderFlowTest {
   @org.springframework.beans.factory.annotation.Autowired com.upoharlab.text.SiteTexts texts;
 
   @Test
+  void thePhotoViewerLibraryIsServedFromThisSite() throws Exception {
+    Browser b = new Browser(port);
+    String html = b.get(PAGE).body();
+    assertThat(html).contains("/vendor/photoswipe-5.4.4/photoswipe").containsPattern("type=\"module\" src=\"/js/photo-viewer[-0-9a-f]*\\.js\"");
+    for (String file : new String[] {"/js/photo-viewer.js", "/vendor/photoswipe-5.4.4/photoswipe-lightbox.esm.min.js",
+        "/vendor/photoswipe-5.4.4/photoswipe.esm.min.js", "/vendor/photoswipe-5.4.4/photoswipe.css"})
+      assertThat(b.get(file).statusCode()).as(file).isEqualTo(200);
+  }
+
+  @Test
+  void aProductVideoIsTheFirstSlideAndLoadsOnlyWhenTapped() throws Exception {
+    String plain = new Browser(port).get(PAGE).body();
+    assertThat(plain).doesNotContain("data-video", "i.ytimg.com");
+
+    db.update("UPDATE product SET landing_config=jsonb_set(landing_config,'{hero,videoUrl}',"
+        + "'\"https://youtu.be/dQw4w9WgXcQ?si=share\"'::jsonb) WHERE id=?", productId);
+    var res = new Browser(port).get(PAGE);
+    String html = res.body();
+    assertThat(html).contains("data-video=\"dQw4w9WgXcQ\"", "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "href=\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\"", text("product.video.play"))
+        .as("the player itself loads only after a tap").doesNotContain("<iframe")
+        .as("the typed link is never put on the page").doesNotContain("si=share");
+    assertThat(res.headers().firstValue("Content-Security-Policy").orElse(""))
+        .contains("frame-src https://www.youtube-nocookie.com", "https://i.ytimg.com");
+  }
+
+  @Test
   void productWordingAndEditedMessagesReachTheCustomer() throws Exception {
     db.update("UPDATE product SET landing_config=jsonb_set(landing_config,'{wording}',"
         + "'{\"textLabel\":\"মগে কী প্রিন্ট হবে?\",\"previewTitle\":\"মগে নিজের নাম দেখুন\"}'::jsonb) WHERE id=?",

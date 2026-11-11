@@ -18,7 +18,7 @@ services:
   app:
     build: .
     ports:
-      - "127.0.0.1:${APP_PORT:-8080}:8080"
+      - "127.0.0.1:${APP_PORT:-1234}:1234"
     environment:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}

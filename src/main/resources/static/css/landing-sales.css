@@ -12,6 +12,20 @@
 .lp-sales .lp-hook-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px}
 .lp-sales .lp-hero{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:contain;background:#ede3d5;border-radius:16px}
 .lp-sales .lp-gallery{background:#ede3d5}
+/* Product video: a picture with a play button until tapped, then the player in the same box. */
+.lp-sales .lp-video{position:relative;overflow:hidden;background:#14110e;color:#fff;text-decoration:none;cursor:pointer}
+.lp-gallery .lp-video{flex:0 0 100%;min-width:0;scroll-snap-align:start}
+.lp-video img,.lp-gallery .lp-video img{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;object-fit:cover;flex:none;transition:transform .4s,opacity .3s}
+.lp-video:hover img{transform:scale(1.03);opacity:.9}
+.lp-video-play{position:absolute;top:50%;left:50%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:var(--primary);box-shadow:0 6px 24px #0000004d;transition:transform .2s}
+.lp-video-play::after{content:"";position:absolute;top:50%;left:50%;margin:-14px 0 0 -8px;border-style:solid;border-width:14px 0 14px 24px;border-color:transparent transparent transparent #fff}
+.lp-video:hover .lp-video-play{transform:scale(1.08)}
+.lp-video-label{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);padding:4px 14px;border-radius:999px;background:#000000a6;font-size:14px;font-weight:600;white-space:nowrap}
+.lp-video-frame{position:absolute;inset:0;width:100%;height:100%;border:0}
+.lp-video-thumb{position:relative}
+.lp-video-thumb>span{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:16px;text-shadow:0 1px 4px #000c;pointer-events:none}
+@media(max-width:760px){.lp-video-play{width:60px;height:60px;margin:-30px 0 0 -30px}.lp-video-play::after{margin:-11px 0 0 -6px;border-width:11px 0 11px 19px}.lp-video-label{font-size:13px;bottom:12px}}
+@media(prefers-reduced-motion:reduce){.lp-video img,.lp-video-play{transition:none}}
 .lp-sales h1{font-size:clamp(30px,3vw,41px);line-height:1.5;letter-spacing:-.02em}
 .lp-sales .lp-sub{font-size:17px;line-height:1.85}
 .lp-offer{padding:20px 0;margin:20px 0 22px;border-block:1px solid var(--border)}
@@ -62,16 +76,18 @@
 .lp-sales .lp-specs{margin-block:24px 16px}
 .lp-sales .lp-spec dd{font-size:15px}
 .lp-sales .lp-proof{background:#f6eee3}
-.lp-sales .lp-reviews blockquote{background:var(--surface);padding:26px}
-.lp-sales .lp-reviews blockquote p{font-size:16px;line-height:1.9}
 .lp-sales .lp-packages>.lp-wrap>.lp-kicker,.lp-sales #pricing-title,.lp-sales .lp-section-intro{text-align:center}
 .lp-sales .lp-cards{gap:20px;align-items:stretch;justify-content:center;padding-top:6px}
 .lp-sales .lp-card{position:relative;display:flex;flex-direction:column;flex:1 1 250px;max-width:400px;padding:30px 24px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px}
 .lp-sales .lp-card-chosen{border:2px solid var(--primary);padding:29px 23px 23px;box-shadow:0 6px 20px #6e432610}
 .lp-sales .lp-card-popular{background:#fff8ef}
-.lp-sales .lp-badge{position:absolute;top:-15px;left:24px;margin:0;padding:3px 12px;background:var(--primary);color:#fff;border-radius:6px;font-size:12px}
+/* The recommended package leads: lifted a little with a stronger shadow on wide screens. */
+@media(min-width:761px){.lp-sales .lp-card-popular{transform:translateY(-10px);box-shadow:0 16px 36px #6e43261f}}
+.lp-card-buy{display:flex;flex-direction:column}
+.lp-sales .lp-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);margin:0;padding:3px 14px;background:var(--primary);color:#fff;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 3px 10px #a94d3240}
 .lp-sales .lp-card h3{font-size:21px;margin-bottom:12px}
-.lp-sales .lp-card-desc{font-size:15px;line-height:1.8;flex:1;margin-bottom:22px}
+.lp-sales .lp-card-desc{display:flex;align-items:flex-start;gap:8px;font-size:15px;line-height:1.8;color:var(--text);flex:1;margin-bottom:22px}
+.lp-card-tick{flex:none;color:#2f7d4f;font-weight:700}
 .lp-sales .lp-card .lp-price{margin-bottom:22px}
 .lp-sales .lp-card .lp-price strong{font-size:32px}
 .lp-sales .lp-card .lp-btn{background:transparent;color:var(--primary);box-shadow:none}
@@ -132,6 +148,30 @@
  .lp-sales .lp-sticky .lp-btn{min-height:46px;padding-inline:28px}
 }
 /* An order button right after the reviews, where buyers are most convinced. */
+/* Reviews: centred heading, the customer count as a big number, quote cards, customer photos. */
+.lp-proof-head{text-align:center;margin-bottom:32px}
+.lp-sales .lp-proof-head h2{margin-bottom:0}
+.lp-proof-stat{display:inline-flex;align-items:baseline;gap:10px;margin:18px 0 0;padding:10px 24px;border-radius:999px;background:var(--surface);border:1px solid #e4d3bd;box-shadow:0 6px 18px #6e432612}
+.lp-proof-stat strong{font-size:32px;line-height:1.2;color:var(--primary)}
+.lp-proof-stat span{font-size:16px;font-weight:600;color:var(--text)}
+.lp-reviews{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}
+.lp-reviews.is-single{max-width:640px;margin-inline:auto}
+.lp-review{position:relative;display:flex;flex-direction:column;margin:0;padding:30px 28px 24px;border:1px solid #eadcca;border-radius:16px;background:var(--surface);box-shadow:0 8px 24px #6e432610}
+.lp-review-mark{position:absolute;top:6px;left:20px;font:72px/1 Georgia,serif;color:#e6cdb2;pointer-events:none}
+.lp-review blockquote{margin:0 0 20px;position:relative}
+.lp-review blockquote p{margin:0;font-size:17px;line-height:1.9;color:var(--text)}
+.lp-review figcaption{display:flex;align-items:center;gap:12px;margin-top:auto;padding-top:16px;border-top:1px solid #f0e4d4}
+.lp-review-avatar{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:50%;background:#f3e1cd;color:var(--primary);font-size:18px;font-weight:700}
+.lp-review-who{display:flex;flex-direction:column;min-width:0;line-height:1.5}
+.lp-review-who strong{font-size:15px;color:var(--text)}
+.lp-review-who small{font-size:13px;color:var(--muted)}
+.lp-proof-photos{margin-top:32px;text-align:center}
+.lp-proof-photos-title{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--muted)}
+.lp-photos{display:flex;justify-content:center;flex-wrap:wrap;gap:16px}
+/* Large enough to see the work; the 600px thumbnails stay sharp at this size. */
+.lp-photos img{width:260px;height:260px;object-fit:cover;border-radius:16px;border:4px solid var(--surface);box-shadow:0 6px 18px #6e43261f;transition:transform .2s}
+.lp-photos img:hover{transform:translateY(-3px)}
+@media(max-width:1000px){.lp-photos img{width:220px;height:220px}}
 .lp-proof-cta{margin:28px 0 0;text-align:center}
 .lp-sales .lp-proof-cta .lp-btn{display:inline-flex;width:auto;min-width:260px;justify-content:center}
 @media(max-width:960px){
@@ -167,7 +207,18 @@
  .lp-sales .lp-card{padding:26px 22px 22px;max-width:none;flex-basis:100%}
  .lp-sales .lp-card-chosen{padding:25px 21px 21px}
  .lp-sales .lp-card-desc{margin-bottom:16px}
- .lp-sales .lp-card .lp-price{margin-bottom:18px}
+ .lp-sales .lp-card .lp-price{margin-bottom:0}
+ /* Phones: price and button share one row, so three packages take about half the height. */
+ .lp-sales .lp-cards{gap:18px}
+ .lp-sales .lp-card{padding:22px 18px 18px}
+ .lp-sales .lp-card-chosen{padding:21px 17px 17px}
+ .lp-sales .lp-card h3{margin-bottom:6px}
+ .lp-sales .lp-card-desc{margin-bottom:14px}
+ .lp-card-buy{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
+ .lp-card-buy .lp-price{display:grid;grid-template-columns:auto auto;justify-content:start;align-items:baseline;gap:0 8px;min-width:0}
+ .lp-sales .lp-card .lp-price strong{font-size:26px}
+ .lp-card-buy .lp-save{grid-column:1/-1;justify-self:start;margin-top:4px}
+ .lp-sales .lp-card .lp-btn{flex:none;width:auto;min-height:46px;padding:8px 18px;font-size:15px}
  .lp-sales .lp-order-grid{grid-template-columns:1fr;gap:28px}
  .lp-sales .lp-order-side{position:static;padding:22px}
  .lp-sales .lp-section-heading h2{margin:0}
@@ -186,4 +237,25 @@
  .lp-hero-reassurance{font-size:12px}
  .lp-sticky-inner{gap:10px}.lp-sales .lp-sticky .lp-btn{padding-inline:14px}
  .lp-sales .lp-package{flex-wrap:wrap}.lp-sales .lp-package-price{margin-left:31px}
+}
+
+/* Photo viewer (PhotoSwipe): product photos show a magnifier; the viewer uses the shop's fonts. */
+.lp-zoomable{cursor:zoom-in}
+.pswp{--pswp-bg:#110e0b;--pswp-icon-color:#fff;font-family:inherit}
+.pswp__bn-counter{height:30px;margin-top:15px;padding:0 14px;font-size:14px;line-height:30px;color:#fff;opacity:.85}
+@media(max-width:760px){
+ .lp-proof-head{margin-bottom:24px}
+ .lp-proof-stat{padding:8px 20px}.lp-proof-stat strong{font-size:26px}.lp-proof-stat span{font-size:14px}
+ .lp-review{padding:26px 20px 20px}
+ /* Several reviews swipe sideways on phones; the next card peeks in to show there is more. */
+ .lp-reviews:not(.is-single){display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:-18px;padding:4px 18px 10px;scrollbar-width:none}
+ .lp-reviews:not(.is-single)::-webkit-scrollbar{display:none}
+ .lp-reviews:not(.is-single) .lp-review{flex:0 0 84%;scroll-snap-align:center}
+ .lp-review blockquote p{font-size:15px}
+ .lp-review-mark{font-size:60px;left:14px}
+ /* Customer photos scroll sideways on phones instead of wrapping into a tall block. */
+ .lp-photos{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:-18px;padding:4px 18px 8px;scrollbar-width:none}
+ .lp-photos::-webkit-scrollbar{display:none}
+ .lp-photos{gap:12px}
+ .lp-photos img{flex:none;width:72%;height:auto;aspect-ratio:1/1;scroll-snap-align:center}
 }

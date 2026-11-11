@@ -36,7 +36,8 @@ public class LandingPageModel {
           "product.text.sample", "product.recap.empty", "product.package.pick",
           "product.package.picked", "product.summary.delivery.waiting", "product.summary.plus.delivery",
           "product.saving", "product.advance.note", "product.advance.note.plain", "product.advance.none",
-          "product.share.message",
+          "product.share.message", "product.zoom.close", "product.zoom.prev", "product.zoom.next",
+          "product.zoom.zoom", "product.zoom.error",
           "product.share.making");
 
   /** Starting choices: the popular package, first of everything else, and a blank engraving field. */

@@ -4,15 +4,22 @@
 
 <section th:fragment="hook" class="lp-hook" th:if="${config.sections().hero()}" th:with="hero=${config.hero()}">
 <div class="lp-wrap lp-hook-grid">
-<img class="lp-hero" th:if="${hero.allImages().size() == 1}" th:src="@{/media/{n}(n=${hero.heroImage()})}" th:alt="${hero.headline()}" fetchpriority="high" decoding="async" width="1200" height="900">
-<div class="lp-hero-box" th:if="${hero.allImages().size() > 1}">
+<th:block th:with="vid=${hero.videoId()},slides=${hero.slideCount()}">
+<!-- One picture, or one video, with no slider. -->
+<img class="lp-hero" th:if="${slides == 1 and vid == null}" th:src="@{/media/{n}(n=${hero.heroImage()})}" th:alt="${hero.headline()}" th:with="zw=${@photoSize.width(hero.heroImage())},zh=${@photoSize.height(hero.heroImage())}" th:attr="data-zoom-w=${zw},data-zoom-h=${zh}" fetchpriority="high" decoding="async" width="1200" height="900">
+<th:block th:if="${slides == 1 and vid != null}"><a th:replace="~{landing/sections :: video(${vid})}"></a></th:block>
+<!-- Several: the video is the first slide, then the pictures. -->
+<div class="lp-hero-box" th:if="${slides > 1}">
 <div class="lp-gallery lp-hero-strip" id="lp-hero-strip" role="group" th:aria-label="#{product.gallery.label}" tabindex="0">
-<img class="lp-hero" th:each="image, i : ${hero.allImages()}" th:src="@{/media/{n}(n=${image})}" th:alt="${hero.headline()}" th:attr="fetchpriority=${i.first ? 'high' : null},loading=${i.first ? null : 'lazy'}" decoding="async" width="1200" height="900">
+<th:block th:if="${vid != null}"><a th:replace="~{landing/sections :: video(${vid})}"></a></th:block>
+<img class="lp-hero" th:each="image, i : ${hero.allImages()}" th:src="@{/media/{n}(n=${image})}" th:alt="${hero.headline()}" th:attr="fetchpriority=${i.first and vid == null ? 'high' : null},loading=${i.first and vid == null ? null : 'lazy'},data-zoom-w=${zw},data-zoom-h=${zh}" th:with="zw=${@photoSize.width(image)},zh=${@photoSize.height(image)}" decoding="async" width="1200" height="900">
 </div>
 <div class="lp-gallery-thumbs lp-hero-thumbs" role="group" th:aria-label="#{product.gallery.pick}" data-js-only hidden>
+<button type="button" class="lp-gallery-thumb lp-hero-thumb lp-video-thumb" th:if="${vid != null}" th:aria-label="#{product.video.title}"><img th:src="${'https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg'}" alt="" loading="lazy" width="72" height="54"><span aria-hidden="true">▶</span></button>
 <button type="button" class="lp-gallery-thumb lp-hero-thumb" th:each="image, i : ${hero.allImages()}" th:with="photoLabel=${#messages.msg('product.photo.n', @bn.digits(i.count))}" th:attr="aria-label=${photoLabel}"><img th:src="@{/media/{n}(n=${'thumb-' + image})}" alt="" loading="lazy" width="72" height="54"></button>
 </div>
 </div>
+</th:block>
 <div class="lp-hook-copy">
 <h1 th:text="${hero.headline()}"></h1>
 <p class="lp-sub" th:if="${!#strings.isEmpty(hero.subHeadline())}" th:text="${hero.subHeadline()}"></p>
@@ -82,6 +89,16 @@
 </div>
 </section>
 
+<!--
+  A YouTube video as a picture with a play button. The player loads only when tapped (landing.js),
+  so the page stays fast; without JavaScript it is a plain link to YouTube.
+-->
+<a th:fragment="video(vid)" class="lp-hero lp-video" th:href="${'https://www.youtube.com/watch?v=' + vid}" th:attr="data-video=${vid}" target="_blank" rel="noopener noreferrer">
+<img th:src="${'https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg'}" th:alt="#{product.video.title}" width="480" height="360" fetchpriority="high">
+<span class="lp-video-play" aria-hidden="true"></span>
+<span class="lp-video-label" th:text="#{product.video.play}"></span>
+</a>
+
 <section th:fragment="benefits" class="lp-section" th:if="${config.sections().benefits() and !config.benefits().isEmpty()}" aria-labelledby="why-title">
 <div class="lp-wrap">
 <h2 id="why-title" th:text="#{product.benefits.title}"></h2>
@@ -96,7 +113,7 @@
 <div class="lp-info-grid" th:classappend="${showGallery and showDetails ? 'lp-info-two' : ''}">
 <div class="lp-gallery-box" th:if="${showGallery}">
 <div class="lp-gallery" id="lp-gallery" role="group" th:aria-label="#{product.gallery.label}" th:attr="tabindex=${photos.size() > 1 ? 0 : null}">
-<img th:each="photo, i : ${photos}" th:src="@{/media/{n}(n=${photo.filename()})}" th:alt="${photo.alt()}" loading="lazy" decoding="async" width="1200" height="900">
+<img th:each="photo, i : ${photos}" th:src="@{/media/{n}(n=${photo.filename()})}" th:alt="${photo.alt()}" th:with="zw=${@photoSize.width(photo.filename())},zh=${@photoSize.height(photo.filename())}" th:attr="data-zoom-w=${zw},data-zoom-h=${zh}" loading="lazy" decoding="async" width="1200" height="900">
 </div>
 <div class="lp-gallery-thumbs" role="group" th:aria-label="#{product.gallery.pick}" data-js-only hidden th:if="${photos.size() > 1}">
 <button type="button" class="lp-gallery-thumb" th:each="photo, i : ${photos}" th:with="photoLabel=${#messages.msg('product.photo.n', @bn.digits(i.count))}" th:attr="data-photo=${i.index},aria-label=${photoLabel}"><img th:src="@{/media/{n}(n=${'thumb-' + photo.filename()})}" alt="" loading="lazy" width="72" height="54"></button>
@@ -123,17 +140,26 @@
 
 <section th:fragment="proof" class="lp-section lp-proof" th:with="p=${config.socialProof()}" th:if="${config.sections().socialProof() and (!config.socialProof().customerImages().isEmpty() or !config.socialProof().allReviews().isEmpty() or config.socialProof().countNumber() != null)}" th:aria-label="#{product.proof.title}">
 <div class="lp-wrap">
+<div class="lp-proof-head">
 <p class="lp-kicker" th:text="#{product.proof.kicker}"></p><h2 th:text="#{product.proof.title}"></h2>
-<div class="lp-photos" th:if="${!p.customerImages().isEmpty()}">
-<img th:each="i : ${p.customerImages()}" th:src="@{/media/{n}(n=${'thumb-' + i})}" th:alt="#{product.proof.photo.alt}" loading="lazy" decoding="async" width="300" height="300">
+<p class="lp-proof-stat" th:if="${p.countNumber() != null}"><strong th:text="${@bn.digits(p.countNumber()) + '+'}"></strong><span th:text="#{product.proof.people(${p.proofLine()})}"></span></p>
 </div>
-<div class="lp-reviews" th:if="${!p.allReviews().isEmpty()}">
-<blockquote th:each="r : ${p.allReviews()}">
-<p th:text="${r.text()}"></p>
-<footer th:text="${r.name() + (#strings.isEmpty(r.area()) ? '' : ', ' + r.area())}"></footer>
-</blockquote>
+<div class="lp-reviews" th:if="${!p.allReviews().isEmpty()}" th:classappend="${p.allReviews().size() == 1 ? 'is-single' : ''}">
+<figure class="lp-review" th:each="r : ${p.allReviews()}">
+<span class="lp-review-mark" aria-hidden="true">“</span>
+<blockquote><p th:text="${r.text()}"></p></blockquote>
+<figcaption th:if="${!#strings.isEmpty(r.name()) or !#strings.isEmpty(r.area())}">
+<span class="lp-review-avatar" aria-hidden="true" th:if="${!#strings.isEmpty(r.name())}" th:text="${#strings.substring(r.name().strip(), 0, 1)}"></span>
+<span class="lp-review-who"><strong th:text="${r.name()}"></strong><small th:if="${!#strings.isEmpty(r.area())}" th:text="${r.area()}"></small></span>
+</figcaption>
+</figure>
 </div>
-<p class="lp-count-line" th:if="${p.countNumber() != null}" th:text="#{product.proof.count(${@bn.digits(p.countNumber())}, ${p.proofLine()})}"></p>
+<div class="lp-proof-photos" th:if="${!p.customerImages().isEmpty()}">
+<p class="lp-proof-photos-title" th:text="#{product.proof.photos}"></p>
+<div class="lp-photos">
+<img th:each="i : ${p.customerImages()}" th:src="@{/media/{n}(n=${'thumb-' + i})}" th:alt="#{product.proof.photo.alt}" th:with="zw=${@photoSize.width(i)},zh=${@photoSize.height(i)}" th:attr="data-zoom-w=${zw},data-zoom-h=${zh}" loading="lazy" decoding="async" width="300" height="300">
+</div>
+</div>
 <p class="lp-proof-cta" th:if="${showOrder and orderable}"><a class="lp-btn" href="#order"><th:block th:text="#{product.proof.cta}"></th:block> <span aria-hidden="true">↓</span></a></p>
 </div>
 </section>
@@ -147,9 +173,11 @@
 <article class="lp-card" th:each="t, i : ${config.packages()}" th:classappend="${t.isPopular() ? 'lp-card-popular' : ''}" th:attr="data-card=${i.index}">
 <p class="lp-badge" th:if="${t.isPopular() and config.packages().size() > 1}" th:text="#{product.packages.popular}"></p>
 <h3 th:text="${t.name()}"></h3>
-<p class="lp-card-desc" th:text="${t.description()}"></p>
+<p class="lp-card-desc" th:if="${!#strings.isEmpty(t.description())}"><span class="lp-card-tick" aria-hidden="true">✓</span><span th:text="${t.description()}"></span></p>
+<div class="lp-card-buy">
 <p class="lp-price" th:if="${t.price() != null}"><strong th:text="${@bn.money(t.price())}"></strong> <s th:if="${t.oldPrice() != null}" th:text="${@bn.money(t.oldPrice())}"></s> <span class="lp-save" th:if="${t.price() != null and t.oldPrice() != null and t.oldPrice() > t.price()}" th:text="#{product.saving(${@bn.money(t.oldPrice() - t.price())})}"></span></p>
 <a class="lp-btn" href="#order" th:if="${showOrder and orderable}" th:attr="data-pick-package=${i.index}" th:text="#{product.package.pick}"></a>
+</div>
 </article>
 </div>
 <p class="lp-urgency" th:each="line : ${config.allUrgencyLines()}" th:text="${line}"></p>

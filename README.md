@@ -22,7 +22,7 @@ If `.env` already exists, keep it. Never commit it.
 docker compose up --build -d
 ```
 
-Open **http://localhost:8080**. If the port is in use, change `APP_PORT` in `.env`.
+Open **http://localhost:1234**. If the port is in use, change `APP_PORT` in `.env`.
 If the database port is occupied, change `DB_HOST_PORT` in `.env` as well.
 The first build downloads dependencies and base images.
 
@@ -71,7 +71,7 @@ export DB_URL="jdbc:postgresql://localhost:${DB_HOST_PORT:-5433}/${DB_NAME:-upoh
 
 The sample `.env` uses shell-compatible values. Keep custom values shell-quoted when needed.
 For Windows, set the same environment variables and use `mvnw.cmd`.
-Stop the Compose app first if it already uses port 8080. Local PostgreSQL is available only on
+Stop the Compose app first if it already uses port 1234. Local PostgreSQL is available only on
 127.0.0.1:5433 by default; the app container uses the internal postgres:5432 address.
 
 ### Personal settings for an IDE or another database
@@ -140,7 +140,7 @@ to start without an `https://` site address. See [DEPLOY.md](DEPLOY.md).
 
 ## Use the admin
 
-Open **http://localhost:8080/admin/login** and sign in with the `ADMIN_USERNAME` and `ADMIN_PASSWORD`
+Open **http://localhost:1234/admin/login** and sign in with the `ADMIN_USERNAME` and `ADMIN_PASSWORD`
 from your ignored `.env` file. They are not printed in logs or committed.
 Keep that file private. After the first bootstrap, editing its password does not reset
 the database account. A missing first-boot credential causes a clear startup failure.

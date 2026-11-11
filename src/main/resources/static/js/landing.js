@@ -377,6 +377,26 @@
   photoStrip($("lp-gallery"), document.querySelectorAll(".lp-gallery-box .lp-gallery-thumb"));
   photoStrip($("lp-hero-strip"), document.querySelectorAll(".lp-hero-thumb"));
 
+  // Product video: the YouTube player loads only when tapped. The site sends no referrer, but
+  // YouTube refuses to play embeds without one, so the frame asks for the page origin to be sent.
+  document.querySelectorAll("[data-video]").forEach(function (link) {
+    link.addEventListener("click", function (event) {
+      var id = link.dataset.video;
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+      event.preventDefault();
+      var frame = document.createElement("iframe");
+      frame.className = "lp-video-frame";
+      frame.src = "https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0&playsinline=1";
+      frame.title = (link.querySelector("img") || {}).alt || "Video";
+      frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = "strict-origin-when-cross-origin";
+      link.replaceChildren(frame);
+      link.removeAttribute("href");
+      link.classList.add("is-playing");
+    });
+  });
+
   var problem = $("order-errors") || $("order-message");
   if (problem) window.addEventListener("load", function () { setTimeout(function () { problem.focus(); }, 0); });
 })();

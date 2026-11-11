@@ -22,6 +22,11 @@
 <div class="field" data-row th:each="m, i : ${landingForm.hero.moreImages}"><label>Hero image</label><th:block th:replace="~{admin/landing-editor :: picker(${'hero.moreImages[' + i.index + ']'}, ${m})}"></th:block><button type="button" class="small-button row-remove" data-remove-row hidden>Remove image</button></div>
 <button type="button" class="small-button package-add" data-add-row hidden>+ Add hero image</button>
 </div>
+<div class="field">
+<label for="hero-video">YouTube video link (optional)</label>
+<input id="hero-video" type="text" name="hero.videoUrl" maxlength="300" inputmode="url" placeholder="https://youtu.be/…" th:value="${landingForm.hero.videoUrl}">
+<p class="field-help">Paste the link from YouTube's Share button (normal videos or Shorts). It becomes the first slide at the top of the page; your hero images follow. The video loads only when a customer taps play.</p>
+</div>
 </div>
 </fieldset>
 

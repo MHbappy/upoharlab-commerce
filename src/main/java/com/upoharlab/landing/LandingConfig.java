@@ -108,14 +108,21 @@ public record LandingConfig(
       @Pattern(regexp = IMAGE) String heroImage,
       @Min(0) @Max(1000000) Integer oldPrice,
       @Min(0) @Max(1000000) Integer offerPrice,
-      @Size(max = 7) List<@Pattern(regexp = IMAGE) String> moreImages) {
+      @Size(max = 7) List<@Pattern(regexp = IMAGE) String> moreImages,
+      @Size(max = 300) String videoUrl) {
+    /** Watch, youtu.be, Shorts, embed and live links; the 11-character id is group 1. */
+    private static final java.util.regex.Pattern YOUTUBE =
+        java.util.regex.Pattern.compile(
+            "^(?:https?://)?(?:www\\.|m\\.)?(?:youtube\\.com/(?:watch\\?(?:[^#]*&)?v=|shorts/|embed/|live/)"
+                + "|youtu\\.be/)([A-Za-z0-9_-]{11})(?:[?&#/].*)?$");
+
     public Hero {
       moreImages = list(moreImages);
     }
 
     public Hero(
         String headline, String subHeadline, String heroImage, Integer oldPrice, Integer offerPrice) {
-      this(headline, subHeadline, heroImage, oldPrice, offerPrice, List.of());
+      this(headline, subHeadline, heroImage, oldPrice, offerPrice, List.of(), null);
     }
 
     /** The main image, then the rest of the slideshow. */
@@ -124,6 +131,21 @@ public record LandingConfig(
       if (heroImage != null && !heroImage.isBlank()) all.add(heroImage);
       all.addAll(moreImages);
       return all;
+    }
+
+    /**
+     * The YouTube video id from the owner's link, or null without a usable link. Pages only ever
+     * use this id, never the typed link.
+     */
+    public String videoId() {
+      if (videoUrl == null || videoUrl.isBlank()) return null;
+      var m = YOUTUBE.matcher(videoUrl.strip());
+      return m.matches() ? m.group(1) : null;
+    }
+
+    /** Slides at the top of the page: the video first (when set), then the images. */
+    public int slideCount() {
+      return allImages().size() + (videoId() == null ? 0 : 1);
     }
   }
 

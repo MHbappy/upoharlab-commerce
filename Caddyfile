@@ -4,7 +4,7 @@
 
 {$SITE_DOMAIN} {
 	encode zstd gzip
-	reverse_proxy app:8080
+	reverse_proxy app:1234
 }
 
 www.{$SITE_DOMAIN} {
