@@ -38,7 +38,7 @@
 </main>
 <th:block th:replace="~{landing/sections :: pageEnd}"></th:block>
 <script type="application/json" id="landing-config" th:utext="${configJson}"></script>
-<script th:if="${@pixel.enabled() and !preview}" th:src="@{/js/pixel.js}" defer th:with="pixelId=${@pixel.id()}" th:attr="data-pixel=${pixelId},data-product=${product.details.title},data-value=${config.hero().offerPrice()}"></script>
+<script th:if="${@pixel.enabled() and !preview}" th:src="@{/js/pixel.js}" defer th:with="pixelId=${@pixel.id()}" th:attr="data-pixel=${pixelId},data-product=${product.details.title},data-value=${config.hero().offerPrice()},data-event=${fbViewEvent}"></script>
 <script type="application/json" id="landing-text" th:utext="${textsJson}"></script>
 <script th:src="@{/js/landing.js}" defer></script>
 <script type="module" th:src="@{/js/photo-viewer.js}"></script>

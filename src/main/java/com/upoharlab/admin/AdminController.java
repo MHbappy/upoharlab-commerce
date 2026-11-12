@@ -1,7 +1,9 @@
 package com.upoharlab.admin;
 
+import com.upoharlab.FacebookPixel;
 import com.upoharlab.landing.LandingFonts;
 import com.upoharlab.landing.LandingForm;
+import com.upoharlab.order.FacebookConversions;
 import com.upoharlab.order.LandingPageModel;
 import com.upoharlab.product.*;
 import com.upoharlab.settings.*;
@@ -23,13 +25,19 @@ public class AdminController {
   private final ImageStorage images;
   private final ProductEditor editor;
   private final LandingPageModel landingPages;
+  private final FacebookPixel pixel;
+  private final FacebookConversions conversions;
 
   public AdminController(
       ProductStore p,
       SettingsService s,
       ImageStorage i,
       ProductEditor editor,
-      LandingPageModel landingPages) {
+      LandingPageModel landingPages,
+      FacebookPixel pixel,
+      FacebookConversions conversions) {
+    this.pixel = pixel;
+    this.conversions = conversions;
     products = p;
     settings = s;
     images = i;
@@ -197,7 +205,18 @@ public class AdminController {
       @ModelAttribute SettingsForm settingsForm, BindingResult errors, RedirectAttributes flash) {
     settings.save(settingsForm, errors);
     if (errors.hasErrors()) return "admin/settings";
+    pixel.refresh();
     flash.addFlashAttribute("message", "Settings saved.");
+    return "redirect:/admin/settings";
+  }
+
+  @PostMapping("/settings/facebook-test")
+  String facebookTest(
+      jakarta.servlet.http.HttpServletRequest request,
+      jakarta.servlet.http.HttpSession session,
+      RedirectAttributes flash) {
+    var result = conversions.sendTest(FacebookConversions.visitor(request, session));
+    flash.addFlashAttribute(result.ok() ? "message" : "error", result.message());
     return "redirect:/admin/settings";
   }
 }

@@ -115,7 +115,33 @@
 </p>
 </div>
 </fieldset>
+<fieldset class="edit-section">
+<legend>Facebook ads tracking</legend>
+<p class="muted" th:text="${@pixel.serverEnabled() ? 'Status: Pixel and server tracking are on.' : (@pixel.enabled() ? 'Status: Pixel is on. Server tracking is off until an access token is saved.' : 'Status: off.')}"></p>
+<div class="field">
+<label for="fb_pixel_id">Pixel ID</label>
+<input id="fb_pixel_id" th:field="*{values[fb_pixel_id]}" type="text" inputmode="numeric" autocomplete="off">
+<p class="field-help">Events Manager → your dataset → Settings. Numbers only. Empty turns the Pixel off.</p>
+<p class="error" th:if="${#fields.hasErrors('values[fb_pixel_id]')}" th:errors="*{values[fb_pixel_id]}"></p>
+</div>
+<div class="field">
+<label for="fb_capi_token">Conversions API access token</label>
+<input id="fb_capi_token" name="values[fb_capi_token]" type="password" autocomplete="new-password">
+<p class="field-help" th:text="${@pixel.hasToken() ? 'A token is saved and hidden. Leave this empty to keep it, or paste a new one.' : 'Events Manager → Settings → Conversions API → Generate access token.'}"></p>
+<p class="error" th:if="${#fields.hasErrors('values[fb_capi_token]')}" th:errors="*{values[fb_capi_token]}"></p>
+<label class="check-row" th:if="${@pixel.hasToken()}"><input type="checkbox" name="values[fb_capi_token_clear]" value="true"> Remove the saved token</label>
+</div>
+<div class="field">
+<label for="fb_test_event_code">Test event code (optional)</label>
+<input id="fb_test_event_code" th:field="*{values[fb_test_event_code]}" type="text" autocomplete="off">
+<p class="field-help">Used only by the test button below. Real customer events are never marked as tests.</p>
+<p class="error" th:if="${#fields.hasErrors('values[fb_test_event_code]')}" th:errors="*{values[fb_test_event_code]}"></p>
+</div>
+</fieldset>
 <button class="button">Save settings</button>
+</form>
+<form class="form-width" th:if="${@pixel.serverEnabled()}" th:action="@{/admin/settings/facebook-test}" method="post">
+<button>Send test event to Facebook</button>
 </form>
 </main>
 </body>

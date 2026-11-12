@@ -65,13 +65,6 @@ public class SecurityConfig {
   @Bean
   SecurityFilterChain securityFilterChain(
       HttpSecurity http, Clock clock, com.upoharlab.FacebookPixel pixel) throws Exception {
-    // Facebook's addresses are allowed only on sites that have chosen to use the Pixel.
-    String facebookImages = pixel.enabled() ? " https://www.facebook.com" : "";
-    String facebookScripts =
-        pixel.enabled()
-            ? " script-src 'self' https://connect.facebook.net; connect-src 'self'"
-                + " https://www.facebook.com https://connect.facebook.net;"
-            : "";
     return http.authorizeHttpRequests(
             a ->
                 a.requestMatchers(
@@ -126,17 +119,26 @@ public class SecurityConfig {
                 h.referrerPolicy(r -> r.policy(ReferrerPolicy.NO_REFERRER))
                     .httpStrictTransportSecurity(
                         t -> t.includeSubDomains(false).maxAgeInSeconds(15552000))
-                    .contentSecurityPolicy(
-                        c ->
-                            c.policyDirectives(
-                                "default-src 'self'; font-src 'self'; style-src 'self'; img-src"
-                                    + " 'self' data: blob: https://i.ytimg.com"
-                                    + facebookImages
-                                    + ";"
-                                    // Product videos: YouTube's privacy-enhanced player only.
-                                    + " frame-src https://www.youtube-nocookie.com;"
-                                    + facebookScripts
-                                    + " frame-ancestors 'none'; form-action 'self'; base-uri 'self'")))
+                    // Written per request, so saving a Pixel ID applies without a restart.
+                    .addHeaderWriter(
+                        (request, response) ->
+                            response.setHeader("Content-Security-Policy", contentSecurityPolicy(pixel))))
         .build();
+  }
+
+  /** Facebook's addresses are allowed only on sites that have chosen to use the Pixel. */
+  private static String contentSecurityPolicy(com.upoharlab.FacebookPixel pixel) {
+    boolean facebook = pixel.enabled();
+    return "default-src 'self'; font-src 'self'; style-src 'self'; img-src"
+        + " 'self' data: blob: https://i.ytimg.com"
+        + (facebook ? " https://www.facebook.com" : "")
+        + ";"
+        // Product videos: YouTube's privacy-enhanced player only.
+        + " frame-src https://www.youtube-nocookie.com;"
+        + (facebook
+            ? " script-src 'self' https://connect.facebook.net; connect-src 'self'"
+                + " https://www.facebook.com https://connect.facebook.net;"
+            : "")
+        + " frame-ancestors 'none'; form-action 'self'; base-uri 'self'";
   }
 }

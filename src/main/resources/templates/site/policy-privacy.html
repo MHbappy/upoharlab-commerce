@@ -12,7 +12,7 @@
 <p th:text="${#messages.msg('privacy.s' + n + '.text')}"></p>
 </th:block>
 <h2 th:text="#{privacy.cookies.title}"></h2>
-<p><th:block th:text="#{privacy.cookies.text}"></th:block> <th:block th:text="${@pixel.enabled() ? #messages.msg('privacy.cookies.pixel') : #messages.msg('privacy.cookies.none')}"></th:block> <th:block th:text="#{privacy.cookies.backup}"></th:block></p>
+<p><th:block th:text="#{privacy.cookies.text}"></th:block> <th:block th:text="${@pixel.serverEnabled() ? #messages.msg('privacy.cookies.pixel.server') : (@pixel.enabled() ? #messages.msg('privacy.cookies.pixel') : #messages.msg('privacy.cookies.none'))}"></th:block> <th:block th:text="#{privacy.cookies.backup}"></th:block></p>
 <h2 th:text="#{privacy.delete.title}"></h2>
 <p th:text="#{privacy.delete.text}"></p>
 <p th:if="${whatsapp != null}"><a th:href="${whatsapp}" th:text="#{policy.whatsapp}"></a></p>

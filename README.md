@@ -193,7 +193,9 @@ Add images with the upload box beside each image slot, or choose one already sav
 
 Confirming a landing order needs both design approval and the advance recorded as a payment. The order page shows **Download SVG**, which holds only the text at its real position; laser software needs that font installed (files are in `static/fonts`). To add a font, add its WOFF2 file and an entry in `LandingFonts` and `landing.css`.
 
-Set `FACEBOOK_PIXEL_ID` in `.env` to turn on ViewContent, InitiateCheckout and Purchase events. Empty means no Facebook code or address is used.
+Set the Pixel ID in **Admin → Settings → Facebook ads tracking** to turn on browser PageView, ViewContent, InitiateCheckout and Purchase events. `FACEBOOK_PIXEL_ID` in `.env` is used only when that box is empty. Empty everywhere means no Facebook code or address is used.
+
+Add a Conversions API access token there to also send ViewContent and Purchase from the server. They share event IDs with the browser, so Facebook counts each once. Purchase includes the customer's SHA-256 hashed phone, IP address and browser details; the privacy page says so automatically. The token is stored in the `setting` table, is never shown again and is kept out of page data. **Send test event to Facebook** checks the setup using your test event code. Live events never carry that code.
 
 ## Managing orders
 

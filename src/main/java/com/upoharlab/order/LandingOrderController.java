@@ -42,6 +42,7 @@ public class LandingOrderController {
   private final SmartValidator beans;
   private final RateLimiter limiter;
   private final int ordersPerHour;
+  private final FacebookConversions conversions;
 
   public LandingOrderController(
       ProductStore products,
@@ -52,7 +53,9 @@ public class LandingOrderController {
       LandingPageModel pages,
       SmartValidator beans,
       Clock clock,
-      @Value("${app.orders.max-per-hour}") int ordersPerHour) {
+      @Value("${app.orders.max-per-hour}") int ordersPerHour,
+      FacebookConversions conversions) {
+    this.conversions = conversions;
     this.products = products;
     this.settings = settings;
     this.validator = validator;
@@ -75,11 +78,22 @@ public class LandingOrderController {
       @PathVariable String slug,
       @RequestParam(required = false) String expired,
       HttpSession session,
+      HttpServletRequest req,
       HttpServletResponse res,
       Model m) {
     res.setHeader("Cache-Control", NO_STORE);
     var product = product(slug);
     var token = OrderSession.of(session).issue(product.id());
+    conversions.rememberClick(req, session);
+    // The browser and server send this same ID, so Facebook counts the view once.
+    String viewEvent = java.util.UUID.randomUUID().toString();
+    m.addAttribute("fbViewEvent", viewEvent);
+    conversions.viewContent(
+        viewEvent,
+        slug,
+        product.details().getTitle(),
+        product.orderLanding().hero().offerPrice(),
+        FacebookConversions.visitor(req, session));
     return render(
         m,
         product,
@@ -129,9 +143,11 @@ public class LandingOrderController {
             m, product, form, token, true, "order.msg.busy");
       }
       PlaceResult result;
+      boolean firstSave = true;
       try {
         result = orders.place(product.id(), input, token.value, token.shownFingerprint);
       } catch (DuplicateKeyException ex) {
+        firstSave = false;
         // The token was issued to this session, so its first order belongs to this customer.
         Optional<String> existing = legacyOrders.codeForSubmitToken(token.value);
         if (existing.isEmpty()) throw ex;
@@ -141,6 +157,14 @@ public class LandingOrderController {
         case Placed placed -> {
           token.orderCode = placed.code();
           access.allowViewing(placed.code());
+          if (firstSave)
+            conversions.purchase(
+                placed.code(),
+                slug,
+                product.details().getTitle(),
+                orders.thanks(placed.code()).map(LandingOrderService.Thanks::total).orElse(null),
+                input.phone(),
+                FacebookConversions.visitor(req, session));
           yield confirmation(placed.code());
         }
         case PricesChanged changed -> render(m, product(slug), form, token, true, REVIEW_MESSAGE);

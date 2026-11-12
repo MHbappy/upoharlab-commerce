@@ -24,6 +24,8 @@
     if (!seen) fbq("track", "Purchase", { value: Number(tag.dataset.value), currency: "BDT" }, { eventID: tag.dataset.purchase });
     return;
   }
-  fbq("track", "ViewContent", { content_name: tag.dataset.product, currency: "BDT", value: Number(tag.dataset.value) });
+  var view = { content_name: tag.dataset.product };
+  if (tag.dataset.value) { view.value = Number(tag.dataset.value); view.currency = "BDT"; }
+  fbq("track", "ViewContent", view, tag.dataset.event ? { eventID: tag.dataset.event } : undefined);
   document.addEventListener("lp:checkout", function () { fbq("track", "InitiateCheckout"); }, { once: true });
 })();

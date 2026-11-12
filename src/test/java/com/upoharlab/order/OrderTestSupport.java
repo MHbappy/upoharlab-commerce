@@ -74,7 +74,7 @@ final class OrderTestSupport {
     HttpResponse<String> get(String path) throws Exception {
       return remember(
           client.send(
-              HttpRequest.newBuilder(URI.create(base + path)).build(),
+              HttpRequest.newBuilder(URI.create(base + path)).timeout(java.time.Duration.ofSeconds(60)).build(),
               HttpResponse.BodyHandlers.ofString()));
     }
 
@@ -86,7 +86,7 @@ final class OrderTestSupport {
           });
       return remember(
           client.send(
-              HttpRequest.newBuilder(URI.create(base + path))
+              HttpRequest.newBuilder(URI.create(base + path)).timeout(java.time.Duration.ofSeconds(60))
                   .header("Content-Type", "application/x-www-form-urlencoded")
                   .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                   .build(),
@@ -103,7 +103,7 @@ final class OrderTestSupport {
       body.append("--").append(boundary).append("--\r\n");
       return remember(
           client.send(
-              HttpRequest.newBuilder(URI.create(base + path))
+              HttpRequest.newBuilder(URI.create(base + path)).timeout(java.time.Duration.ofSeconds(60))
                   .header("Content-Type", "multipart/form-data; boundary=" + boundary)
                   .POST(HttpRequest.BodyPublishers.ofString(body.toString()))
                   .build(),
@@ -131,7 +131,7 @@ final class OrderTestSupport {
       body.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
       return remember(
           client.send(
-              HttpRequest.newBuilder(URI.create(base + path))
+              HttpRequest.newBuilder(URI.create(base + path)).timeout(java.time.Duration.ofSeconds(60))
                   .header("Content-Type", "multipart/form-data; boundary=" + boundary)
                   .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))
                   .build(),

@@ -1,5 +1,6 @@
 package com.upoharlab.settings;
 
+import com.upoharlab.FacebookPixel;
 import com.upoharlab.shared.PhoneNormalizer;
 import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,13 +24,17 @@ public class SettingsService {
           "courier_days_outside_max",
           "reply_hours",
           "accepting_orders",
-          "pause_notice");
+          "pause_notice",
+          FacebookPixel.ID_KEY,
+          FacebookPixel.TEST_CODE_KEY);
+  private static final String CLEAR_TOKEN = FacebookPixel.TOKEN_KEY + "_clear";
   private final JdbcTemplate db;
 
   public SettingsService(JdbcTemplate db) {
     this.db = db;
   }
 
+  /** Never includes the Facebook access token: this map is handed to public page templates. */
   public Map<String, String> all() {
     Map<String, String> values = new LinkedHashMap<>();
     db.query(
@@ -37,6 +42,7 @@ public class SettingsService {
         r -> {
           values.put(r.getString(1), r.getString(2));
         });
+    values.remove(FacebookPixel.TOKEN_KEY);
     return values;
   }
 
@@ -120,7 +126,21 @@ public class SettingsService {
     }
     if (s.get("pause_notice").length() > 500)
       errors.rejectValue("values[pause_notice]", "length", "Keep the notice under 500 characters.");
+    if (!s.get(FacebookPixel.ID_KEY).isBlank() && !s.get(FacebookPixel.ID_KEY).matches("[0-9]{5,25}"))
+      errors.rejectValue("values[" + FacebookPixel.ID_KEY + "]", "pixel", "Enter the numeric Pixel ID.");
+    if (!s.get(FacebookPixel.TEST_CODE_KEY).matches("[A-Za-z0-9]{0,50}"))
+      errors.rejectValue(
+          "values[" + FacebookPixel.TEST_CODE_KEY + "]", "code", "Enter the code exactly as Facebook shows it.");
+    String token = Objects.toString(s.get(FacebookPixel.TOKEN_KEY), "").strip();
+    if (!token.isEmpty() && !token.matches("[A-Za-z0-9_|.-]{20,1000}"))
+      errors.rejectValue(
+          "values[" + FacebookPixel.TOKEN_KEY + "]", "token", "Paste the whole access token from Facebook.");
     if (errors.hasErrors()) return;
     for (String k : KEYS) db.update("UPDATE setting SET value=? WHERE key=?", s.get(k), k);
+    // A blank box keeps the saved token, because the page never shows it.
+    if ("true".equals(s.get(CLEAR_TOKEN)))
+      db.update("UPDATE setting SET value='' WHERE key=?", FacebookPixel.TOKEN_KEY);
+    else if (!token.isEmpty())
+      db.update("UPDATE setting SET value=? WHERE key=?", token, FacebookPixel.TOKEN_KEY);
   }
 }
